@@ -24,6 +24,10 @@ docs/
 
 Every lab owns its source code, synthetic fixtures, scripts, tests and findings. Shared repository-wide policy and CI stay at the root. Python package names are deliberately lowercase; the layout also works on case-sensitive filesystems.
 
+## How we choose components
+
+Start with the [project-wide evaluation policy](docs/evaluation-policy.md): **selection criteria first, tests second**. For every lab, define mandatory gates, evidence needs and a stopping rule before comparing candidates. Historical Router Lab criteria were recorded after exploratory results and are explicitly marked as retrospective; future evaluations must not repeat that order.
+
 ## Run tests (Python 3.11+, no third-party Python dependencies)
 
 From the repository root:

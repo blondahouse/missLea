@@ -2,6 +2,8 @@
 
 ## The question
 
+This lab now follows the [project-wide criteria-first evaluation policy](evaluation-policy.md): define the decision and its mandatory requirements, then select only tests that provide the necessary evidence. The original router benchmark started as exploratory research; [ADR-001](router-decision-record.md) explicitly labels its later formalized decision retrospective.
+
 Which existing LLM router can Miss Lea operate economically and safely? A single green GitHub Actions run cannot determine that. The purpose of this PR is to fix *measurement asymmetry*, not to invent a winner.
 
 ### Evidence taxonomy (never collapse statuses)

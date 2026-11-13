@@ -2,6 +2,7 @@
 
 Evaluate off-the-shelf model gateways with identical synthetic local upstreams; do not treat routing functionality as evidence of secure operation.
 
+- [**Project-wide criteria-first evaluation policy**](../../docs/evaluation-policy.md)
 - [**ADR-001: Demo router selection and admission criteria**](../../docs/router-decision-record.md)
 - [Experiment protocol](docs/router-experiments.md)
 - [First baseline findings](docs/router-first-results.md)

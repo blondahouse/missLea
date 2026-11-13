@@ -2,6 +2,7 @@
 
 **Status:** SELECTED for the first Demo integration; **NOT approved for deployment with real provider credentials or paid calls**  
 **Decision date:** 2026-11-13  
+**Methodology:** retrospective decision using earlier exploratory evidence; criteria were documented after most comparative tests. Subsequent evaluations must follow the [criteria-first evaluation policy](evaluation-policy.md).  
 **Choice:** **Bifrost**, using a pinned, self-hosted, governance-enabled configuration and an agent credential restricted to direct free providers. **GoModel** remains the primary replacement candidate.
 
 ## Decision scope
@@ -12,7 +13,7 @@ The aim is to start integrating a suitable replaceable component. We will not pr
 
 ## Stable selection policy
 
-The policy is based on Miss Lea's requirements and is adopted **now**, with the existing evidence applied below. It must not be retroactively changed merely to favor a different candidate.
+These gates are derived from Miss Lea's operating requirements and **fixed from this decision onward**. They were **not preregistered** before all the earlier exploratory tests; this introduces potential selection bias and must not be concealed. Further comparative research must follow the [project-wide criteria-first policy](evaluation-policy.md). The gates must not be quietly changed to favor a candidate.
 
 ### Hard gates for selecting the first Demo integration candidate
 

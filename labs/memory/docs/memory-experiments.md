@@ -6,6 +6,8 @@ Select or combine existing memory solutions for a long-lived agent. Candidate na
 
 ## Questions we intend to answer
 
+All future comparative trials must follow the [project-wide evaluation policy](../../../docs/evaluation-policy.md): define selection gates, trade-offs and stopping conditions **before** writing candidate-specific tests. The following questions are research interests, not yet a frozen threshold or a pre-registered winner-selection rule. Before adding another memory backend, determine which decision-critical question the experiment would settle.
+
 1. **Experience** — does the system distill useful lessons from hundreds of events rather than endlessly repeat transcripts?
 2. **Revision and forgetting** — can it demote irrelevant details and obsolete beliefs while retaining traceable reasons for changes?
 3. **Causal recall** — can it retrieve the decision, alternatives, evidence, and later consequences months after the event?
