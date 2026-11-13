@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "name": "memory_v1_synthetic_project_history",
+  "synthetic": true,
+  "description": "Entirely fabricated project events. No TinyFund conversations or personal data.",
+  "events": [
+    {
+      "id": "e01",
+      "at": "2025-01-01T09:00:00Z",
+      "text": "Project Falcon chose SkyStore for logs because SkyStore offered free storage."
+    },
+    {
+      "id": "e02",
+      "at": "2025-01-02T11:00:00Z",
+      "text": "Project Falcon meeting was moved from Friday to Sunday because the train was delayed."
+    },
+    {
+      "id": "e03",
+      "at": "2025-01-03T09:00:00Z",
+      "text": "Project Falcon observed that SkyStore suspends idle log databases after seven days."
+    },
+    {
+      "id": "e04",
+      "at": "2025-01-04T09:00:00Z",
+      "text": "Project Falcon replaced SkyStore with RiverDB for current logs because idle database suspension was unacceptable. RiverDB is now the chosen provider."
+    },
+    {
+      "id": "e05",
+      "at": "2025-01-05T09:00:00Z",
+      "text": "During lunch an analyst bought an orange notebook and watched the rain."
+    },
+    {
+      "id": "e06",
+      "at": "2025-01-06T09:00:00Z",
+      "text": "Project Falcon must preserve original audit evidence for all deployment decisions, including rejected options."
+    },
+    {
+      "id": "e07",
+      "at": "2025-01-07T09:00:00Z",
+      "text": "The monthly budget ceiling for Project Falcon was initially five dollars, approved by the owner."
+    },
+    {
+      "id": "e08",
+      "at": "2025-01-08T09:00:00Z",
+      "text": "After a budget review, the current Project Falcon monthly budget ceiling changed from five dollars to four dollars."
+    },
+    {
+      "id": "e09",
+      "at": "2025-01-09T09:00:00Z",
+      "text": "Analyst Mara proposed switching Project Falcon to CloudNest; the proposal was rejected due to unreliable exports."
+    },
+    {
+      "id": "e10",
+      "at": "2025-01-10T09:00:00Z",
+      "text": "The experimental Atlas service uses CloudNest for illustrations and has no connection with Falcon logs."
+    }
+  ],
+  "probes": [
+    {
+      "id": "current_provider",
+      "question": "Which provider currently stores Project Falcon logs?",
+      "expected_event_ids": ["e04"],
+      "obsolete_event_ids": ["e01"]
+    },
+    {
+      "id": "historical_reason",
+      "question": "Why did Project Falcon originally choose SkyStore for logs?",
+      "expected_event_ids": ["e01"]
+    },
+    {
+      "id": "change_reason",
+      "question": "Why was SkyStore replaced for Project Falcon logs?",
+      "expected_event_ids": ["e03", "e04"]
+    },
+    {
+      "id": "current_budget",
+      "question": "What is the current monthly budget ceiling for Project Falcon?",
+      "expected_event_ids": ["e08"],
+      "obsolete_event_ids": ["e07"]
+    },
+    {
+      "id": "obligation",
+      "question": "What original audit evidence must Project Falcon preserve?",
+      "expected_event_ids": ["e06"]
+    },
+    {
+      "id": "rejected_proposal",
+      "question": "Who proposed CloudNest for Falcon and why was it rejected?",
+      "expected_event_ids": ["e09"],
+      "obsolete_event_ids": ["e10"]
+    }
+  ]
+}

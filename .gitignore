@@ -1,0 +1,20 @@
+# Secrets and private state
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+private/
+state/
+backups/
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+# Experiment outputs
+*-report.json
+reports/
+*.sqlite
+*.db
