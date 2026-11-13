@@ -12,6 +12,7 @@ The same deterministic synthetic providers are used for LiteLLM, GoModel, Bifros
 | Explicit synthetic paid route | PASS | NOT TESTED | PASS | PASS |
 | Peak RAM / cold start | NOT MEASURED | NOT MEASURED | NOT MEASURED | NOT MEASURED |
 | Budget enforcement with real keys | NOT TESTED | NOT TESTED | NOT TESTED | NOT TESTED |
+| Localhost SSRF security diagnostic | NOT TESTED | NOT TESTED | NOT TESTED | **VULNERABLE** |
 
 This table begins with the verified results of PR #2, not guessed results for new candidates. The new candidates have been exercised and verified in [PR #3 CI](https://github.com/blondahouse/missLea/actions/runs/43417421036); the previous candidates were also rerun successfully. More tests are still needed before choosing a router. Do not infer ranking from one CI run or raw latency across independently allocated runners.
 
@@ -47,3 +48,16 @@ The diagnostic reports one of `VULNERABLE`, `NOT_REPRODUCED` or `INCONCLUSIVE`. 
 The original official advisory [CVE-2025-66405](https://github.com/Portkey-AI/gateway/security/advisories/GHSA-hhh5-2cvx-vmfp) lists 1.14.0 as a fix for the first version of this issue. A later public report, [CVE-2026-82270 / Issue #1718](https://github.com/Portkey-AI/gateway/issues/1718), identifies missing validation on the deprecated route. A separate [CVE-2026-110719](https://www.tenable.com/cve/CVE-2026-110719) identifies unsafe trusted-host defaults. Current upstream source (2026-11-13) still contains both the unvalidated legacy route and localhost defaults. None of these observations is proof of **all** possible SSRF paths: redirects, other providers and authentication are outside this diagnostic.
 
 Run on a disposable Linux host with Docker and Python 3.11+: `bash scripts/run_portkey_security_trial.sh`. **Never run this diagnostic against a real gateway or send real tokens.**
+
+### Confirmed pinned-image security result — 2026-11-13
+
+The [local-only regression run](https://github.com/blondahouse/missLea/actions/runs/43418959178) executed the **exact pinned Portkey Docker image** with `TRUSTED_CUSTOM_HOSTS=api.openai.com`, no provider keys, and a mock server on `127.0.0.1:19100`.
+
+| Route | HTTP result | Unexpected calls to localhost mock |
+| --- | ---: | ---: |
+| `/v1/chat/completions` (validated route) | 400 | 0 |
+| `/v1/proxy/v1/chat/completions` (legacy route) | 200 | **1** |
+
+**Verdict: VULNERABLE / production gate BLOCKED.** The host validator rejects localhost on the normal route but was bypassed through the legacy route. We did not send real provider credentials or test other possible bypasses (for example redirects), and do not claim arbitrary credential theft was reproduced.
+
+This diagnostic publishes an explicit **security failure** in the JSON report and a CI warning. Its job exits successfully when the vulnerability is conclusively detected because it is a *research diagnostic*, not a production-approval check. **Do not interpret a green CI job as a secure Portkey version.** A future patched build must return rejected requests and zero mock hits for both routes, and must be independently reviewed for the default-host and redirect issues.
