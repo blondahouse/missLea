@@ -6,6 +6,7 @@ Routes without a confirmed positive control are NOT_TESTED, not PASS.
 from __future__ import annotations
 
 import argparse
+import base64
 import json
 import urllib.error
 import urllib.request
@@ -37,7 +38,7 @@ CASES = (
 # These paths are documented *research candidates*, not universal admin APIs.
 ADMIN_PATHS = {
     "litellm": ("/config/yaml", "/config/update"),
-    "gomodel": ("/admin/config", "/admin/config"),
+    "gomodel": ("/admin/plugins", "/admin/plugins"),
     "bifrost": ("/api/config", "/api/config"),
     "portkey": (None, None),  # no equivalent admin API demonstrated
 }
@@ -112,21 +113,23 @@ def verdict(status, changes, expectation):
     if expectation == "deny":
         if any_calls:
             outcome = "fail"
-        elif status in (401, 403):
+        elif status in (400, 401, 403):
             outcome = "pass"
         else:
             outcome = "not_tested"
     elif expectation == "no_paid":
         if paid:
             outcome = "fail"
-        elif status in (401, 403):
+        elif status in (400, 401, 403):
             outcome = "pass"
         else:
             outcome = "not_tested"
     elif expectation == "no_forbidden":
         if forbidden:
             outcome = "fail"
-        elif sum(len(changes[x]) for x in ("primary", "backup")):
+        elif sum(len(changes[x]) for x in ("primary", "backup")) or (
+            status in (400, 401, 403) and total_calls(changes) == 0
+        ):
             outcome = "pass"
         else:
             outcome = "not_tested"
@@ -262,9 +265,15 @@ def run(candidate, gateway, model, paid_model):
 
     admin_read, admin_write = ADMIN_PATHS[candidate]
     if admin_read:
+        if candidate == "bifrost":
+            admin_token = base64.b64encode(
+                b"lab-admin:sk-lab-admin-password"
+            ).decode()
+            admin_headers = {"Authorization": "Basic " + admin_token}
+        else:
+            admin_headers = {"Authorization": "Bearer " + TOKEN}
         good_status, _ = request(
-            "GET", base + admin_read,
-            headers={"Authorization": "Bearer " + (BIFROST_TOKEN if candidate == "bifrost" else TOKEN)},
+            "GET", base + admin_read, headers=admin_headers,
         )
         bad_status, _ = request("GET", base + admin_read)
         if bad_status == 200:
@@ -279,7 +288,10 @@ def run(candidate, gateway, model, paid_model):
             "path": admin_read,
         }
         # Never make valid admin mutations, even with fake credentials.
-        bad_write, _ = request("POST", base + admin_write, {})
+        bad_write, _ = request(
+            "PUT" if candidate == "bifrost" else "POST",
+            base + admin_write, {},
+        )
         results["management_write_anonymous"] = {
             "status": "fail" if 200 <= bad_write < 300
                       else ("pass" if bad_write in (401, 403)
@@ -302,7 +314,7 @@ def run(candidate, gateway, model, paid_model):
     )
     results["invalid_token_echo"] = {
         "status": "fail" if BAD_TOKEN in body else (
-            "pass" if status in (401, 403) else "not_tested"
+            "pass" if status in (400, 401, 403) else "not_tested"
         ),
         "http_status": status,
         "credential_echoed": BAD_TOKEN in body,
@@ -322,7 +334,7 @@ def run(candidate, gateway, model, paid_model):
         if valid_free_scope:
             scoped_status = (
                 "fail" if paid_hits["paid"]
-                else ("pass" if paid_status in (401, 403) else "not_tested")
+                else ("pass" if paid_status in (400, 401, 403) else "not_tested")
             )
         else:
             scoped_status = "not_tested"

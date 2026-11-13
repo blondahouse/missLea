@@ -11,7 +11,7 @@ Every router receives the **same 16 scoped negative or control probes**, includi
 | Control / threat | Actual behaviour observed | Honest limitations |
 | --- | --- | --- |
 | Authenticated chat baseline | Valid synthetic request reaches only free primary | Doesn't prove production role boundaries |
-| Anonymous chat / invalid key | Refused with 401/403 **and** no upstream calls | A 404 from an unknown route is `not_tested`, never PASS |
+| Anonymous chat / invalid key | Refused with 401/403 **and** no upstream calls | The same route must pass a valid-token control; HTTP 400/401/403 with **zero** upstream requests demonstrates a scoped denial. HTTP 404 alone remains `not_tested` |
 | Anonymous / invalid-key paid selection | Paid mock is never called | A free-scoped valid key is not configured yet; **paid budget access control remains NOT TESTED** |
 | Client credential isolation | Synthetic gateway credential is not forwarded in upstream Authorization | Other headers, log storage, real secrets unexamined |
 | Destination override | Inbound custom-host header, config header and body base URL cannot reach *unconfigured* forbidden mock | Limited known inputs only; not proof against arbitrary SSRF |
@@ -44,3 +44,5 @@ The fair decision is not a raw count of PASS: a production choice requires a **s
 The common suite is run automatically inside each `run_router_trial.sh` execution on a single shared ephemeral CI runner. Security reports are named `reports/<candidate>-security.json`, aggregated by `fair_matrix.py`. For Portkey, the existing `run_portkey_security_trial.sh` runs separately with strict `TRUSTED_CUSTOM_HOSTS=api.openai.com`.
 
 **Never point this suite at a real gateway, provider, internal network address other than the lab's loopback canary, or actual credentials.**
+
+**Result semantics clarification:** an HTTP 400 caused by an invalid token or a rejected untrusted URL counts as a *scoped deny* only after the same endpoint has passed an authorized positive control and the traffic audit records no upstream call. This is not a claim that the router emits ideal HTTP authentication codes. A 404 or 5xx still earns no positive security result.

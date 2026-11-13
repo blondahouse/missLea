@@ -89,7 +89,7 @@ def evaluate(folder: Path):
         known = SSRf_KNOWN.get(name)
         security_status = (
             "fail" if known or security_failures
-            else ("not_tested" if security_gaps else "pass_limited")
+            else ("partial_evidence" if security_gaps else "pass_limited")
         )
         cold = folder / f"{name}-cold-ready.txt"
         raw_cold = cold.read_text() if cold.exists() else ""

@@ -28,6 +28,12 @@ class SecuritySuiteTests(unittest.TestCase):
     def test_non_authorization_http_error_does_not_count_as_auth_pass(self):
         self.assertEqual(verdict(404, ev(), "deny")["status"], "not_tested")
 
+    def test_bad_token_rejected_with_400_and_zero_upstream_is_denial(self):
+        self.assertEqual(verdict(400, ev(), "deny")["status"], "pass")
+
+    def test_rejected_custom_base_url_without_upstream_is_scoped_pass(self):
+        self.assertEqual(verdict(400, ev(), "no_forbidden")["status"], "pass")
+
     def test_paid_canary_must_never_be_called_by_invalid_identity(self):
         self.assertEqual(
             verdict(401, ev(paid=[{"scenario": "LAB_BASIC"}]), "no_paid")["status"],
