@@ -5,7 +5,7 @@ import unittest
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-from router_lab.mock_provider import Handler, LabServer
+from labs.llm_router.mock_provider import Handler, LabServer
 
 
 def req(base, path, data=None):

@@ -1,7 +1,7 @@
 """Classifier tests; all probes use synthetically fabricated response codes."""
 import unittest
 
-from router_lab.portkey_security import diagnose
+from labs.llm_router.portkey_security import diagnose
 
 
 class SSRFClassifierTests(unittest.TestCase):

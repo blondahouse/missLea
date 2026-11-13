@@ -47,7 +47,7 @@ The diagnostic reports one of `VULNERABLE`, `NOT_REPRODUCED` or `INCONCLUSIVE`. 
 
 The original official advisory [CVE-2025-66405](https://github.com/Portkey-AI/gateway/security/advisories/GHSA-hhh5-2cvx-vmfp) lists 1.14.0 as a fix for the first version of this issue. A later public report, [CVE-2026-82270 / Issue #1718](https://github.com/Portkey-AI/gateway/issues/1718), identifies missing validation on the deprecated route. A separate [CVE-2026-110719](https://www.tenable.com/cve/CVE-2026-110719) identifies unsafe trusted-host defaults. Current upstream source (2026-11-13) still contains both the unvalidated legacy route and localhost defaults. None of these observations is proof of **all** possible SSRF paths: redirects, other providers and authentication are outside this diagnostic.
 
-Run on a disposable Linux host with Docker and Python 3.11+: `bash scripts/run_portkey_security_trial.sh`. **Never run this diagnostic against a real gateway or send real tokens.**
+Run on a disposable Linux host with Docker and Python 3.11+: `bash labs/llm_router/scripts/run_portkey_security_trial.sh`. **Never run this diagnostic against a real gateway or send real tokens.**
 
 ### Confirmed pinned-image security result — 2026-11-13
 

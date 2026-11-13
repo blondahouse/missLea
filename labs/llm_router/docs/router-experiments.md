@@ -30,10 +30,10 @@ A candidate only passes the *critical* gate when basic chat reaches the primary 
 ## Run with Docker (public synthetic fixtures only)
 
 ```bash
-bash scripts/run_router_trial.sh litellm
-bash scripts/run_router_trial.sh gomodel
-bash scripts/run_router_trial.sh bifrost
-bash scripts/run_router_trial.sh portkey
+bash labs/llm_router/scripts/run_router_trial.sh litellm
+bash labs/llm_router/scripts/run_router_trial.sh gomodel
+bash labs/llm_router/scripts/run_router_trial.sh bifrost
+bash labs/llm_router/scripts/run_router_trial.sh portkey
 ```
 
 Requires Docker Engine/desktop with Linux containers, Python 3.11+, and the ability to fetch public images. The script uses `--network host` (Linux only); on Docker Desktop the host-network feature depends on host configuration, so run through a Linux VM or GitHub Actions if unavailable.
