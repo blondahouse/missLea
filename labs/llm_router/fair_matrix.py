@@ -135,7 +135,7 @@ def evaluate(folder: Path):
             "same security probes run on all four; profiles may not be production-hardened",
             "Portkey has an additional confirmed hardened-profile SSRF bypass",
             "limited local threat probes cannot establish global security clearance",
-            "scoped identity with free-only authorization not provisioned in this suite",
+            "free-only agent key proved only for hardened Bifrost fixture, not for other candidates",
             "performance is one sequential batch per gateway on one shared runner",
             "sequential order and background load can bias latency",
             "memory snapshot is not peak usage",

@@ -45,6 +45,8 @@ bash labs/llm_router/scripts/run_router_trial.sh bifrost
 bash labs/llm_router/scripts/run_router_trial.sh portkey
 ```
 
+**Decision for the first Demo integration:** [ADR-001 selects Bifrost](docs/router-decision-record.md) with a validated free-only key. This is a reversible technology selection, **not** authorization for real-key deployment or paid requests.
+
 These runs use disposable, deterministic **local mock providers only**, never real AI accounts or paid requests. Reports and resource snapshots go into the ignored `reports/` directory. Read the [Fair Comparison Protocol](docs/router-fair-comparison.md), [Security Suite](docs/router-security-comparison.md) and [measured security results](docs/router-security-results-2026-11-13.md) and [Router Lab protocol](labs/llm_router/docs/router-experiments.md) and [four-candidate results](labs/llm_router/docs/router-four-candidate-results.md) before using results.
 
 **Portkey security warning:** the pinned image reproducibly bypasses its localhost host-validation policy on the deprecated proxy route. It is **not approved for deployment with real keys**. Reproduce *only* in an isolated synthetic environment:

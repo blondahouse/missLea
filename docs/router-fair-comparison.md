@@ -48,7 +48,7 @@ The shared fixture profiles are not necessarily production-hardened. A failed au
 ### Previously untested areas remain honest
 
 - Portkey's pinned image is known **VULNERABLE** to a reproducible localhost SSRF bypass through `/v1/proxy/*`; this is a production veto.
-- Other gateways have **NOT TESTED** security status; we do **not** mark them safe merely because no SSRF test was written.
+- All four gateway profiles now have scoped synthetic security tests. These **do not establish complete security**; the exact unknowns and vendor-specific exceptions remain visible.
 - Nobody passes **real budget enforcement** yet: local mock requests cannot prove paid-provider billing guarantees or hard limits across restarts and concurrency.
 - At a later private stage, use bounded keys, actual provider account caps and fail-closed policy to verify rate limits, budget exhaustion, identity scoping and disallowed user-supplied destinations. No real API keys belong in this public repository or GitHub Actions.
 - Nonavailability of provider API access is `not_tested`, not `unsupported`.
@@ -62,6 +62,6 @@ bash labs/llm_router/scripts/run_fair_comparison.sh
 
 The execution produces `reports/fair-comparison.json`, four per-router security reports, four functional reports and four warm latency reports, the individual image digests, cold-readiness timing and Docker snapshot, and an order manifest. Synthetic CI must fail if a mandatory functional test is missing or fails; Portkey vulnerability is reported separately as a **security blocker even if diagnostic execution succeeds**.
 
-The report's `winner` stays `null`, and `deployment_approved` remains `false`, until critical non-synthetic validation is complete. See the [19-vector security results and explicit remaining gaps](router-security-results-2026-11-13.md).
+**Technology selection is now recorded separately in [ADR-001](router-decision-record.md): Bifrost for the first Demo integration, not an approval to deploy.** The synthetic report's `winner` stays `null`, and `deployment_approved` remains `false`, until critical non-synthetic validation is complete. See the [19-vector security results and explicit remaining gaps](router-security-results-2026-11-13.md).
 
 A [public security advisory inventory](router-security-advisories.md) accompanies the common probes. It is not a complete SBOM or security certification, and each advisory's affected version/configuration needs explicit verification.
