@@ -19,6 +19,7 @@ class RouterProfilesTests(unittest.TestCase):
             )
             self.assertEqual(providers[name]["keys"][0]["value"], "sk-lab-synthetic-only")
         self.assertIs(data["config_store"]["enabled"], True)
+        self.assertEqual(data["config_store"]["config"]["path"], "./config.db")
         self.assertTrue(data["client"]["enforce_auth_on_inference"])
         self.assertTrue(data["governance"]["auth_config"]["is_enabled"])
         self.assertEqual(len(data["governance"]["virtual_keys"]), 2)

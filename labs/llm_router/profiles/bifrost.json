@@ -6,7 +6,10 @@
   },
   "config_store": {
     "enabled": true,
-    "type": "sqlite"
+    "type": "sqlite",
+    "config": {
+      "path": "./config.db"
+    }
   },
   "providers": {
     "lab-primary": {
