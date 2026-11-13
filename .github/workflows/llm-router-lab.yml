@@ -1,0 +1,40 @@
+name: LLM Router Lab
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m unittest discover -s tests -v
+  live-gateways:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        candidate: [litellm, gomodel]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Probe real gateway with synthetic upstreams
+        run: bash scripts/run_router_trial.sh "${{ matrix.candidate }}"
+      - name: Attach synthetic report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: router-report-${{ matrix.candidate }}
+          path: reports/*.json
+          if-no-files-found: warn

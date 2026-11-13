@@ -2,7 +2,18 @@
 
 An open laboratory for selecting replaceable components of a portable, self-evolving agent.
 
-**Status:** research only. The existing TinyFund / Miss Lea installation is not changed. No real memories, credentials, financial data, or Telegram messages are copied here.
+**Status:** research only. The existing TinyFund / Miss Lea installation is not changed. No real memories, credentials, or operational data from the existing TinyFund installation belong here.
+
+## LLM Router research (PR #2)
+
+Before choosing memory technologies, we evaluate a replaceable model gateway using fake providers and **no paid requests**. Run a real third-party router against three local mock model APIs with:
+
+```bash
+bash scripts/run_router_trial.sh litellm
+bash scripts/run_router_trial.sh gomodel
+```
+
+The CLI writes synthetic evidence to `reports/`. Candidate capability coverage and safety caveats are in [router experiment protocol](docs/router-experiments.md). Bifrost and Portkey remain untested candidates, **not** benchmarked or ranked.
 
 ## First track: long-term memory
 
