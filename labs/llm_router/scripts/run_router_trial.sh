@@ -141,6 +141,21 @@ python3 -m labs.llm_router.security_suite \
   --model "$security_model" --paid-model "$security_paid_model" \
   --output "reports/${candidate}-security.json"
 
+# Best-effort pinned binary/package version evidence (never infer from "latest").
+case "$candidate" in
+  litellm)
+    docker exec "$container" python -c 'import importlib.metadata; print(importlib.metadata.version("litellm"))' \
+      > "reports/${candidate}-version.txt" 2>/dev/null || echo "version not exposed" > "reports/${candidate}-version.txt"
+    ;;
+  bifrost)
+    docker logs "$container" 2>&1 | grep -E -m 1 'v[0-9]+[.][0-9]+[.][0-9]+' \
+      > "reports/${candidate}-version.txt" || echo "version not exposed" > "reports/${candidate}-version.txt"
+    ;;
+  gomodel|portkey)
+    printf '%s\n' "version not independently verified in this run" > "reports/${candidate}-version.txt"
+    ;;
+esac
+
 docker inspect --format 'Local image ID: {{.Image}}' "$container" \
   > "reports/${candidate}-image.txt"
 printf 'Image ref: %s\n' "$image" >> "reports/${candidate}-image.txt"

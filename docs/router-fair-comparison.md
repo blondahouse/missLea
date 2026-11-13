@@ -63,3 +63,5 @@ bash labs/llm_router/scripts/run_fair_comparison.sh
 The execution produces `reports/fair-comparison.json`, four per-router security reports, four functional reports and four warm latency reports, the individual image digests, cold-readiness timing and Docker snapshot, and an order manifest. Synthetic CI must fail if a mandatory functional test is missing or fails; Portkey vulnerability is reported separately as a **security blocker even if diagnostic execution succeeds**.
 
 The report's `winner` stays `null`, and `deployment_approved` remains `false`, until critical non-synthetic validation is complete.
+
+A [public security advisory inventory](router-security-advisories.md) accompanies the common probes. It is not a complete SBOM or security certification, and each advisory's affected version/configuration needs explicit verification.

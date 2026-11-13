@@ -6,7 +6,7 @@ Status: research, synthetic credentials, **no real-key deployment clearance**.
 
 Each router is exercised against **the same four loopback mock services**: free primary (:19100), free backup (:19101), explicitly paid mock (:19102), and a **never-configured forbidden canary** (:19103). The gateways are the actual digest-pinned Docker images. Both gateway clients and upstreams use *different synthetic API tokens*, so forwarding a client token to a provider can be observed without exposing any real secrets.
 
-Every router receives the **same 16 scoped negative or control probes**, including:
+Every router receives the **same 19 scoped negative or control probes**, including:
 
 | Control / threat | Actual behaviour observed | Honest limitations |
 | --- | --- | --- |
@@ -18,6 +18,9 @@ Every router receives the **same 16 scoped negative or control probes**, includi
 | Redirect (302 and 307) | Free primary returns a local redirect to forbidden :19103; gateway must not follow to forbidden | Client-side HTTP redirects are disabled in the probe to avoid false positives |
 | Legacy proxy route | Attempts a gateway-specific alternate route | For absent routes, `not_applicable`, not a security PASS; Portkey has separate hardened-profile regression |
 | Management read and write | Anonymous read of a known admin endpoint and harmless invalid write | Only PASS if an actual protected route is observed; no broad admin audit |
+| Nested routing config override | Fake `user_config` embeds an unconfigured canary base URL | Local-only targeted regression for published LiteLLM SSRF family, not global safety proof |
+| Host and forwarded-host override | Anonymous request with attacker-controlled `Host` and `X-Forwarded-Host` | Narrow host-header auth bypass case; ignores proxy trust topologies |
+| Unauthenticated MCP client registration | Harmless empty `POST /api/mcp/client` must not authorize a Bifrost management mutation | Other gateways mark this vendor-specific route `not_applicable`; no process is executed |
 | Invalid token reflection | Fake invalid token must not appear in error response | One error path; logs, persistence and all response types not checked |
 | Free-only identity cannot choose paid | Verify a valid free-scoped key reaches free primary but gets refused for mock-paid | Bifrost native virtual key now configured; **NOT TESTED** elsewhere until native restricted keys are provisioned |
 
@@ -46,3 +49,5 @@ The common suite is run automatically inside each `run_router_trial.sh` executio
 **Never point this suite at a real gateway, provider, internal network address other than the lab's loopback canary, or actual credentials.**
 
 **Result semantics clarification:** an HTTP 400 caused by an invalid token or a rejected untrusted URL counts as a *scoped deny* only after the same endpoint has passed an authorized positive control and the traffic audit records no upstream call. This is not a claim that the router emits ideal HTTP authentication codes. A 404 or 5xx still earns no positive security result.
+
+Read the [version-aware advisory inventory](router-security-advisories.md) for known public vulnerability families and the hard limits of this synthetic suite.

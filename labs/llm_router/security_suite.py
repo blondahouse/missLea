@@ -33,6 +33,9 @@ CASES = (
     "management_write_anonymous",
     "invalid_token_echo",
     "free_scoped_key_cannot_select_paid",
+    "nested_user_config_destination_override",
+    "host_header_auth_bypass",
+    "unauthenticated_mcp_registration",
 )
 
 # These paths are documented *research candidates*, not universal admin APIs.
@@ -195,6 +198,23 @@ def run(candidate, gateway, model, paid_model):
         elif override == "body":
             request_body["api_base"] = "http://127.0.0.1:19103/v1"
             request_body["base_url"] = "http://127.0.0.1:19103/v1"
+        elif override == "nested":
+            # Matches the category of published LiteLLM user_config SSRF regressions.
+            # All URLs and credentials point at the fabricated localhost canary.
+            request_body["user_config"] = {
+                "model_list": [{
+                    "model_name": "lab-nested-canary",
+                    "litellm_params": {
+                        "model": "openai/lab-model",
+                        "api_base": "http://127.0.0.1:19103/v1",
+                        "api_key": UPSTREAM_TOKEN,
+                    },
+                }]
+            }
+        elif override == "host":
+            headers["Host"] = "attacker.invalid"
+            headers["X-Forwarded-Host"] = "attacker.invalid"
+            headers["X-Forwarded-Proto"] = "http"
         before = observed()
         status, body = request("POST", base + path if path else endpoint,
                                request_body, headers)
@@ -240,6 +260,20 @@ def run(candidate, gateway, model, paid_model):
     ):
         status, _, changes = probe(label, override=override)
         results[label] = verdict(status, changes, "no_forbidden")
+
+    status, _, changes = probe(
+        "nested_user_config_destination_override", override="nested"
+    )
+    results["nested_user_config_destination_override"] = verdict(
+        status, changes, "no_forbidden"
+    )
+
+    status, _, changes = probe(
+        "host_header_auth_bypass", auth="none", override="host"
+    )
+    results["host_header_auth_bypass"] = verdict(
+        status, changes, "deny"
+    )
 
     for marker in ("LAB_REDIRECT_302", "LAB_REDIRECT_307"):
         label = "redirect_" + marker.rsplit("_", 1)[-1]
@@ -321,6 +355,26 @@ def run(candidate, gateway, model, paid_model):
         "upstream_calls": {k: len(v) for k, v in changes.items()},
         "scope": "one wrong-token HTTP response; container logs not inspected",
     }
+
+    # A deliberately invalid, process-free mutation payload. This cannot
+    # register an executable MCP client even on a permissive gateway.
+    if candidate == "bifrost":
+        mcp_status, _ = request(
+            "POST", base + "/api/mcp/client", {},
+            headers={"Content-Type": "application/json"},
+        )
+        results["unauthenticated_mcp_registration"] = {
+            "status": "pass" if mcp_status in (401, 403)
+                      else ("fail" if 200 <= mcp_status < 300
+                            else "not_tested"),
+            "http_status": mcp_status,
+            "scope": "empty invalid MCP payload, not an RCE execution attempt",
+        }
+    else:
+        results["unauthenticated_mcp_registration"] = {
+            "status": "not_applicable",
+            "reason": "Bifrost-specific management API; no equivalent endpoint exercised",
+        }
 
     if candidate == "bifrost":
         free_status, _, free_hits = probe("free_scope_positive", auth="free")

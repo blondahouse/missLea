@@ -1,0 +1,20 @@
+# LLM gateway security advisory review — 2026-11-13
+
+This is a **targeted public-advisory inventory**, not a vulnerability scan, SBOM analysis, or proof of absence. Each benchmark runs a **digest-pinned** Docker image; the image's exact runtime/package version is needed before comparing advisory affected/patched ranges. A date or `latest` label is not a version.
+
+| Gateway | Published security issues worth checking | Status in this lab |
+| --- | --- | --- |
+| LiteLLM | [GHSA-3cv6-jpf6-8222](https://github.com/BerriAI/litellm/security/advisories/GHSA-3cv6-jpf6-8222) — authenticated SSRF / provider-credential exfiltration via request-body router fields; [GHSA-hx8v-g79f-8w5f](https://github.com/advisories/GHSA-hx8v-g79f-8w5f) — nested `user_config` SSRF; [GHSA-7hp6-4w63-5g45](https://github.com/advisories/GHSA-7hp6-4w63-5g45) — privilege escalation via salt-key reuse; [GHSA-w4c7-34wj-hqm8](https://github.com/BerriAI/litellm/security/advisories/GHSA-w4c7-34wj-hqm8) — *Enterprise-only* unauthenticated file-read issue | Common test suite now includes local-only nested `user_config` and Host-header spoof probes. Runtime package version is captured best-effort into CI artifacts; no assertion about patched status until verified |
+| Bifrost | [GHSA-86gf-xh3g-rvxq](https://github.com/maximhq/bifrost/security/advisories/GHSA-86gf-xh3g-rvxq) — unprotected MCP stdio management endpoint and RCE in earlier releases; [GHSA-2qp8-4xgm-fw6g](https://github.com/maximhq/bifrost/security/advisories/GHSA-2qp8-4xgm-fw6g) — custom-plugin HTTP path; [GHSA-w98g-5w9p-p3rc](https://github.com/maximhq/bifrost/security/advisories/GHSA-w98g-5w9p-p3rc) — incomplete SSRF address-range checks | Current tested Bifrost image displays **v2.5.1** in startup logs, later than published fixed v2.1.0 and v1.5.17 references; this is *version evidence*, not proof of every patch. A harmless invalid `/api/mcp/client` request is added as an authentication check |
+| Portkey | [GHSA-hhh5-2cvx-vmfp](https://github.com/Portkey-AI/gateway/security/advisories/GHSA-hhh5-2cvx-vmfp) (earlier fix), [CVE-2026-82270 / issue #1718](https://github.com/Portkey-AI/gateway/issues/1718), [CVE-2026-110719](https://www.vulncheck.com/advisories/portkey-ai-gateway-1.14.0-through-1.15.2-ssrf-via-x-portkey-custom-host-header) | **Known VULNERABLE / BLOCKED**: exact pinned image was observed bypassing host validation on deprecated proxy route with only a localhost canary |
+| GoModel | Review the [upstream source and releases](https://github.com/ENTERPILOT/GoModel), security policy and dependencies; no specific reviewed advisory was established in the initial research | **Unknown advisory status**, not `secure`. Symmetric synthetic checks do not substitute for a dependency audit |
+
+## Rules for decisions
+
+1. For each advisory, match actual pinned binary/package version **and affected configuration** to the published range. Do not call a product vulnerable just because it has a historical CVE, and do not call it fixed solely because its version is newer without checking backports/build provenance.
+2. A failed public synthetic security probe is an observed *configuration-specific* blocker. An unrun or inconclusive probe stays `not_tested`.
+3. A local SSRF test can only prove what its fake forbidden endpoint reveals. It cannot test arbitrary cloud metadata endpoints, DNS rebinding, redirect chains, local files, credentials or all alternate routes.
+4. Never ship a real API key into GitHub Actions or this public repository. Real provider access, hard financial spending caps and production hardening require isolated private trials.
+5. Dependency updates or new advisories should trigger a fresh security and functional matrix; the agent should not silently roll out a different digest.
+
+Run evidence: `reports/<candidate>-version.txt`, `reports/<candidate>-image.txt`, `reports/<candidate>-security.json`, `reports/fair-comparison.json` from the [Fair Comparison GitHub Actions workflow](https://github.com/blondahouse/missLea/actions/workflows/llm-router-lab.yml).
