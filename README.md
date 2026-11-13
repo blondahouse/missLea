@@ -11,9 +11,11 @@ Before choosing memory technologies, we evaluate a replaceable model gateway usi
 ```bash
 bash scripts/run_router_trial.sh litellm
 bash scripts/run_router_trial.sh gomodel
+bash scripts/run_router_trial.sh bifrost
+bash scripts/run_router_trial.sh portkey
 ```
 
-The CLI writes synthetic evidence to `reports/`. Candidate capability coverage and safety caveats are in [router experiment protocol](docs/router-experiments.md). Bifrost and Portkey remain untested candidates, **not** benchmarked or ranked.
+The CLI writes synthetic evidence to `reports/`. Candidate capability coverage and safety caveats are in [router experiment protocol](docs/router-experiments.md). Bifrost and Portkey are included in PR #3's synthetic gateway trials. See [four-candidate comparison](docs/router-four-candidate-results.md); no production selection has been made.
 
 ## First track: long-term memory
 

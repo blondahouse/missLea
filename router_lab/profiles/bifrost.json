@@ -1,0 +1,83 @@
+{
+  "client": {
+    "drop_excess_requests": false,
+    "enable_logging": false
+  },
+  "config_store": {
+    "enabled": false
+  },
+  "providers": {
+    "lab-primary": {
+      "keys": [
+        {
+          "name": "lab-primary-key",
+          "value": "sk-lab-synthetic-only",
+          "models": [
+            "*"
+          ],
+          "weight": 1
+        }
+      ],
+      "network_config": {
+        "base_url": "http://127.0.0.1:19100",
+        "allow_private_network": true,
+        "max_retries": 0
+      },
+      "custom_provider_config": {
+        "base_provider_type": "openai",
+        "allowed_requests": {
+          "chat_completion": true,
+          "chat_completion_stream": true
+        }
+      }
+    },
+    "lab-backup": {
+      "keys": [
+        {
+          "name": "lab-backup-key",
+          "value": "sk-lab-synthetic-only",
+          "models": [
+            "*"
+          ],
+          "weight": 1
+        }
+      ],
+      "network_config": {
+        "base_url": "http://127.0.0.1:19101",
+        "allow_private_network": true,
+        "max_retries": 0
+      },
+      "custom_provider_config": {
+        "base_provider_type": "openai",
+        "allowed_requests": {
+          "chat_completion": true,
+          "chat_completion_stream": true
+        }
+      }
+    },
+    "lab-paid": {
+      "keys": [
+        {
+          "name": "lab-paid-key",
+          "value": "sk-lab-synthetic-only",
+          "models": [
+            "*"
+          ],
+          "weight": 1
+        }
+      ],
+      "network_config": {
+        "base_url": "http://127.0.0.1:19102",
+        "allow_private_network": true,
+        "max_retries": 0
+      },
+      "custom_provider_config": {
+        "base_provider_type": "openai",
+        "allowed_requests": {
+          "chat_completion": true,
+          "chat_completion_stream": true
+        }
+      }
+    }
+  }
+}

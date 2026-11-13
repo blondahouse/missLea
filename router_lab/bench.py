@@ -67,9 +67,29 @@ def run(args):
             "messages": [{"role": "user", "content": marker}],
             **(payload or {}),
         }
+        call_headers = dict(headers)
+        if args.candidate == "bifrost" and name != "explicit_paid":
+            # Explicitly never include the paid mock in a free fallback chain.
+            request["fallbacks"] = ["lab-backup/lab-model"]
+        if args.candidate == "portkey":
+            # Portkey's per-request config is part of its documented gateway API.
+            # No arbitrary user-provided hosts: every target is a fixed lab port.
+            free_targets = [
+                {"provider": "openai", "api_key": TOKEN,
+                 "custom_host": f"http://127.0.0.1:{MOCK_PORTS[tier]}/v1"}
+                for tier in ("primary", "backup")
+            ]
+            paid_target = [
+                {"provider": "openai", "api_key": TOKEN,
+                 "custom_host": f"http://127.0.0.1:{MOCK_PORTS['paid']}/v1"}
+            ]
+            call_headers["x-portkey-config"] = json.dumps({
+                "strategy": {"mode": "fallback"},
+                "targets": paid_target if name == "explicit_paid" else free_targets,
+            })
         started = time.perf_counter()
         try:
-            status, raw = call(gateway, request, timeout=30, headers=headers)
+            status, raw = call(gateway, request, timeout=30, headers=call_headers)
             return status, raw, round((time.perf_counter() - started) * 1000, 2)
         except (urllib.error.URLError, TimeoutError) as error:
             return 0, str(error), round((time.perf_counter() - started) * 1000, 2)
