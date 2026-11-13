@@ -1,6 +1,6 @@
 # Miss Lea — Architecture Lab
 
-Research workspace for evaluating **replaceable components** of Miss Lea before deploying any of them. This repository is **not** the running agent. It contains no production TinyFund memory, credentials or operational state.
+Research workspace for evaluating **replaceable components** of Miss Lea before deploying any of them. This repository is **not** the running agent. It contains no memory, credentials, or operational state from the running Miss Lea instance.
 
 ## Structure
 
