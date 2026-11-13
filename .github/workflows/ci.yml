@@ -1,0 +1,25 @@
+name: Synthetic Memory Lab
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  memory-lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Unit tests (stdlib only)
+        run: python -m unittest discover -s tests -v
+      - name: Run synthetic memory benchmark
+        run: python -m lab.cli run --candidate sqlite --scenario scenarios/memory_v1.json --output memory-report.json
+      - name: Validate restoration report
+        run: python -c "import json; d=json.load(open('memory-report.json')); assert d['summary']['same_candidate_snapshot_recovery']=='passed'; assert d['synthetic']"
