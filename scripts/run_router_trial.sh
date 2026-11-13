@@ -53,7 +53,7 @@ if [[ "$candidate" == "litellm" ]]; then
     --model lab-primary --paid-model lab-paid --expect-fallback \
     --output reports/litellm.json
 elif [[ "$candidate" == "bifrost" ]]; then
-  image="maximhq/bifrost:latest"
+  image="maximhq/bifrost@sha256:5ec9873acaf1687556b6e4dd854b92b539d9debf87a5a683b66338648b84d3c8"
   port=8080
   docker run -d --name "$container" --network host \
     -v "$PWD/router_lab/profiles/bifrost.json:/app/data/config.json:ro" \
@@ -64,7 +64,7 @@ elif [[ "$candidate" == "bifrost" ]]; then
     --model lab-primary/lab-model --paid-model lab-paid/lab-model --expect-fallback \
     --output reports/bifrost.json
 elif [[ "$candidate" == "portkey" ]]; then
-  image="portkeyai/gateway:latest"
+  image="portkeyai/gateway@sha256:97f094d9c8a764cbfaa2a7138c0017b247ca923bb06db1b4c13b7f8a33b5200d"
   port=8787
   # Explicit allowlist for local-only tests; never use this image with real secrets.
   docker run -d --name "$container" --network host \
