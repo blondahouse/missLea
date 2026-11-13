@@ -36,5 +36,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: router-report-${{ matrix.candidate }}
-          path: reports/*.json
+          path: |\n            reports/*.json\n            reports/*-metrics.txt\n            reports/*-image.txt
           if-no-files-found: warn

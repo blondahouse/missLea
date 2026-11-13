@@ -40,7 +40,7 @@ for port in (19100, 19101, 19102):
 PY
 
 if [[ "$candidate" == "litellm" ]]; then
-  image="docker.litellm.ai/berriai/litellm:latest"
+  image="docker.litellm.ai/berriai/litellm@sha256:11175975a3093e05e92faee2fe2fe3412a3ae2fcaa849eb0fe25d5f0d8bcb2e9"
   port=4000
   # No database, hence no claim that LiteLLM enforces real dollar budgets.
   docker run -d --name "$container" --network host \
@@ -53,7 +53,7 @@ if [[ "$candidate" == "litellm" ]]; then
     --model lab-primary --paid-model lab-paid --expect-fallback \
     --output reports/litellm.json
 else
-  image="enterpilot/gomodel:latest"
+  image="enterpilot/gomodel@sha256:c50627e093ff88bff311e582a43d7de14e0be29d52cb333ecb3191eac7874f05"
   port=8080
   docker run -d --name "$container" --network host \
     -e GOMODEL_MASTER_KEY=sk-lab-synthetic-only \
@@ -67,6 +67,9 @@ else
     --output reports/gomodel.json
 fi
 
-docker inspect --format 'Image digest (as running): {{.Image}}' "$container" \
+docker inspect --format 'Local image ID: {{.Image}}' "$container" \
   > "reports/${candidate}-image.txt"
+printf 'Image ref: %s\n' "$image" >> "reports/${candidate}-image.txt"
+docker stats --no-stream --format 'Memory (snapshot): {{.MemUsage}}; CPU (snapshot): {{.CPUPerc}}' "$container" \
+  > "reports/${candidate}-metrics.txt"
 echo "Candidate '$candidate': synthetic trial finished."

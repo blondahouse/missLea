@@ -161,8 +161,7 @@ def run(args):
         "not_measured": [
             "actual_model_quality", "real_vendor_billing", "real_budget_enforcement",
             "peak_rss_mb", "cross_provider_model_equivalence",
-            "independent_provider_failover" if not args.expect_fallback else "none",
-        ],
+        ] + ([] if args.expect_fallback else ["independent_provider_failover"]),
     }
     return report
 
