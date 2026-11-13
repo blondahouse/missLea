@@ -15,7 +15,7 @@ class RouterProfilesTests(unittest.TestCase):
         for name, port in [("lab-primary", 19100), ("lab-backup", 19101), ("lab-paid", 19102)]:
             self.assertEqual(
                 providers[name]["network_config"]["base_url"],
-                f"http://127.0.0.1:{port}/v1",
+                f"http://127.0.0.1:{port}",
             )
             self.assertEqual(providers[name]["keys"][0]["value"], "sk-lab-synthetic-only")
         self.assertIs(data["config_store"]["enabled"], False)

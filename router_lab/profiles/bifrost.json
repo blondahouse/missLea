@@ -19,7 +19,7 @@
         }
       ],
       "network_config": {
-        "base_url": "http://127.0.0.1:19100/v1",
+        "base_url": "http://127.0.0.1:19100",
         "allow_private_network": true,
         "max_retries": 0
       },
@@ -43,7 +43,7 @@
         }
       ],
       "network_config": {
-        "base_url": "http://127.0.0.1:19101/v1",
+        "base_url": "http://127.0.0.1:19101",
         "allow_private_network": true,
         "max_retries": 0
       },
@@ -67,7 +67,7 @@
         }
       ],
       "network_config": {
-        "base_url": "http://127.0.0.1:19102/v1",
+        "base_url": "http://127.0.0.1:19102",
         "allow_private_network": true,
         "max_retries": 0
       },
