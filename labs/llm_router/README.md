@@ -5,6 +5,7 @@ Evaluate off-the-shelf model gateways with identical synthetic local upstreams; 
 - [Experiment protocol](docs/router-experiments.md)
 - [First baseline findings](docs/router-first-results.md)
 - [Four-candidate comparison and security diagnosis](docs/router-four-candidate-results.md)
+- [Fair Comparison Protocol](../../docs/router-fair-comparison.md)
 - Gateway profiles: `profiles/`
 - Invocations: `scripts/`
 - Tests: `tests/`
@@ -25,3 +26,11 @@ bash labs/llm_router/scripts/run_portkey_security_trial.sh
 ```
 
 Reports are written to the repository root's gitignored `reports/`. **Never use these fixtures with real keys, actual models, or a network-exposed gateway.**
+
+### Fair comparison on a single Linux Docker host
+
+```bash
+bash labs/llm_router/scripts/run_fair_comparison.sh
+```
+
+This command measures equivalent warm requests and records a strict evidence matrix. It **does not** select a winner, approve real API spending or imply security clearance. The known Portkey SSRF remains a production blocker.

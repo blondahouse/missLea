@@ -17,29 +17,24 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m unittest discover -s labs -t . -p 'test_*.py' -v
-  live-gateways:
+  fair-comparison:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        candidate: [litellm, gomodel, bifrost, portkey]
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Probe real gateway with synthetic upstreams
-        run: bash labs/llm_router/scripts/run_router_trial.sh "${{ matrix.candidate }}"
-      - name: Attach synthetic report
+      - name: Run every gateway on the same runner against local synthetic mocks
+        run: bash labs/llm_router/scripts/run_fair_comparison.sh
+      - name: Upload evidence, including incomplete or failed comparisons
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: router-report-${{ matrix.candidate }}
+          name: router-fair-comparison
           path: |
             reports/*.json
-            reports/*-metrics.txt
-            reports/*-image.txt
+            reports/*.txt
           if-no-files-found: warn
   portkey-security-diagnostic:
     runs-on: ubuntu-latest
