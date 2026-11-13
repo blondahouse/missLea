@@ -15,7 +15,9 @@ from pathlib import Path
 
 
 MOCK_PORTS = {"primary": 19100, "backup": 19101, "paid": 19102}
-TOKEN = "sk-lab-synthetic-only"
+TOKEN = "sk-lab-gateway-client"
+UPSTREAM_TOKEN = "sk-lab-synthetic-only"
+BIFROST_TOKEN = "sk-bf-lab-gateway-client"
 
 
 def call(url: str, data=None, *, timeout=15, headers=None):
@@ -51,6 +53,43 @@ def choose_text(raw):
         return {}
 
 
+def build_request(candidate, marker, model, name="basic", payload=None):
+    """Build an equivalent synthetic call through each gateway's native contract.
+
+    Portkey uses an in-request routing header; other gateways resolve configured
+    model aliases server-side. This architectural difference is recorded, not hidden.
+    Only hardcoded loopback mocks and synthetic credentials are permitted.
+    """
+    request = {
+        "model": model,
+        "messages": [{"role": "user", "content": marker}],
+        **(payload or {}),
+    }
+    call_headers = {"Authorization": "Bearer " + (
+        BIFROST_TOKEN if candidate == "bifrost" else TOKEN
+    )}
+    if candidate == "bifrost" and name != "explicit_paid":
+        # Explicitly never include the paid mock in a free fallback chain.
+        request["fallbacks"] = ["lab-backup/lab-model"]
+    if candidate == "portkey":
+        # Portkey's per-request config is part of its documented gateway API.
+        # No arbitrary user-provided hosts: every target is a fixed lab port.
+        free_targets = [
+            {"provider": "openai", "api_key": UPSTREAM_TOKEN,
+             "custom_host": f"http://127.0.0.1:{MOCK_PORTS[tier]}/v1"}
+            for tier in ("primary", "backup")
+        ]
+        paid_target = [
+            {"provider": "openai", "api_key": UPSTREAM_TOKEN,
+             "custom_host": f"http://127.0.0.1:{MOCK_PORTS['paid']}/v1"}
+        ]
+        call_headers["x-portkey-config"] = json.dumps({
+            "strategy": {"mode": "fallback"},
+            "targets": paid_target if name == "explicit_paid" else free_targets,
+        })
+    return request, call_headers
+
+
 def run(args):
     if not args.gateway.startswith("http://127.0.0.1:") and not args.gateway.startswith("http://localhost:"):
         raise ValueError("synthetic test only allows loopback gateway URLs")
@@ -60,33 +99,10 @@ def run(args):
     reset()
     results = {}
     gateway = args.gateway.rstrip("/") + "/v1/chat/completions"
-    headers = {"Authorization": "Bearer " + TOKEN}
     def probe(name, marker, model, payload=None):
-        request = {
-            "model": model,
-            "messages": [{"role": "user", "content": marker}],
-            **(payload or {}),
-        }
-        call_headers = dict(headers)
-        if args.candidate == "bifrost" and name != "explicit_paid":
-            # Explicitly never include the paid mock in a free fallback chain.
-            request["fallbacks"] = ["lab-backup/lab-model"]
-        if args.candidate == "portkey":
-            # Portkey's per-request config is part of its documented gateway API.
-            # No arbitrary user-provided hosts: every target is a fixed lab port.
-            free_targets = [
-                {"provider": "openai", "api_key": TOKEN,
-                 "custom_host": f"http://127.0.0.1:{MOCK_PORTS[tier]}/v1"}
-                for tier in ("primary", "backup")
-            ]
-            paid_target = [
-                {"provider": "openai", "api_key": TOKEN,
-                 "custom_host": f"http://127.0.0.1:{MOCK_PORTS['paid']}/v1"}
-            ]
-            call_headers["x-portkey-config"] = json.dumps({
-                "strategy": {"mode": "fallback"},
-                "targets": paid_target if name == "explicit_paid" else free_targets,
-            })
+        request, call_headers = build_request(
+            args.candidate, marker, model, name, payload
+        )
         started = time.perf_counter()
         try:
             status, raw = call(gateway, request, timeout=30, headers=call_headers)

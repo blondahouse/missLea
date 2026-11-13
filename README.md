@@ -24,6 +24,10 @@ docs/
 
 Every lab owns its source code, synthetic fixtures, scripts, tests and findings. Shared repository-wide policy and CI stay at the root. Python package names are deliberately lowercase; the layout also works on case-sensitive filesystems.
 
+## How we choose components
+
+Start with the [project-wide evaluation policy](docs/evaluation-policy.md): **selection criteria first, tests second**. For every lab, define mandatory gates, evidence needs and a stopping rule before comparing candidates. Historical Router Lab criteria were recorded after exploratory results and are explicitly marked as retrospective; future evaluations must not repeat that order.
+
 ## Run tests (Python 3.11+, no third-party Python dependencies)
 
 From the repository root:
@@ -45,7 +49,9 @@ bash labs/llm_router/scripts/run_router_trial.sh bifrost
 bash labs/llm_router/scripts/run_router_trial.sh portkey
 ```
 
-These runs use disposable, deterministic **local mock providers only**, never real AI accounts or paid requests. Reports and resource snapshots go into the ignored `reports/` directory. Read the [Router Lab protocol](labs/llm_router/docs/router-experiments.md) and [four-candidate results](labs/llm_router/docs/router-four-candidate-results.md) before using results.
+**Decision for the first Demo integration:** [ADR-001 selects Bifrost](docs/router-decision-record.md) with a validated free-only key. This is a reversible technology selection, **not** authorization for real-key deployment or paid requests.
+
+These runs use disposable, deterministic **local mock providers only**, never real AI accounts or paid requests. Reports and resource snapshots go into the ignored `reports/` directory. Read the [Fair Comparison Protocol](docs/router-fair-comparison.md), [Security Suite](docs/router-security-comparison.md) and [measured security results](docs/router-security-results-2026-11-13.md) and [Router Lab protocol](labs/llm_router/docs/router-experiments.md) and [four-candidate results](labs/llm_router/docs/router-four-candidate-results.md) before using results.
 
 **Portkey security warning:** the pinned image reproducibly bypasses its localhost host-validation policy on the deprecated proxy route. It is **not approved for deployment with real keys**. Reproduce *only* in an isolated synthetic environment:
 

@@ -1,5 +1,7 @@
 # LLM Router Lab — four candidate comparison
 
+> **Historical PR #3 snapshot.** This table records what had been configured **at that time**. The [newer Fair Comparison results](../../../docs/router-fair-results-2026-11-13.md) add GoModel's previously missing fallback and paid-mock routes. Do not treat historical `NOT TESTED` entries as the product's capability limits.
+
 The same deterministic synthetic providers are used for LiteLLM, GoModel, Bifrost and Portkey. A **PASS** always requires observed mock-provider traffic; a configured feature alone cannot earn a passing grade.
 
 | Criterion | LiteLLM | GoModel | Bifrost | Portkey |

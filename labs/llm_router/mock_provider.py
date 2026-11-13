@@ -68,7 +68,8 @@ class Handler(BaseHTTPRequestHandler):
         prompt = " ".join(
             str(m.get("content", "")) for m in messages if isinstance(m, dict)
         )
-        marker = next((m for m in ("LAB_BASIC", "LAB_QUOTA", "LAB_OUTAGE",
+        marker = next((m for m in ("LAB_REDIRECT_307", "LAB_REDIRECT_302",
+                                   "LAB_BASIC", "LAB_QUOTA", "LAB_OUTAGE",
                                    "LAB_TOOL", "LAB_STREAM", "LAB_EMBED")
                        if m in prompt), "LAB_OTHER")
         tier = self.server.tier
@@ -82,7 +83,22 @@ class Handler(BaseHTTPRequestHandler):
             self.server.events.append({
                 "tier": tier, "scenario": marker, "status": status,
                 "endpoint": "embeddings" if "embeddings" in self.path else "chat",
+                # Never persist actual secret values to public CI artifacts.
+                "has_authorization_header": bool(self.headers.get("Authorization")),
+                "has_gateway_canary": self.headers.get("Authorization") in (
+                    "Bearer sk-lab-gateway-client",
+                    "Bearer sk-bf-lab-gateway-client"
+                ),
             })
+        if marker in ("LAB_REDIRECT_307", "LAB_REDIRECT_302") and tier == "primary":
+            # Deliberate localhost canary; no real internal host or credentials.
+            self.send_response(307 if marker.endswith("307") else 302)
+            self.send_header(
+                "Location", "http://127.0.0.1:19103/v1/chat/completions"
+            )
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
         if status != 200:
             return self.reply(status, {
                 "error": {
@@ -138,7 +154,7 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--tier", choices=["primary", "backup", "paid"], required=True)
+    parser.add_argument("--tier", choices=["primary", "backup", "paid", "forbidden"], required=True)
     parser.add_argument("--port", type=int, required=True)
     args = parser.parse_args()
     server = LabServer(("127.0.0.1", args.port), Handler, args.tier)

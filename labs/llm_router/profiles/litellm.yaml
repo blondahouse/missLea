@@ -20,4 +20,4 @@ router_settings:
   fallbacks:
     - lab-primary: [lab-backup]
 general_settings:
-  master_key: sk-lab-synthetic-only
+  master_key: sk-lab-gateway-client
