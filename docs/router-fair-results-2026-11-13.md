@@ -1,5 +1,7 @@
 # Fair Comparison — first observed run, 2026-11-13
 
+> **Historical functional-performance snapshot.** The [later security comparison](router-security-results-2026-11-13.md) uses 19 scoped probes and a hardened Bifrost configuration. It supersedes this page's implied safety coverage and Bifrost resource numbers, while preserving the original reproducible measurements.
+
 **Source:** [GitHub Actions run 43434096989](https://github.com/blondahouse/missLea/actions/runs/43434096989); [download raw comparison evidence](https://github.com/blondahouse/missLea/actions/runs/43434096989/artifacts/14043930005).
 
 These are **real third-party Docker gateway binaries**, each tested against the **same deterministic localhost mock providers**. All four ran on **one CI runner** (rather than one runner per gateway), with pinned images pre-pulled before measuring cold readiness.

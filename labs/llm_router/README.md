@@ -8,6 +8,7 @@ Evaluate off-the-shelf model gateways with identical synthetic local upstreams; 
 - [Fair Comparison Protocol](../../docs/router-fair-comparison.md)
 - [Common Security Suite and threat coverage](../../docs/router-security-comparison.md)
 - [Public advisory and pinned-version inventory](../../docs/router-security-advisories.md)
+- [Measured security results (19 scenarios)](../../docs/router-security-results-2026-11-13.md)
 - [First observed fair comparison](../../docs/router-fair-results-2026-11-13.md)
 - Gateway profiles: `profiles/`
 - Invocations: `scripts/`
