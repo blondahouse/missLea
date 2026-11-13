@@ -1,0 +1,23 @@
+# Synthetic-only. No real accounts or external model endpoints.
+model_list:
+  - model_name: lab-primary
+    litellm_params:
+      model: openai/lab-model
+      api_base: http://127.0.0.1:19100/v1
+      api_key: sk-lab-synthetic-only
+  - model_name: lab-backup
+    litellm_params:
+      model: openai/lab-model
+      api_base: http://127.0.0.1:19101/v1
+      api_key: sk-lab-synthetic-only
+  - model_name: lab-paid
+    litellm_params:
+      model: openai/lab-model
+      api_base: http://127.0.0.1:19102/v1
+      api_key: sk-lab-synthetic-only
+router_settings:
+  num_retries: 0
+  fallbacks:
+    - lab-primary: [lab-backup]
+general_settings:
+  master_key: sk-lab-synthetic-only
