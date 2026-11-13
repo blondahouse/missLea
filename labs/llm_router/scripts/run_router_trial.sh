@@ -68,7 +68,11 @@ elif [[ "$candidate" == "bifrost" ]]; then
   docker run -d --name "$container" --network host \
     -v "$PWD/labs/llm_router/profiles/bifrost.json:/app/data/config.json:ro" \
     "$image" > /dev/null
-  python3 -m labs.llm_router.wait --url "http://127.0.0.1:${port}/v1/models" --token sk-bf-lab-gateway-client --seconds 150
+  if ! python3 -m labs.llm_router.wait --url "http://127.0.0.1:${port}/health" --token sk-bf-lab-gateway-client --seconds 60; then
+    docker logs "$container" >reports/bifrost-startup.txt 2>&1 || true
+    echo "Bifrost hardened profile failed health readiness; see startup evidence" >&2
+    exit 1
+  fi
   cold_ready_ms=$(( $(date +%s%3N) - start_ms ))
   python3 -m labs.llm_router.bench --candidate bifrost \
     --gateway "http://127.0.0.1:${port}" --profile bifrost.json \
