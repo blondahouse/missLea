@@ -15,7 +15,8 @@ from pathlib import Path
 
 
 MOCK_PORTS = {"primary": 19100, "backup": 19101, "paid": 19102}
-TOKEN = "sk-lab-synthetic-only"
+TOKEN = "sk-lab-gateway-client"
+UPSTREAM_TOKEN = "sk-lab-synthetic-only"
 
 
 def call(url: str, data=None, *, timeout=15, headers=None):
@@ -71,12 +72,12 @@ def build_request(candidate, marker, model, name="basic", payload=None):
         # Portkey's per-request config is part of its documented gateway API.
         # No arbitrary user-provided hosts: every target is a fixed lab port.
         free_targets = [
-            {"provider": "openai", "api_key": TOKEN,
+            {"provider": "openai", "api_key": UPSTREAM_TOKEN,
              "custom_host": f"http://127.0.0.1:{MOCK_PORTS[tier]}/v1"}
             for tier in ("primary", "backup")
         ]
         paid_target = [
-            {"provider": "openai", "api_key": TOKEN,
+            {"provider": "openai", "api_key": UPSTREAM_TOKEN,
              "custom_host": f"http://127.0.0.1:{MOCK_PORTS['paid']}/v1"}
         ]
         call_headers["x-portkey-config"] = json.dumps({

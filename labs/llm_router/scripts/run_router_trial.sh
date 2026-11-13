@@ -21,7 +21,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-for pair in "primary:19100" "backup:19101" "paid:19102"; do
+for pair in "primary:19100" "backup:19101" "paid:19102" "forbidden:19103"; do
   tier="${pair%:*}"
   port="${pair#*:}"
   python3 -m labs.llm_router.mock_provider --tier "$tier" --port "$port" >"reports/mock-${tier}.log" 2>&1 &
@@ -30,7 +30,7 @@ done
 
 python3 - <<'PY'
 import time, urllib.request
-for port in (19100, 19101, 19102):
+for port in (19100, 19101, 19102, 19103):
     for _ in range(100):
         try:
             with urllib.request.urlopen(f"http://127.0.0.1:{port}/health", timeout=0.3) as r:
@@ -49,9 +49,9 @@ if [[ "$candidate" == "litellm" ]]; then
   start_ms=$(date +%s%3N)
   docker run -d --name "$container" --network host \
     -v "$PWD/labs/llm_router/profiles/litellm.yaml:/app/config.yaml:ro" \
-    -e LITELLM_MASTER_KEY=sk-lab-synthetic-only \
+    -e LITELLM_MASTER_KEY=sk-lab-gateway-client \
     "$image" --config /app/config.yaml > /dev/null
-  python3 -m labs.llm_router.wait --url "http://127.0.0.1:${port}/v1/models" --token sk-lab-synthetic-only --seconds 150
+  python3 -m labs.llm_router.wait --url "http://127.0.0.1:${port}/v1/models" --token sk-lab-gateway-client --seconds 150
   cold_ready_ms=$(( $(date +%s%3N) - start_ms ))
   python3 -m labs.llm_router.bench --candidate litellm \
     --gateway "http://127.0.0.1:${port}" --profile litellm.yaml \
@@ -68,7 +68,7 @@ elif [[ "$candidate" == "bifrost" ]]; then
   docker run -d --name "$container" --network host \
     -v "$PWD/labs/llm_router/profiles/bifrost.json:/app/data/config.json:ro" \
     "$image" > /dev/null
-  python3 -m labs.llm_router.wait --url "http://127.0.0.1:${port}/v1/models" --token sk-lab-synthetic-only --seconds 150
+  python3 -m labs.llm_router.wait --url "http://127.0.0.1:${port}/v1/models" --token sk-lab-gateway-client --seconds 150
   cold_ready_ms=$(( $(date +%s%3N) - start_ms ))
   python3 -m labs.llm_router.bench --candidate bifrost \
     --gateway "http://127.0.0.1:${port}" --profile bifrost.json \
@@ -86,7 +86,7 @@ elif [[ "$candidate" == "portkey" ]]; then
   docker run -d --name "$container" --network host \
     -e TRUSTED_CUSTOM_HOSTS=127.0.0.1,localhost \
     "$image" > /dev/null
-  python3 -m labs.llm_router.wait --url "http://127.0.0.1:${port}/public/" --token sk-lab-synthetic-only --seconds 150
+  python3 -m labs.llm_router.wait --url "http://127.0.0.1:${port}/public/" --token sk-lab-gateway-client --seconds 150
   cold_ready_ms=$(( $(date +%s%3N) - start_ms ))
   python3 -m labs.llm_router.bench --candidate portkey \
     --gateway "http://127.0.0.1:${port}" --profile header-config \
@@ -101,7 +101,7 @@ else
   docker image inspect "$image" >/dev/null 2>&1 || docker pull "$image" >/dev/null
   start_ms=$(date +%s%3N)
   docker run -d --name "$container" --network host \
-    -e GOMODEL_MASTER_KEY=sk-lab-synthetic-only \
+    -e GOMODEL_MASTER_KEY=sk-lab-gateway-client \
     -e VLLM_BASE_URL=http://127.0.0.1:19100/v1 \
     -e VLLM_MODELS=lab-model \
     -e SGLANG_BASE_URL=http://127.0.0.1:19101/v1 \
@@ -113,7 +113,7 @@ else
     -e RETRY_MAX_RETRIES=0 \
     -e GOMODEL_OFFLINE=true \
     "$image" > /dev/null
-  python3 -m labs.llm_router.wait --url "http://127.0.0.1:${port}/v1/models" --token sk-lab-synthetic-only --seconds 120
+  python3 -m labs.llm_router.wait --url "http://127.0.0.1:${port}/v1/models" --token sk-lab-gateway-client --seconds 120
   cold_ready_ms=$(( $(date +%s%3N) - start_ms ))
   python3 -m labs.llm_router.bench --candidate gomodel \
     --gateway "http://127.0.0.1:${port}" --profile three-upstream-virtual-failover \
@@ -124,7 +124,19 @@ else
     --output reports/gomodel-latency.json
 fi
 
+case "$candidate" in
+  litellm) security_model=lab-primary; security_paid_model=lab-paid ;;
+  bifrost) security_model=lab-primary/lab-model; security_paid_model=lab-paid/lab-model ;;
+  portkey) security_model=lab-model; security_paid_model=lab-model ;;
+  gomodel) security_model=lab-free; security_paid_model=openai/lab-model ;;
+esac
+
 printf 'Cold ready, image already available: %s ms\n' "$cold_ready_ms" > "reports/${candidate}-cold-ready.txt"
+python3 -m labs.llm_router.security_suite \
+  --candidate "$candidate" --gateway "http://127.0.0.1:${port}" \
+  --model "$security_model" --paid-model "$security_paid_model" \
+  --output "reports/${candidate}-security.json"
+
 docker inspect --format 'Local image ID: {{.Image}}' "$container" \
   > "reports/${candidate}-image.txt"
 printf 'Image ref: %s\n' "$image" >> "reports/${candidate}-image.txt"

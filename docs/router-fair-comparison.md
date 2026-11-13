@@ -39,7 +39,13 @@ A new CI job **pre-pulls the exact digest-pinned images** and runs all four gate
 
 **Limits:** one runner is not stable hardware across runs. Sequential order, startup disk cache, HTTP connection reuse, gateway-native headers, cross-process mocks and background load all remain confounds. Cold readiness is *one measurement*, not a startup distribution; resource snapshot is *not peak RSS*. Do not rank candidates by these numbers alone. Future work can add multiple randomized replicates, cgroup peak sampling and confidence intervals.
 
-### Security and budgets: no fake parity
+### Security and budgets: common negative probes without false assurance
+
+The [symmetric security suite](router-security-comparison.md) exercises all four gateway profiles with distinct synthetic client/upstream tokens, a fourth forbidden loopback canary, anonymous and wrong-key chat, unauthorised paid selection, alternate routing, 302/307 redirect handling, management read/write paths and credential reflection. Every vector has an individual verdict and observed upstream traffic. The **same threats** apply to each candidate; vendor-specific routes can be `NOT APPLICABLE` rather than pretend-pass.
+
+The shared fixture profiles are not necessarily production-hardened. A failed auth test is a failure of the *current tested profile*, not proof that vendor-supported authentication cannot work. Unknown route, admin or scope coverage stays `NOT TESTED`. The hardened Portkey regression remains independent and explicitly blocks Portkey.
+
+### Previously untested areas remain honest
 
 - Portkey's pinned image is known **VULNERABLE** to a reproducible localhost SSRF bypass through `/v1/proxy/*`; this is a production veto.
 - Other gateways have **NOT TESTED** security status; we do **not** mark them safe merely because no SSRF test was written.
@@ -54,6 +60,6 @@ python -m unittest discover -s labs -t . -p 'test_*.py' -v
 bash labs/llm_router/scripts/run_fair_comparison.sh
 ```
 
-The execution produces `reports/fair-comparison.json`, four functional reports and four warm latency reports, the individual image digests, cold-readiness timing and Docker snapshot, and an order manifest. Synthetic CI must fail if a mandatory functional test is missing or fails; Portkey vulnerability is reported separately as a **security blocker even if diagnostic execution succeeds**.
+The execution produces `reports/fair-comparison.json`, four per-router security reports, four functional reports and four warm latency reports, the individual image digests, cold-readiness timing and Docker snapshot, and an order manifest. Synthetic CI must fail if a mandatory functional test is missing or fails; Portkey vulnerability is reported separately as a **security blocker even if diagnostic execution succeeds**.
 
 The report's `winner` stays `null`, and `deployment_approved` remains `false`, until critical non-synthetic validation is complete.

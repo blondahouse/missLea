@@ -30,7 +30,7 @@ class FairMatrixTests(unittest.TestCase):
     def test_even_all_synthetic_passes_are_not_production_approval(self):
         checks = {key: "pass" for key in FUNCTIONAL_GATES}
         self.assertEqual(classify("bifrost", checks, "not_tested"),
-                         "functional_only_not_production_approved")
+                         "insufficient_security_evidence")
 
     def test_missing_report_does_not_get_assumed_success(self):
         with tempfile.TemporaryDirectory() as directory:

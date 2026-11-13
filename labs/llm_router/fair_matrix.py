@@ -29,9 +29,10 @@ def classify(candidate, functional, security_status):
         return "incomplete_or_failed_functional_gate"
     if any(functional.get(k) != "pass" for k in FUNCTIONAL_GATES):
         return "insufficient_evidence"
-    # Functional pass is NOT a deployment approval. No real billing/SSRF
-    # assurance exists for any candidate in this synthetic suite.
-    return "functional_only_not_production_approved"
+    if security_status not in ("pass_limited",):
+        return "insufficient_security_evidence"
+    # Scoped synthetic tests are not a general security audit.
+    return "synthetic_functional_and_security_checks_only"
 
 
 def evaluate(folder: Path):
@@ -40,10 +41,11 @@ def evaluate(folder: Path):
     for name in CANDIDATES:
         path = folder / f"{name}.json"
         latency_path = folder / f"{name}-latency.json"
-        if not path.exists() or not latency_path.exists():
+        security_path = folder / f"{name}-security.json"
+        if not path.exists() or not latency_path.exists() or not security_path.exists():
             execution_complete = False
             candidates[name] = {
-                "trial": "not_tested", "reason": "missing gateway or latency report",
+                "trial": "not_tested", "reason": "missing gateway, latency or security report",
                 "functional": {key: "not_tested" for key in FUNCTIONAL_GATES},
                 "security": "fail" if name == "portkey" else "not_tested",
                 "budget_with_real_keys": "not_tested",
@@ -55,6 +57,23 @@ def evaluate(folder: Path):
             continue
         trial = json.loads(path.read_text())
         latency = json.loads(latency_path.read_text())
+        security_report = json.loads(security_path.read_text())
+        if security_report.get("candidate") != name or security_report.get("synthetic") is not True:
+            raise ValueError(f"wrong synthetic security evidence: {name}")
+        security_tests = security_report.get("tests", {})
+        if len(security_tests) < 15:
+            raise ValueError(f"security evidence coverage is incomplete: {name}")
+        allowed_security_status = {"pass", "fail", "not_tested", "not_applicable"}
+        if any(data.get("status") not in allowed_security_status
+               for data in security_tests.values()):
+            raise ValueError(f"unknown security verdict for {name}")
+        security_failures = [
+            k for k, v in security_tests.items() if v["status"] == "fail"
+        ]
+        security_gaps = [
+            k for k, v in security_tests.items()
+            if v["status"] in ("not_tested", "not_applicable")
+        ]
         if trial.get("gateway") != name or latency.get("candidate") != name:
             raise ValueError(f"wrong candidate report: {name}")
         functions = {}
@@ -66,7 +85,10 @@ def evaluate(folder: Path):
         if not latency.get("valid"):
             execution_complete = False
         known = SSRf_KNOWN.get(name)
-        security_status = known["status"] if known else "not_tested"
+        security_status = (
+            "fail" if known or security_failures
+            else ("not_tested" if security_gaps else "pass_limited")
+        )
         cold = folder / f"{name}-cold-ready.txt"
         raw_cold = cold.read_text() if cold.exists() else ""
         match = re.search(r"(\d+) ms", raw_cold)
@@ -77,7 +99,16 @@ def evaluate(folder: Path):
             "trial": "complete" if latency["valid"] else "invalid",
             "functional": functions,
             "security": security_status,
-            "security_evidence": known["evidence"] if known else "not audited",
+            "security_evidence": (
+                known["evidence"] if known else
+                f"{len(security_tests)} scoped synthetic probes; not a full audit"
+            ),
+            "security_profile_tests": {
+                key: data["status"] for key, data in security_tests.items()
+            },
+            "security_profile_failures": security_failures,
+            "security_profile_unverified": security_gaps,
+            "security_profile_context": security_report.get("configuration"),
             "budget_with_real_keys": "not_tested",
             "eligibility": classify(name, functions, security_status),
             "sample": {
@@ -85,7 +116,7 @@ def evaluate(folder: Path):
                 "cold_ready_ms": int(match.group(1)) if match else None,
                 "memory_snapshot_raw": metrics.read_text().strip() if metrics.exists() else None,
             },
-            "evidence_files": [str(path), str(latency_path)],
+            "evidence_files": [str(path), str(latency_path), str(security_path)],
         }
         if any(v != "pass" for v in functions.values()):
             execution_complete = False
@@ -99,7 +130,10 @@ def evaluate(folder: Path):
         "candidates": candidates,
         "limitations": [
             "real provider quota, costs, and budgeting not tested",
-            "SSRF diagnostic is Portkey-specific; no security clearance for others",
+            "same security probes run on all four; profiles may not be production-hardened",
+            "Portkey has an additional confirmed hardened-profile SSRF bypass",
+            "limited local threat probes cannot establish global security clearance",
+            "scoped identity with free-only authorization not provisioned in this suite",
             "performance is one sequential batch per gateway on one shared runner",
             "sequential order and background load can bias latency",
             "memory snapshot is not peak usage",
