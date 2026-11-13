@@ -41,6 +41,10 @@ class FairMatrixTests(unittest.TestCase):
         self.assertEqual(set(report["candidates"]), set(CANDIDATES))
         self.assertEqual(report["candidates"]["gomodel"]["functional"]["free_provider_fallback"], "not_tested")
         self.assertEqual(report["candidates"]["portkey"]["security"], "fail")
+        self.assertEqual(
+            report["candidates"]["portkey"]["eligibility"],
+            "blocked_known_security_failure",
+        )
 
 
 if __name__ == "__main__":

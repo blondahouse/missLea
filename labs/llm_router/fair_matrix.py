@@ -47,7 +47,10 @@ def evaluate(folder: Path):
                 "functional": {key: "not_tested" for key in FUNCTIONAL_GATES},
                 "security": "fail" if name == "portkey" else "not_tested",
                 "budget_with_real_keys": "not_tested",
-                "eligibility": "insufficient_evidence",
+                "eligibility": classify(
+                    name, {key: "not_tested" for key in FUNCTIONAL_GATES},
+                    "fail" if name == "portkey" else "not_tested",
+                ),
             }
             continue
         trial = json.loads(path.read_text())
@@ -68,6 +71,8 @@ def evaluate(folder: Path):
         raw_cold = cold.read_text() if cold.exists() else ""
         match = re.search(r"(\d+) ms", raw_cold)
         metrics = folder / f"{name}-metrics.txt"
+        if not match or not metrics.exists():
+            execution_complete = False
         candidates[name] = {
             "trial": "complete" if latency["valid"] else "invalid",
             "functional": functions,

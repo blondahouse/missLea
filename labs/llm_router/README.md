@@ -6,6 +6,7 @@ Evaluate off-the-shelf model gateways with identical synthetic local upstreams; 
 - [First baseline findings](docs/router-first-results.md)
 - [Four-candidate comparison and security diagnosis](docs/router-four-candidate-results.md)
 - [Fair Comparison Protocol](../../docs/router-fair-comparison.md)
+- [First observed fair comparison](../../docs/router-fair-results-2026-11-13.md)
 - Gateway profiles: `profiles/`
 - Invocations: `scripts/`
 - Tests: `tests/`
