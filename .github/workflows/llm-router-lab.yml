@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: python -m unittest discover -s tests -v
+      - run: python -m unittest discover -s labs -t . -p 'test_*.py' -v
   live-gateways:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -30,7 +30,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Probe real gateway with synthetic upstreams
-        run: bash scripts/run_router_trial.sh "${{ matrix.candidate }}"
+        run: bash labs/llm_router/scripts/run_router_trial.sh "${{ matrix.candidate }}"
       - name: Attach synthetic report
         if: always()
         uses: actions/upload-artifact@v4
@@ -50,7 +50,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Inspect pinned Portkey with localhost-only synthetic canary
-        run: bash scripts/run_portkey_security_trial.sh
+        run: bash labs/llm_router/scripts/run_portkey_security_trial.sh
       - name: Publish the security verdict (not a production approval)
         if: always()
         uses: actions/upload-artifact@v4

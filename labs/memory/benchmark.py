@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from lab.memory import MemoryCandidate
+from labs.memory.memory import MemoryCandidate
 
 
 def load_scenario(path: str | Path) -> dict[str, Any]:

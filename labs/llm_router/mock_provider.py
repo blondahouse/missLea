@@ -1,7 +1,7 @@
 """Deterministic OpenAI-compatible mock. Never calls a real model or network API.
 
 Start one process per tier, e.g.
-python -m router_lab.mock_provider --tier primary --port 19100
+python -m labs.llm_router.mock_provider --tier primary --port 19100
 """
 from __future__ import annotations
 

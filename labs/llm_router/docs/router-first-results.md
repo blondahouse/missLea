@@ -4,7 +4,7 @@ These are **real gateway binaries** exercised only against local synthetic provi
 
 - [CI run: LLM Router Lab](https://github.com/blondahouse/missLea/actions/runs/43413371923) — three successful jobs: unit tests, LiteLLM integration, GoModel integration.
 - JSON artifacts: `router-report-litellm` and `router-report-gomodel` under that run.
-- Profiles and benchmark code are in this PR. The gateway Docker image digests from the first run are now pinned in `scripts/run_router_trial.sh` for reproducibility.
+- Profiles and benchmark code are in this PR. The gateway Docker image digests from the first run are now pinned in `labs/llm_router/scripts/run_router_trial.sh` for reproducibility.
 
 | Probe | LiteLLM | GoModel | Interpretation |
 | --- | --- | --- | --- |

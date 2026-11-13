@@ -1,4 +1,4 @@
-"""Run the lab without installing packages: python -m lab.cli."""
+"""Run the lab without installing packages: python -m labs.memory.cli."""
 
 from __future__ import annotations
 
@@ -7,8 +7,8 @@ import json
 import tempfile
 from pathlib import Path
 
-from lab.benchmark import load_scenario, run_scenario
-from lab.memory import SQLiteBaseline
+from labs.memory.benchmark import load_scenario, run_scenario
+from labs.memory.memory import SQLiteBaseline
 
 CANDIDATES = {
     "sqlite": "implemented — no API, no model cost",
@@ -24,7 +24,7 @@ def main() -> None:
     sub.add_parser("list", help="Show implemented and planned candidates")
     run = sub.add_parser("run", help="Run a synthetic evaluation")
     run.add_argument("--candidate", choices=sorted(CANDIDATES), default="sqlite")
-    run.add_argument("--scenario", default="scenarios/memory_v1.json")
+    run.add_argument("--scenario", default=str(Path(__file__).resolve().parent / "scenarios" / "memory_v1.json"))
     run.add_argument("--output")
     run.add_argument("--top-k", type=int, default=3)
     args = parser.parse_args()

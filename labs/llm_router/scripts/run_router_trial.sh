@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # Run real third-party gateways against strictly synthetic local HTTP providers.
 set -euo pipefail
+# Work from repository root regardless of the caller's current directory.
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 
 candidate="${1:-}"
 case "$candidate" in
   litellm|gomodel|bifrost|portkey) ;;
-  *) echo "Usage: bash scripts/run_router_trial.sh {litellm|gomodel|bifrost|portkey}" >&2; exit 2 ;;
+  *) echo "Usage: bash labs/llm_router/scripts/run_router_trial.sh {litellm|gomodel|bifrost|portkey}" >&2; exit 2 ;;
 esac
 
 command -v docker >/dev/null || { echo "Docker required" >&2; exit 2; }
@@ -22,7 +24,7 @@ trap cleanup EXIT
 for pair in "primary:19100" "backup:19101" "paid:19102"; do
   tier="${pair%:*}"
   port="${pair#*:}"
-  python3 -m router_lab.mock_provider --tier "$tier" --port "$port" >"reports/mock-${tier}.log" 2>&1 &
+  python3 -m labs.llm_router.mock_provider --tier "$tier" --port "$port" >"reports/mock-${tier}.log" 2>&1 &
   mock_pids+=("$!")
 done
 
@@ -44,11 +46,11 @@ if [[ "$candidate" == "litellm" ]]; then
   port=4000
   # No database, hence no claim that LiteLLM enforces real dollar budgets.
   docker run -d --name "$container" --network host \
-    -v "$PWD/router_lab/profiles/litellm.yaml:/app/config.yaml:ro" \
+    -v "$PWD/labs/llm_router/profiles/litellm.yaml:/app/config.yaml:ro" \
     -e LITELLM_MASTER_KEY=sk-lab-synthetic-only \
     "$image" --config /app/config.yaml > /dev/null
-  python3 -m router_lab.wait --url "http://127.0.0.1:${port}/v1/models" --token sk-lab-synthetic-only --seconds 150
-  python3 -m router_lab.bench --candidate litellm \
+  python3 -m labs.llm_router.wait --url "http://127.0.0.1:${port}/v1/models" --token sk-lab-synthetic-only --seconds 150
+  python3 -m labs.llm_router.bench --candidate litellm \
     --gateway "http://127.0.0.1:${port}" --profile litellm.yaml \
     --model lab-primary --paid-model lab-paid --expect-fallback \
     --output reports/litellm.json
@@ -56,10 +58,10 @@ elif [[ "$candidate" == "bifrost" ]]; then
   image="maximhq/bifrost@sha256:5ec9873acaf1687556b6e4dd854b92b539d9debf87a5a683b66338648b84d3c8"
   port=8080
   docker run -d --name "$container" --network host \
-    -v "$PWD/router_lab/profiles/bifrost.json:/app/data/config.json:ro" \
+    -v "$PWD/labs/llm_router/profiles/bifrost.json:/app/data/config.json:ro" \
     "$image" > /dev/null
-  python3 -m router_lab.wait --url "http://127.0.0.1:${port}/v1/models" --token sk-lab-synthetic-only --seconds 150
-  python3 -m router_lab.bench --candidate bifrost \
+  python3 -m labs.llm_router.wait --url "http://127.0.0.1:${port}/v1/models" --token sk-lab-synthetic-only --seconds 150
+  python3 -m labs.llm_router.bench --candidate bifrost \
     --gateway "http://127.0.0.1:${port}" --profile bifrost.json \
     --model lab-primary/lab-model --paid-model lab-paid/lab-model --expect-fallback \
     --output reports/bifrost.json
@@ -70,8 +72,8 @@ elif [[ "$candidate" == "portkey" ]]; then
   docker run -d --name "$container" --network host \
     -e TRUSTED_CUSTOM_HOSTS=127.0.0.1,localhost \
     "$image" > /dev/null
-  python3 -m router_lab.wait --url "http://127.0.0.1:${port}/public/" --token sk-lab-synthetic-only --seconds 150
-  python3 -m router_lab.bench --candidate portkey \
+  python3 -m labs.llm_router.wait --url "http://127.0.0.1:${port}/public/" --token sk-lab-synthetic-only --seconds 150
+  python3 -m labs.llm_router.bench --candidate portkey \
     --gateway "http://127.0.0.1:${port}" --profile header-config \
     --model lab-model --paid-model lab-model --expect-fallback \
     --output reports/portkey.json
@@ -83,8 +85,8 @@ else
     -e VLLM_BASE_URL=http://127.0.0.1:19100/v1 \
     -e VLLM_MODELS=lab-model \
     "$image" > /dev/null
-  python3 -m router_lab.wait --url "http://127.0.0.1:${port}/v1/models" --token sk-lab-synthetic-only --seconds 120
-  python3 -m router_lab.bench --candidate gomodel \
+  python3 -m labs.llm_router.wait --url "http://127.0.0.1:${port}/v1/models" --token sk-lab-synthetic-only --seconds 120
+  python3 -m labs.llm_router.bench --candidate gomodel \
     --gateway "http://127.0.0.1:${port}" --profile env-vllm \
     --model vllm/lab-model \
     --output reports/gomodel.json

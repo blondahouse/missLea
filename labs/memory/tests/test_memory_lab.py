@@ -4,8 +4,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from lab.benchmark import load_scenario, run_scenario
-from lab.memory import SQLiteBaseline
+from labs.memory.benchmark import load_scenario, run_scenario
+from labs.memory.memory import SQLiteBaseline
 
 
 SCENARIO = Path(__file__).resolve().parents[1] / "scenarios" / "memory_v1.json"
