@@ -18,7 +18,10 @@ class RouterProfilesTests(unittest.TestCase):
                 f"http://127.0.0.1:{port}",
             )
             self.assertEqual(providers[name]["keys"][0]["value"], "sk-lab-synthetic-only")
-        self.assertIs(data["config_store"]["enabled"], False)
+        self.assertIs(data["config_store"]["enabled"], True)
+        self.assertTrue(data["client"]["enforce_auth_on_inference"])
+        self.assertTrue(data["governance"]["auth_config"]["is_enabled"])
+        self.assertEqual(len(data["governance"]["virtual_keys"]), 2)
 
     def test_no_provider_secrets_in_profiles(self):
         config = (ROOT / "profiles/bifrost.json").read_text()

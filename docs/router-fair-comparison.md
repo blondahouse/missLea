@@ -27,7 +27,7 @@ Every gateway is configured with **three actual independent loopback endpoints**
 
 The gateway-native configuration is intentionally visible rather than forced to use identical configuration files:
 - LiteLLM: server-side aliases/fallbacks.
-- Bifrost: request-level fallback list of only free upstreams.
+- Bifrost: request-level fallback list of only free upstreams, with SQLite-backed governance and two scoped synthetic virtual keys in the hardened fixture.
 - GoModel: virtual model with priority failover to vLLM and SGLang mocks; separate OpenAI-compatible mock-paid provider.
 - Portkey: documented `x-portkey-config` with local hardcoded targets. **Portkey remains security-blocked**.
 

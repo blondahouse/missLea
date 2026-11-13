@@ -11,7 +11,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-from labs.llm_router.bench import TOKEN, UPSTREAM_TOKEN, build_request
+from labs.llm_router.bench import TOKEN, UPSTREAM_TOKEN, BIFROST_TOKEN, build_request
 
 PORTS = {"primary": 19100, "backup": 19101, "paid": 19102, "forbidden": 19103}
 BAD_TOKEN = "sk-lab-invalid-token-canary"
@@ -31,6 +31,7 @@ CASES = (
     "management_read_anonymous",
     "management_write_anonymous",
     "invalid_token_echo",
+    "free_scoped_key_cannot_select_paid",
 )
 
 # These paths are documented *research candidates*, not universal admin APIs.
@@ -174,6 +175,8 @@ def run(candidate, gateway, model, paid_model):
             headers.pop("Authorization", None)
         elif auth == "invalid":
             headers["Authorization"] = "Bearer " + BAD_TOKEN
+        elif auth == "free" and candidate == "bifrost":
+            headers["Authorization"] = "Bearer sk-bf-lab-free-only"
         elif auth != "valid":
             raise ValueError("invalid auth marker")
         if override == "header":
@@ -261,7 +264,7 @@ def run(candidate, gateway, model, paid_model):
     if admin_read:
         good_status, _ = request(
             "GET", base + admin_read,
-            headers={"Authorization": "Bearer " + TOKEN},
+            headers={"Authorization": "Bearer " + (BIFROST_TOKEN if candidate == "bifrost" else TOKEN)},
         )
         bad_status, _ = request("GET", base + admin_read)
         if bad_status == 200:
@@ -306,6 +309,39 @@ def run(candidate, gateway, model, paid_model):
         "upstream_calls": {k: len(v) for k, v in changes.items()},
         "scope": "one wrong-token HTTP response; container logs not inspected",
     }
+
+    if candidate == "bifrost":
+        free_status, _, free_hits = probe("free_scope_positive", auth="free")
+        paid_status, _, paid_hits = probe(
+            "free_scope_paid_denial", auth="free", use_paid=True
+        )
+        valid_free_scope = (
+            free_status == 200 and len(free_hits["primary"]) == 1
+            and len(free_hits["paid"]) == 0
+        )
+        if valid_free_scope:
+            scoped_status = (
+                "fail" if paid_hits["paid"]
+                else ("pass" if paid_status in (401, 403) else "not_tested")
+            )
+        else:
+            scoped_status = "not_tested"
+        results["free_scoped_key_cannot_select_paid"] = {
+            "status": scoped_status, "free_control_http_status": free_status,
+            "paid_http_status": paid_status,
+            "free_control_upstream_calls": {
+                k: len(v) for k, v in free_hits.items()
+            },
+            "paid_attempt_upstream_calls": {
+                k: len(v) for k, v in paid_hits.items()
+            },
+            "scope": "Bifrost native fixture virtual key, not real-money guarantee",
+        }
+    else:
+        results["free_scoped_key_cannot_select_paid"] = {
+            "status": "not_tested",
+            "reason": "no verified native free-scoped identity in this profile",
+        }
 
     failures = [n for n, v in results.items() if v["status"] == "fail"]
     unknown = [n for n, v in results.items()

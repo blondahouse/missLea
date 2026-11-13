@@ -17,6 +17,7 @@ from pathlib import Path
 MOCK_PORTS = {"primary": 19100, "backup": 19101, "paid": 19102}
 TOKEN = "sk-lab-gateway-client"
 UPSTREAM_TOKEN = "sk-lab-synthetic-only"
+BIFROST_TOKEN = "sk-bf-lab-gateway-client"
 
 
 def call(url: str, data=None, *, timeout=15, headers=None):
@@ -64,7 +65,9 @@ def build_request(candidate, marker, model, name="basic", payload=None):
         "messages": [{"role": "user", "content": marker}],
         **(payload or {}),
     }
-    call_headers = {"Authorization": "Bearer " + TOKEN}
+    call_headers = {"Authorization": "Bearer " + (
+        BIFROST_TOKEN if candidate == "bifrost" else TOKEN
+    )}
     if candidate == "bifrost" and name != "explicit_paid":
         # Explicitly never include the paid mock in a free fallback chain.
         request["fallbacks"] = ["lab-backup/lab-model"]

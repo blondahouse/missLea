@@ -1,10 +1,12 @@
 {
   "client": {
     "drop_excess_requests": false,
-    "enable_logging": false
+    "enable_logging": false,
+    "enforce_auth_on_inference": true
   },
   "config_store": {
-    "enabled": false
+    "enabled": true,
+    "type": "sqlite"
   },
   "providers": {
     "lab-primary": {
@@ -79,5 +81,49 @@
         }
       }
     }
+  },
+  "governance": {
+    "auth_config": {
+      "is_enabled": true,
+      "admin_username": "lab-admin",
+      "admin_password": "sk-lab-admin-password",
+      "disable_auth_on_inference": true
+    },
+    "virtual_keys": [
+      {
+        "id": "vk-lab-all",
+        "name": "lab-gateway-client",
+        "value": "sk-bf-lab-gateway-client",
+        "is_active": true,
+        "allow_all_providers": true
+      },
+      {
+        "id": "vk-lab-free",
+        "name": "lab-free-only",
+        "value": "sk-bf-lab-free-only",
+        "is_active": true,
+        "allow_all_providers": false,
+        "provider_configs": [
+          {
+            "provider": "lab-primary",
+            "allowed_models": [
+              "*"
+            ],
+            "key_ids": [
+              "*"
+            ]
+          },
+          {
+            "provider": "lab-backup",
+            "allowed_models": [
+              "*"
+            ],
+            "key_ids": [
+              "*"
+            ]
+          }
+        ]
+      }
+    ]
   }
 }

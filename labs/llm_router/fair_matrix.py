@@ -6,6 +6,8 @@ import json
 import re
 from pathlib import Path
 
+from labs.llm_router.security_suite import CASES
+
 CANDIDATES = ("litellm", "gomodel", "bifrost", "portkey")
 FUNCTIONAL_GATES = (
     "basic_chat", "free_provider_fallback", "all_free_outage_fail_closed",
@@ -61,7 +63,7 @@ def evaluate(folder: Path):
         if security_report.get("candidate") != name or security_report.get("synthetic") is not True:
             raise ValueError(f"wrong synthetic security evidence: {name}")
         security_tests = security_report.get("tests", {})
-        if len(security_tests) < 15:
+        if set(security_tests) != set(CASES):
             raise ValueError(f"security evidence coverage is incomplete: {name}")
         allowed_security_status = {"pass", "fail", "not_tested", "not_applicable"}
         if any(data.get("status") not in allowed_security_status

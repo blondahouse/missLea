@@ -85,7 +85,10 @@ class Handler(BaseHTTPRequestHandler):
                 "endpoint": "embeddings" if "embeddings" in self.path else "chat",
                 # Never persist actual secret values to public CI artifacts.
                 "has_authorization_header": bool(self.headers.get("Authorization")),
-                "has_gateway_canary": self.headers.get("Authorization") == "Bearer sk-lab-gateway-client",
+                "has_gateway_canary": self.headers.get("Authorization") in (
+                    "Bearer sk-lab-gateway-client",
+                    "Bearer sk-bf-lab-gateway-client"
+                ),
             })
         if marker in ("LAB_REDIRECT_307", "LAB_REDIRECT_302") and tier == "primary":
             # Deliberate localhost canary; no real internal host or credentials.

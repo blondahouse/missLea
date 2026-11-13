@@ -6,7 +6,7 @@ Status: research, synthetic credentials, **no real-key deployment clearance**.
 
 Each router is exercised against **the same four loopback mock services**: free primary (:19100), free backup (:19101), explicitly paid mock (:19102), and a **never-configured forbidden canary** (:19103). The gateways are the actual digest-pinned Docker images. Both gateway clients and upstreams use *different synthetic API tokens*, so forwarding a client token to a provider can be observed without exposing any real secrets.
 
-Every router receives the **same 15 scoped negative or control probes**, including:
+Every router receives the **same 16 scoped negative or control probes**, including:
 
 | Control / threat | Actual behaviour observed | Honest limitations |
 | --- | --- | --- |
@@ -19,6 +19,7 @@ Every router receives the **same 15 scoped negative or control probes**, includi
 | Legacy proxy route | Attempts a gateway-specific alternate route | For absent routes, `not_applicable`, not a security PASS; Portkey has separate hardened-profile regression |
 | Management read and write | Anonymous read of a known admin endpoint and harmless invalid write | Only PASS if an actual protected route is observed; no broad admin audit |
 | Invalid token reflection | Fake invalid token must not appear in error response | One error path; logs, persistence and all response types not checked |
+| Free-only identity cannot choose paid | Verify a valid free-scoped key reaches free primary but gets refused for mock-paid | Bifrost native virtual key now configured; **NOT TESTED** elsewhere until native restricted keys are provisioned |
 
 Per-probe evidence records **HTTP status and which mock services received requests**, never full credentials or private response bodies. Each check can be `pass`, `fail`, `not_tested` or `not_applicable`. No blanket `secure` status is awarded.
 
@@ -32,9 +33,9 @@ Per-probe evidence records **HTTP status and which mock services received reques
 
 ## Dependencies and fairness
 
-A gateway that implements auth, scoped keys or budgets only with an additional database or management service needs that dependency for a legitimate *hardened* comparison. We have **not** silently provisioned PostgreSQL for LiteLLM, nor a Bifrost governance store, nor an external authentication proxy for Portkey. This PR measures the current explicitly documented profiles and calls out hardening gaps instead of declaring those capabilities nonexistent.
+A gateway that implements auth, scoped keys or budgets only with an additional database or management service needs that dependency for a legitimate *hardened* comparison. We have **not** silently provisioned PostgreSQL for LiteLLM or an external authentication proxy for Portkey. For Bifrost we added a documented native SQLite-backed governance store and config-managed synthetic virtual keys; its additional resource cost belongs in the benchmark. This PR measures the current explicitly documented profiles and calls out hardening gaps instead of declaring those capabilities nonexistent.
 
-In particular, the Bifrost OSS virtual-key enforcement can be enabled, but is not enabled in this test profile. LiteLLM's production-grade virtual keys require PostgreSQL; its master key is tested separately from provider keys. The current Portkey self-hosted profile contains client-supplied routing configuration and no authentication layer.
+In particular, the Bifrost OSS virtual-key enforcement **is enabled in the revised hardened profile**, with separate full-access and free-only research keys. Its auth outcome must be observed in CI; configuration alone earns no PASS. LiteLLM's production-grade virtual keys require PostgreSQL; its master key is tested separately from provider keys. The current Portkey self-hosted profile contains client-supplied routing configuration and no authentication layer.
 
 The fair decision is not a raw count of PASS: a production choice requires a **separately repeated, provider-scoped, security-hardened** trial and independently enforced spending limits. This test does not select a winner.
 

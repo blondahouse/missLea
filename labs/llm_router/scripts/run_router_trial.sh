@@ -68,7 +68,7 @@ elif [[ "$candidate" == "bifrost" ]]; then
   docker run -d --name "$container" --network host \
     -v "$PWD/labs/llm_router/profiles/bifrost.json:/app/data/config.json:ro" \
     "$image" > /dev/null
-  python3 -m labs.llm_router.wait --url "http://127.0.0.1:${port}/v1/models" --token sk-lab-gateway-client --seconds 150
+  python3 -m labs.llm_router.wait --url "http://127.0.0.1:${port}/v1/models" --token sk-bf-lab-gateway-client --seconds 150
   cold_ready_ms=$(( $(date +%s%3N) - start_ms ))
   python3 -m labs.llm_router.bench --candidate bifrost \
     --gateway "http://127.0.0.1:${port}" --profile bifrost.json \

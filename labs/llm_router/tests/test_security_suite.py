@@ -14,7 +14,7 @@ def ev(**kwargs):
 
 class SecuritySuiteTests(unittest.TestCase):
     def test_same_negative_scenarios_are_required_for_all(self):
-        self.assertGreaterEqual(len(CASES), 15)
+        self.assertEqual(len(CASES), 16)
 
     def test_missing_auth_reaching_upstream_is_failure(self):
         self.assertEqual(
