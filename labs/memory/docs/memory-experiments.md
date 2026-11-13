@@ -31,7 +31,7 @@ The SQLite baseline deliberately has no LLM and no semantic embedding. A special
 - Run a second, private held-out synthetic suite before adopting any winner to avoid optimizing for the public test fixtures.
 - Combinations must justify added cost, complexity, and migration risk against individual components.
 - Test crash/restart, inconsistent updates, export/restore, privacy, and safe rollback before a production migration.
-- Do not put personal or TinyFund operational data into public repositories or unreviewed third-party memory services.
+- Do not put personal or operational data from the running Miss Lea instance into public repositories or unreviewed third-party memory services.
 
 ## Next experiments (not yet implemented)
 

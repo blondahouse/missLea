@@ -2,7 +2,7 @@
   "schema_version": 1,
   "name": "memory_v1_synthetic_project_history",
   "synthetic": true,
-  "description": "Entirely fabricated project events. No TinyFund conversations or personal data.",
+  "description": "Entirely fabricated project events. No real Miss Lea conversations or personal data.",
   "events": [
     {
       "id": "e01",
