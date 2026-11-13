@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        candidate: [litellm, gomodel]
+        candidate: [litellm, gomodel, bifrost, portkey]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

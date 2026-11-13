@@ -4,14 +4,14 @@
 
 Select an existing, replaceable router that can direct Miss Lea to independent **free-tier** model APIs while using **OpenRouter only as a paid pool**. A route's price class is a **policy**, not a property inferred from a model name. OpenRouter `:free` endpoints are excluded from the intended free-provider pool. Never send experimental traffic to real paid endpoints.
 
-Four candidates are tracked. Our first executable profiles are **LiteLLM** (three synthetic upstreams) and **GoModel** (one synthetic upstream); Portkey Gateway and Bifrost remain **not yet exercised**. Do not interpret runnable profiles as a final ranking.
+Four candidates are tracked. All four now have synthetic-run profiles; their actual CI outcomes and limitations are recorded in the comparison report. Configurations differ: GoModel has no fallback in this profile. A runnable profile is not a production endorsement.
 
 | Candidate | Runtime | Status in this PR | Research question |
 | --- | --- | --- | --- |
 | [LiteLLM](https://github.com/BerriAI/litellm) | Python + optional PostgreSQL | Docker profile, synthetic provider fallback | Breadth vs footprint, auth and budget dependency |
 | [GoModel](https://github.com/ENTERPILOT/GoModel) | Go | Docker profile, synthetic basic access | Footprint, feature completeness, governance |
-| [Bifrost](https://github.com/maximhq/bifrost) | Go | Catalogued, not tested | Key/budget governance, failover, management overhead |
-| [Portkey Gateway](https://github.com/Portkey-AI/gateway) | JS runtime | Catalogued, not tested | Low memory, OSS feature availability, outbound host controls |
+| [Bifrost](https://github.com/maximhq/bifrost) | Go | Docker profile, three synthetic custom upstreams | Key/budget governance, failover, management overhead |
+| [Portkey Gateway](https://github.com/Portkey-AI/gateway) | JS runtime | Docker profile, fixed local routing targets | Low memory, OSS feature availability, outbound host controls |
 
 ## What the synthetic experiment proves
 
@@ -32,11 +32,13 @@ A candidate only passes the *critical* gate when basic chat reaches the primary 
 ```bash
 bash scripts/run_router_trial.sh litellm
 bash scripts/run_router_trial.sh gomodel
+bash scripts/run_router_trial.sh bifrost
+bash scripts/run_router_trial.sh portkey
 ```
 
 Requires Docker Engine/desktop with Linux containers, Python 3.11+, and the ability to fetch public images. The script uses `--network host` (Linux only); on Docker Desktop the host-network feature depends on host configuration, so run through a Linux VM or GitHub Actions if unavailable.
 
-The script starts local mocks on ports 19100–19102 and the selected gateway on 4000 (LiteLLM) or 8080 (GoModel), cleans them up on exit, and writes JSON reports to `reports/` (gitignored). Review scripts before running. **Never introduce real provider keys to these profiles.**
+The script starts local mocks on ports 19100–19102 and the selected gateway on 4000 (LiteLLM), 8080 (GoModel/Bifrost), or 8787 (Portkey), cleans them up on exit, and writes JSON reports to `reports/` (gitignored). Review scripts before running. **Never introduce real provider keys to these profiles.**
 
 ### Real provider acceptance (future PR)
 
@@ -46,4 +48,4 @@ Free tiers may change, require human registration, and may apply data-use terms 
 
 ### Security
 
-All public CI uses fabricated keys and endpoints on loopback only. Running gateway images can fetch updates/telemetry under upstream defaults, so this is **not an air-gapped test**. Pin and review external dependencies for production; do not expose gateway admin interfaces publicly. In particular, research current Portkey host-routing and SSRF disclosures before using it with credentials.
+All public CI uses fabricated keys and endpoints on loopback only. Running gateway images can fetch updates/telemetry under upstream defaults, so this is **not an air-gapped test**. Pin and review external dependencies for production; do not expose gateway admin interfaces publicly. In particular, Portkey has publicly reported SSRF defects including CVE-2026-82270 affecting versions through 1.15.2. This lab uses only synthetic credentials and known fixed loopback targets; successful local routing does not mitigate this risk or authorize real-key deployment. See [security report](https://github.com/advisories/ghsa-rv66-rgwx-xfrj).
