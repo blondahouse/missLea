@@ -41,3 +41,22 @@ jobs:
             reports/*-metrics.txt
             reports/*-image.txt
           if-no-files-found: warn
+  portkey-security-diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Inspect pinned Portkey with localhost-only synthetic canary
+        run: bash scripts/run_portkey_security_trial.sh
+      - name: Publish the security verdict (not a production approval)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: portkey-security-diagnostic
+          path: |
+            reports/portkey-security.json
+            reports/portkey-security-image.txt
+          if-no-files-found: warn

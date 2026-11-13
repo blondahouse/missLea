@@ -37,3 +37,13 @@ Latency samples are from independent GitHub Actions runner jobs and are **not** 
 
 No selected winner or production deployment is implied. All three multi-upstream configurations (LiteLLM, Bifrost and Portkey) passed the functional fallbacks; GoModel fallback was **not configured or tested**. Portkey has unresolved public security concerns that require independent investigation before real-key trials. Next: uniform cold-start and resource measurements, real free-provider interoperability under bounded keys, and verified spending controls.
 
+
+## Security regression diagnostic (Portkey)
+
+A dedicated CI job exercises the **pinned** Portkey image with fake credentials and a local-only canary provider. It deliberately configures `TRUSTED_CUSTOM_HOSTS=api.openai.com`, then compares the protected `/v1/chat/completions` route with the deprecated `/v1/proxy/v1/chat/completions` route when both are asked to reach the *same untrusted localhost mock*. Expected secure behaviour is rejection by **both** routes and no traffic to the mock.
+
+The diagnostic reports one of `VULNERABLE`, `NOT_REPRODUCED` or `INCONCLUSIVE`. **A successful CI execution is not a successful security gate**: if the published report says `VULNERABLE`, Portkey is disqualified from real-key use until an upstream fix is verified and this test reports `NOT_REPRODUCED`. The CI warning and artifact make this visible without conflating diagnostic execution with production eligibility.
+
+The original official advisory [CVE-2025-66405](https://github.com/Portkey-AI/gateway/security/advisories/GHSA-hhh5-2cvx-vmfp) lists 1.14.0 as a fix for the first version of this issue. A later public report, [CVE-2026-82270 / Issue #1718](https://github.com/Portkey-AI/gateway/issues/1718), identifies missing validation on the deprecated route. A separate [CVE-2026-110719](https://www.tenable.com/cve/CVE-2026-110719) identifies unsafe trusted-host defaults. Current upstream source (2026-11-13) still contains both the unvalidated legacy route and localhost defaults. None of these observations is proof of **all** possible SSRF paths: redirects, other providers and authentication are outside this diagnostic.
+
+Run on a disposable Linux host with Docker and Python 3.11+: `bash scripts/run_portkey_security_trial.sh`. **Never run this diagnostic against a real gateway or send real tokens.**
