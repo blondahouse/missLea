@@ -41,7 +41,7 @@ Every lab owns its source code, synthetic fixtures, scripts, tests and findings.
 
 ## Identity & Capability Hub (offline-only foundation)
 
-Explore a resource inventory, independent account-holder/operator/billing/recovery fields, exact-scope revocable grants, sanitized audit and default-inactive recovery. The first implementation is **only a synthetic local fixture**, not an authenticated service, secret vault, external account integration or agent deployment. See [Identity Lab](labs/identity/README.md).
+Explore a resource inventory, independent account-holder/operator/billing/recovery fields, exact-scope revocable grants, sanitized audit and default-inactive recovery. The first implementation is **only a synthetic local fixture**, not an authenticated service, secret vault or agent deployment. A [Cloudflare service-identity study](labs/identity/cloudflare-study.md) adds an offline account-token lifecycle simulation and an explicitly authorized **read-only** Cloudflare token-status check; neither constitutes live deployment or proven account independence. See [Identity Lab](labs/identity/README.md).
 
 ```bash
 python -m labs.identity.cli demo
