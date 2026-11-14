@@ -64,7 +64,7 @@ def run():
             attempted_deploy = True
             record["resource_id"] = name
             output = command([str(binary), "deploy", "--config", str(config)],
-                             cwd=root, timeout=180)
+                             cwd=root, timeout=180, combined=True)
             url = worker_url(output, name)
             request = Request(url, data=json.dumps({"values": VALUES}).encode("utf-8"),
                               method="POST", headers={
