@@ -17,6 +17,10 @@ labs/
     scenarios/
     tests/
     docs/
+  identity/           # Identity & Capability Hub synthetic foundation
+    hub.py
+    cli.py
+    tests/
   compute/            # E2B, Cloudflare Workers and Cloud Run Jobs (opt-in)
     cli.py
     worker/
@@ -34,6 +38,14 @@ docs/
 ```
 
 Every lab owns its source code, synthetic fixtures, scripts, tests and findings. Shared repository-wide policy and CI stay at the root. Python package names are deliberately lowercase; the layout also works on case-sensitive filesystems.
+
+## Identity & Capability Hub (offline-only foundation)
+
+Explore a resource inventory, independent account-holder/operator/billing/recovery fields, exact-scope revocable grants, sanitized audit and default-inactive recovery. The first implementation is **only a synthetic local fixture**, not an authenticated service, secret vault, external account integration or agent deployment. See [Identity Lab](labs/identity/README.md).
+
+```bash
+python -m labs.identity.cli demo
+```
 
 ## How we choose components
 
