@@ -36,6 +36,17 @@ python -m unittest discover -s labs -t . -p 'test_*.py' -v
 
 Real integration will need independently authenticated callers, protected secrets and an isolated broker, provider-specific least-privilege permissions, reliable recovery and single-active-instance rules. Do **not** give this prototype a real API key, connect it to TinyFund or expose it as an agent tool.
 
+## Cloudflare service identity — next research slice
+
+[Cloudflare service identity protocol](cloudflare-study.md) compares an account-owned token scoped to an **existing Worker (Editor)** with a wider Workers product **Admin** token required for the current Compute Lab's create/delete test.
+
+```bash
+python -m labs.identity.cloudflare_cli simulate
+python -m labs.identity.cloudflare_cli roles existing_worker
+```
+
+The optional real token *status verification* is read-only, requires two explicit flags, and does **not** prove the actual token's permissions or ownership. No live accounts or secrets are used by GitHub CI.
+
 ## Next narrowly scoped experiment
 
-Evaluate how an independently provisioned Cloudflare account can delegate the minimum Workers permissions to a service identity, rotate or revoke access and recover after a compute-host change. First document any legally required human bootstrap. No account registration, financial commitment or live API call is authorized by this PR.
+With separate authorization and a lawfully provisioned **dedicated** account, conduct a live read-only service-token verification and controlled existing-Worker deployment. Test real credential replacement and host fencing only after independently authenticated provisioning and secret custody are available. No account registration, financial commitment or provider mutation is authorized by this PR.
