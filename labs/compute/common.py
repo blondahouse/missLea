@@ -38,14 +38,14 @@ def parse_result(output):
     raise ValueError("No synthetic result marker was observed")
 
 
-def command(args, *, timeout=180, cwd=None, input=None):
+def command(args, *, timeout=180, cwd=None, input=None, combined=False):
     result = subprocess.run(args, cwd=cwd, input=input, text=True,
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                             timeout=timeout, check=False)
     if result.returncode != 0:
         # Do not include stderr, which can expose CLI configuration or credentials.
         raise RuntimeError(f"{args[0]} exited with status {result.returncode}")
-    return result.stdout + "\n" + result.stderr
+    return result.stdout + ("\n" + result.stderr if combined else "")
 
 
 def report(provider):
