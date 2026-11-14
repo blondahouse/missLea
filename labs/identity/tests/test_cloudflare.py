@@ -18,8 +18,10 @@ from labs.identity.cloudflare_service import (
     CloudflareAdmissionError, role_guidance, verify_service_identity,
 )
 from labs.identity.cloudflare_simulation import (
-    MockCloudflareAccount, MockProviderDenied, MockSecretStore, synthetic_lifecycle,
+    CloudflareMockBroker, MockCloudflareAccount, MockProviderDenied,
+    MockSecretStore, synthetic_lifecycle,
 )
+from labs.identity.hub import AccessDenied, IdentityHub
 
 ACCOUNT = "a" * 32
 TOKEN_ID = "b" * 32
@@ -134,6 +136,28 @@ class CloudflareLifecycleTests(unittest.TestCase):
         provider.revoke(token)
         with self.assertRaises(MockProviderDenied):
             provider.operate(secret=token, operation="delete", worker="new-worker")
+
+    def test_local_worker_allowlist_still_blocks_admin_token(self):
+        provider = MockCloudflareAccount()
+        secret = provider.provision(role="admin")
+        store = MockSecretStore()
+        store.set("operator", secret)
+        with IdentityHub(execution_enabled=True, clock=lambda: 1000) as hub:
+            hub.register_resource(
+                id="lab-only", provider="cloudflare", kind="compute",
+                legal_holder="synthetic", operator="synthetic",
+                billing_party="synthetic", recovery_authority="synthetic",
+                human_bootstrap="synthetic", transferability="unknown",
+                credential_handle="operator")
+            hub.grant(subject="lea", resource_id="lab-only", action="compute.run",
+                      issued_by="trusted-test", expires_at=2000)
+            broker = CloudflareMockBroker(hub, store, provider,
+                                          allowed_worker="misslea-example")
+            with self.assertRaises(AccessDenied):
+                broker.deploy(subject="lea", resource_id="lab-only", worker="outside")
+            broker.deploy(subject="lea", resource_id="lab-only", worker="misslea-example")
+            self.assertNotIn("outside", provider.workers)
+            self.assertEqual(provider.workers["misslea-example"], 1)
 
     def test_fake_secret_store_denies_missing_handle(self):
         store = MockSecretStore()
