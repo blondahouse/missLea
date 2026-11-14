@@ -97,12 +97,15 @@ class CloudflareMockBroker:
     """Exactly scoped local grants plus separate fake Cloudflare permission checks."""
 
     def __init__(self, hub: IdentityHub, store: MockSecretStore,
-                 cloudflare: MockCloudflareAccount):
+                 cloudflare: MockCloudflareAccount, *, allowed_worker: str):
         self._hub = hub
         self._store = store
         self._cloudflare = cloudflare
+        self._allowed_worker = allowed_worker
 
     def deploy(self, *, subject: str, resource_id: str, worker: str) -> None:
+        if worker != self._allowed_worker:
+            raise AccessDenied("Worker outside local capability scope")
         if not self._hub.authorize(
             subject=subject, resource_id=resource_id, action="compute.run"
         ):
@@ -140,7 +143,7 @@ def synthetic_lifecycle() -> dict:
                 action="compute.run", issued_by="trusted-bootstrap",
                 expires_at=2000,
             )
-            broker = CloudflareMockBroker(hub, store, cloudflare)
+            broker = CloudflareMockBroker(hub, store, cloudflare, allowed_worker="misslea-example")
             broker.deploy(subject="miss-lea-lab", resource_id="cloudflare-compute-lab",
                           worker="misslea-example")
             first_pass = cloudflare.workers["misslea-example"] == 1
@@ -175,7 +178,7 @@ def synthetic_lifecycle() -> dict:
         # This reenactment requires an explicit trusted harness admission.
         # Real identity verification/fencing is still NOT implemented.
         with IdentityHub(backup, execution_enabled=True, clock=lambda: now) as restored:
-            recovered_broker = CloudflareMockBroker(restored, store, cloudflare)
+            recovered_broker = CloudflareMockBroker(restored, store, cloudflare, allowed_worker="misslea-example")
             recovered_broker.deploy(
                 subject="miss-lea-lab", resource_id="cloudflare-compute-lab",
                 worker="misslea-example")
