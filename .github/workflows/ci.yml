@@ -19,6 +19,8 @@ jobs:
           python-version: '3.11'
       - name: Unit tests (stdlib only)
         run: python -m unittest discover -s labs -t . -p 'test_*.py' -v
+      - name: Validate Compute Lab Worker syntax (no cloud access)
+        run: node --check labs/compute/worker/worker.mjs
       - name: Run synthetic memory benchmark
         run: python -m labs.memory.cli run --candidate sqlite --scenario labs/memory/scenarios/memory_v1.json --output memory-report.json
       - name: Validate restoration report

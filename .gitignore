@@ -18,3 +18,7 @@ __pycache__/
 reports/
 *.sqlite
 *.db
+
+# Cloudflare Wrangler local dependencies and state
+node_modules/
+.wrangler/

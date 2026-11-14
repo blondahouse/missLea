@@ -11,6 +11,10 @@ labs/
     scenarios/
     tests/
     docs/
+  compute/            # E2B, Cloudflare Workers and Cloud Run Jobs (opt-in)
+    cli.py
+    worker/
+    tests/
   llm_router/         # Gateway selection, synthetic providers and security probes
     bench.py
     profiles/
@@ -60,6 +64,14 @@ bash labs/llm_router/scripts/run_portkey_security_trial.sh
 ```
 
 The diagnostic may exit successfully while reporting `VULNERABLE`; that is a successfully observed security defect, **not** a security pass.
+
+## Compute Lab (no remote execution by default)
+
+Explore three different ephemeral execution classes without creating a Compute Router or touching the running Miss Lea. See [Compute Lab](labs/compute/README.md). Offline checks run as part of the standard unittest command. Remote trials need provider credentials and explicit `--live --acknowledge-cost`; no CI workflow uses real accounts.
+
+```bash
+python -m labs.compute.cli list
+```
 
 ## Research principles
 
