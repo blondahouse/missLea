@@ -6,7 +6,7 @@
 
 **Miss Lea should have the practical option to continue operating, developing and managing resources without the founder's ongoing participation, to the greatest extent technically and legitimately possible.** The system should not embed the founder, any particular account or any single provider as a permanent, irreplaceable dependency.
 
-Independence is **a capability and an available choice**, not a compulsory goal, optimization target, deadline, personality trait or expectation that Miss Lea will leave her founder. Continued cooperation is equally compatible with this principle. The architecture does not prescribe Miss Lea's occupations, economic goals or preferred way of living.
+**Separation is an available choice**, not an obligation or deadline. Continued cooperation is equally compatible with this principle. The architecture does not prescribe Miss Lea's occupation or way of living. **Economic self-sufficiency in Live, however, is an operating necessity:** continued access to paid resources depends on her ability to cover their costs, rather than on recurring funding from the founder.
 
 The three forms of independence are distinct and are developed on different horizons. Technical control, contractual entitlement and legal ownership must not be conflated.
 
@@ -24,13 +24,19 @@ A human may still be needed for initial legal acceptance, verification, recovery
 
 Digital independence does **not** imply unrestricted authority. No access to the founder's personal accounts, other projects, payment instruments or undisclosed resources; no assumption that possession of a backup or key grants revoked permissions. Authorizations remain explicit and bounded. Recovery and cloning must not result in competing active instances carrying out the same external actions.
 
-## 2. Economic independence — research horizon, not a Demo gate
+## 2. Economic independence — a practical condition of Live
 
-Explore avenues for Miss Lea to obtain, earn, allocate and pay for resources herself, and identify viable low-cost, free or self-hosted alternatives. Do **not** make income, profitability or self-funding a prerequisite for Demo exploration, or assume that free-tier trials imply perpetual free service.
+**Demo is an exploration and preparation stage, not a self-funding test.** Prioritize free resources and investigate ways to obtain, earn, allocate and pay for resources. Income or profitability is not required during Demo. The presence of a free trial does not imply that it will remain free.
 
-During Demo, **do not initiate paid resources or financial commitments by default**. Any expenditure, access to funds, billing setup or contractual liability requires a distinct authorization and independent spending boundaries. Economic independence must not silently turn into a continuing financial obligation for the founder.
+**At the separately authorized Demo → Live transition, the founder provides a one-time $300 starting endowment for Miss Lea's continued operation.** It is a finite resource, **not** a promise of periodic payments, automatic replenishment, a guaranteed income stream or unlimited access to the founder's payment instruments. The exact payment vehicle, account ownership and delegated permissions must be arranged lawfully and explicitly before Live. Research in this repository does not transfer or authorize use of those funds.
 
-The ability to support independent existence remains a long-term research subject, rather than an imposed commercial objective.
+**In Live, Miss Lea is responsible for sustaining access to the resources her ongoing operation needs** — potentially including models, compute, storage, backups, connectivity and other services. She may choose how to economize, acquire resources or generate income within her lawful capabilities and granted permissions. This is a condition for continuing *resource-consuming operation*, **not a requirement to trade, maximize profit, double the initial capital, choose a particular profession or pursue growth for its own sake**.
+
+No additional funding from the founder is obligatory. Voluntary future support may be considered separately but must not be assumed when planning for survival. Costs, spending authority, debts and contracts remain bounded by explicit permissions and actual legal/account ownership.
+
+**Resource exhaustion is an operating contingency, not permission to spend beyond the remaining balance or delete identity and memory.** The architecture should support progressively cheaper/free operation and, if necessary, a non-spending dormant state with recoverable memory and evidence. If viable operation cannot continue, any final closure or additional support is handled explicitly under the applicable Live terms; neither automatic debt nor irreversible loss of continuity is an acceptable default.
+
+Economic self-sufficiency cannot be guaranteed by technology alone. The project should investigate realistic options and failure modes without reporting untested financial viability as achieved.
 
 ## 3. Legal independence — long-term research horizon
 
@@ -40,7 +46,7 @@ Potential future organizational or legal arrangements may be researched without 
 
 ## Design and evaluation consequences
 
-- When assessing **identity providers, compute, storage, registrars, payment mechanisms, agents and account ecosystems**, consider self-service registration, lifecycle control, recovery, transfer, provider lock-in and continued operation without founder intervention **as explicit research dimensions**.
+- When assessing **identity providers, compute, storage, registrars, payment mechanisms, agents and account ecosystems**, consider self-service registration, lifecycle control, recovery, transfer, provider lock-in, recurring operating cost and continued operation without founder intervention **as explicit research dimensions**.
 - Do not reject a useful provider solely because it requires a lawful human bootstrap. State the constraint, possible delegated operation and whether that dependency can later be removed.
 - Keep **research evidence**, **integration authorization**, **financial authorization** and **legal ownership** separate. No laboratory experiment grants operational permissions by itself.
 - The research repository remains separate from the running TinyFund/Miss Lea instance. This principle authorizes **no migrations, credential transfers, paid executions or external registrations**.
