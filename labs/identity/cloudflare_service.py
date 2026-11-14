@@ -9,7 +9,7 @@ import json
 import re
 from typing import Callable
 from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 ACCOUNT_ID_RE = re.compile(r"^[a-fA-F0-9]{32}$")
 TOKEN_ID_RE = re.compile(r"^[a-fA-F0-9]{32}$")
@@ -54,8 +54,12 @@ def http_verify(account_id: str, token: str) -> dict:
         "Authorization": "Bearer " + token,
         "Accept": "application/json",
     })
+    class DenyRedirect(HTTPRedirectHandler):
+        def redirect_request(self, req, fp, code, msg, headers, newurl):
+            return None
+
     try:
-        with urlopen(request, timeout=12) as response:
+        with build_opener(DenyRedirect()).open(request, timeout=12) as response:
             data = response.read(16385)
     except (HTTPError, URLError, TimeoutError, OSError) as exc:
         # Deliberately omit raw HTTP bodies, URLs and token-bearing exceptions.
