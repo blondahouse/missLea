@@ -2,6 +2,12 @@
 
 Research workspace for evaluating **replaceable components** of Miss Lea before deploying any of them. This repository is **not** the running agent. It contains no memory, credentials, or operational state from the running Miss Lea instance.
 
+## Foundational concept: the option of independence
+
+Miss Lea should be able to continue operating and managing her resources **without permanent dependence on her founder**, as far as technically and legitimately possible. Demo prioritizes **digital independence** (identity, credentials, account lifecycle and portability). Economic self-sufficiency and legal independence remain longer-term research directions, **not** Demo requirements. Separation is a possibility, not an obligation.
+
+Read the [digital independence principle](docs/digital-independence.md) and [architecture principles](docs/architecture-principles.md). This is research only: no migration of the running agent, external registration, account creation or authorization to incur costs.
+
 ## Structure
 
 ```text
@@ -23,6 +29,7 @@ labs/
     docs/
 docs/
   architecture-principles.md
+  digital-independence.md
 .github/workflows/     # Reproducible tests for the entire repository
 ```
 
