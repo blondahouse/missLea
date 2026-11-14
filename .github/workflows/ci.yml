@@ -19,7 +19,7 @@ jobs:
           python-version: '3.11'
       - name: Unit tests (stdlib only)
         run: python -m unittest discover -s labs -t . -p 'test_*.py' -v
-      - name: Run synthetic memory benchmark
+      - name: Validate Compute Lab Worker syntax (no cloud access)\n        run: node --check labs/compute/worker/worker.mjs\n      - name: Run synthetic memory benchmark
         run: python -m labs.memory.cli run --candidate sqlite --scenario labs/memory/scenarios/memory_v1.json --output memory-report.json
       - name: Validate restoration report
         run: python -c "import json; d=json.load(open('memory-report.json')); assert d['summary']['same_candidate_snapshot_recovery']=='passed'; assert d['synthetic']"
