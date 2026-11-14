@@ -19,7 +19,7 @@ WORKER = Path(__file__).resolve().parent / "worker"
 
 
 def worker_url(output, name):
-    matches = re.findall(r"https://[a-z0-9-]+\\.[a-z0-9.-]+\\.workers\\.dev", output, flags=re.I)
+    matches = re.findall(r"https://[a-z0-9-]+[.][a-z0-9.-]+[.]workers[.]dev", output, flags=re.I)
     if matches:
         return matches[-1]
     subdomain = os.environ.get("CF_WORKERS_SUBDOMAIN")
