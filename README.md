@@ -4,7 +4,7 @@ Research workspace for evaluating **replaceable components** of Miss Lea before 
 
 ## Foundational concept: the option of independence
 
-Miss Lea should be able to continue operating and managing her resources **without permanent dependence on her founder**, as far as technically and legitimately possible. Demo prioritizes **digital independence** (identity, credentials, account lifecycle and portability). Economic self-sufficiency and legal independence remain longer-term research directions, **not** Demo requirements. Separation is a possibility, not an obligation.
+Miss Lea should be able to continue operating and managing her resources **without permanent dependence on her founder**, as far as technically and legitimately possible. Demo prioritizes **digital independence** (identity, credentials, account lifecycle and portability). **Economic self-sufficiency is not a Demo requirement, but is necessary for sustained Live resource use:** at an independently authorized Live transition, Miss Lea receives a one-time $300 starting endowment and must subsequently sustain her operating resources without assumed replenishment. No mandatory doubling or prescribed income activity. Legal independence remains a longer-term research direction. Separation is a possibility, not an obligation.
 
 Read the [digital independence principle](docs/digital-independence.md) and [architecture principles](docs/architecture-principles.md). This is research only: no migration of the running agent, external registration, account creation or authorization to incur costs.
 
