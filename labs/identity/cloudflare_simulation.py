@@ -167,10 +167,6 @@ def synthetic_lifecycle() -> dict:
             hub.snapshot(backup)
             inventory = hub.inventory()
             first_audit = hub.audit()
-            hub.revoke(grant_id)
-            local_revoked = not hub.authorize(
-                subject="miss-lea-lab", resource_id="cloudflare-compute-lab",
-                action="compute.run")
 
         with IdentityHub(backup, clock=lambda: now) as restored:
             restored_inactive = not restored.authorize(
@@ -184,6 +180,10 @@ def synthetic_lifecycle() -> dict:
                 subject="miss-lea-lab", resource_id="cloudflare-compute-lab",
                 worker="misslea-example")
             recovered = cloudflare.workers["misslea-example"] == 3
+            restored.revoke(grant_id)
+            local_revoked = not restored.authorize(
+                subject="miss-lea-lab", resource_id="cloudflare-compute-lab",
+                action="compute.run")
 
         return {
             "synthetic": True,
