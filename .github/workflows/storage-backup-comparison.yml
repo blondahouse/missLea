@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        engine: [restic, kopia, borg, rustic]
+        engine: [restic, kopia, borg, rustic, duplicacy]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -48,6 +48,11 @@ jobs:
               binary="$(find /tmp/ml-backup-bin -type f -name kopia -print -quit)"
               test -n "$binary"
               sudo install -m 0755 "$binary" /usr/local/bin/kopia
+              ;;
+            duplicacy)
+              curl --fail --silent --show-error --location --retry 2                 "https://github.com/gilbertchen/duplicacy/releases/download/v3.3.0/duplicacy_linux_x64_3.3.0" -o /tmp/duplicacy-binary
+              echo "a2ac4db7018633b116506e081a029dd6635e9619cf24b85c33144640613416ee  /tmp/duplicacy-binary" | sha256sum --check
+              sudo install -m 0755 /tmp/duplicacy-binary /usr/local/bin/duplicacy
               ;;
             rustic)
               curl --fail --silent --show-error --location --retry 2 \
@@ -82,9 +87,9 @@ jobs:
     timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
-      - name: Document Duplicacy CLI as eligible competitor but NOT authorized for commercial backup trial
+      - name: Verify commercial trial is allowed but paid license required for permanent Live use
         run: |
           set -euo pipefail
-          grep -q 'Duplicacy CLI 3.2.5' labs/storage/backup-comparison-protocol.md
-          grep -q 'NOT_TESTED_LICENSE_GATE' labs/storage/backup-comparison-protocol.md
-          echo "Duplicacy included: license/revenue-use gate unresolved; encrypted backup CLI trial NOT TESTED, not a technical failure."
+          grep -q 'Duplicacy CLI 3.3.0' labs/storage/backup-comparison-protocol.md
+          grep -q 'CONDITIONAL_ON_LICENSE' labs/storage/backup-comparison-protocol.md
+          echo "Duplicacy included under vendor commercial-trial permission; ongoing commercial backup is PAID, not a free Demo-to-Live promise."
