@@ -21,7 +21,7 @@ from pathlib import Path
 
 from labs.storage.snapshot import create_snapshot, restore_to_quarantine, verify_snapshot
 
-CANDIDATES = ("restic", "kopia", "borg", "rustic")
+CANDIDATES = ("restic", "kopia", "borg", "rustic", "duplicacy")
 CANARY = b"MISSLEA_SYNTHETIC_BACKUP_TEST_MARKER_NOT_REAL_DATA"
 EXPECTED = (
     ("evidence", "message#1", "firsthand synthetic source", "retained"),
@@ -78,6 +78,11 @@ class Tool:
             self.env.update({"BORG_PASSPHRASE": password.read_text(),
                              "BORG_RELOCATED_REPO_ACCESS_IS_OK": "yes",
                              "BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK": "no"})
+        elif name == "duplicacy":
+            self.prefix = ["duplicacy"]
+            self.env.update({"DUPLICACY_PASSWORD": password.read_text(),
+                             "DUPLICACY_DISABLE_UPDATE_CHECK": "true"})
+            self.source = None
         elif name == "kopia":
             self.prefix = ["kopia", "--config-file", str(root / "kopia.json")]
             self.env.update({"KOPIA_PASSWORD": password.read_text(),
@@ -89,12 +94,18 @@ class Tool:
         return run([*self.prefix, *args], env=self.env, **kwargs)
 
     def version(self) -> str:
+        # Pinned by its verified release digest; Duplicacy may report version to stderr.
+        if self.name == "duplicacy":
+            return "duplicacy CLI v3.3.0 (verified vendor release)"
         # Version output is non-sensitive.
         return str(run([self.name, "version" if self.name not in ("borg", "kopia") else "--version"],
                        env=self.env, output=True)).splitlines()[0][:180]
 
-    def init(self) -> None:
-        if self.name == "restic":
+    def init(self, source: Path) -> None:
+        if self.name == "duplicacy":
+            self.source = source
+            self.call("init", "-e", "misslea-synthetic", str(self.repo), cwd=source)
+        elif self.name == "restic":
             self.call("init")
         elif self.name == "rustic":
             self.call("init")
@@ -104,7 +115,9 @@ class Tool:
             self.call("repository", "create", "filesystem", "--path", str(self.repo))
 
     def backup(self, source: Path, version: int) -> None:
-        if self.name in ("restic", "rustic"):
+        if self.name == "duplicacy":
+            self.call("backup", cwd=source)
+        elif self.name in ("restic", "rustic"):
             self.call("backup", str(source))
         elif self.name == "borg":
             self.call("create", f"{self.repo}::v{version}", str(source))
@@ -112,7 +125,9 @@ class Tool:
             self.call("snapshot", "create", str(source))
 
     def check(self) -> None:
-        if self.name == "restic":
+        if self.name == "duplicacy":
+            self.call("check", "-all", "-files", cwd=self.source)
+        elif self.name == "restic":
             self.call("check", "--read-data")
         elif self.name == "rustic":
             self.call("check", "--read-data")
@@ -122,7 +137,10 @@ class Tool:
             self.call("snapshot", "verify", "--verify-files-percent=100")
 
     def restore(self, source: Path, dest: Path) -> None:
-        if self.name == "restic":
+        if self.name == "duplicacy":
+            self.call("init", "-e", "misslea-synthetic", str(self.repo), cwd=dest)
+            self.call("restore", "-r", "2", cwd=dest)
+        elif self.name == "restic":
             self.call("restore", "latest", "--target", str(dest))
         elif self.name == "rustic":
             self.call("restore", "latest", str(dest))
@@ -132,6 +150,10 @@ class Tool:
             self.call("snapshot", "restore", str(source), str(dest / "snapshot"))
 
     def wrong_password_denied(self) -> bool:
+        if self.name == "duplicacy":
+            wrong_env = {**self.env, "DUPLICACY_PASSWORD": "this-is-the-wrong-password"}
+            return not run(["duplicacy", "list"], cwd=self.source, env=wrong_env,
+                           expected_success=False)
         if self.name == "kopia":
             wrong_env = {**self.env, "KOPIA_PASSWORD": "this-is-the-wrong-password"}
             result = run(["kopia", "--config-file", str(self.root / "wrong.json"),
@@ -159,9 +181,17 @@ def create_source(path: Path) -> None:
 
 
 def make_snapshot(db: Path, source: Path, iteration: int) -> dict[str, str]:
+    # Duplicacy keeps its repository connection in .duplicacy; it is excluded
+    # from backups but must survive regeneration of the same SQLite snapshot path.
+    preference_dir = source / ".duplicacy"
+    temporary_prefs = source.parent / ".backup-client-prefs"
+    if preference_dir.exists():
+        preference_dir.rename(temporary_prefs)
     if source.exists():
         shutil.rmtree(source)
     create_snapshot(db, source)
+    if temporary_prefs.exists():
+        temporary_prefs.rename(preference_dir)
     (source / "attachment.bin").write_bytes(bytes(range(256)) * 4096 + CANARY)
     (source / "notes.txt").write_text("synthetic initial notes version " +
                                       str(iteration), encoding="utf-8")
@@ -189,7 +219,7 @@ def trial(name: str) -> dict:
         timings: dict[str, float] = {}
 
         start = time.monotonic()
-        tool.init()
+        tool.init(bundle)
         tool.backup(bundle, 1)
         timings["initial_backup_s"] = round(time.monotonic() - start, 3)
         repo_bytes1 = repo_bytes(tool.repo)
@@ -263,6 +293,7 @@ def trial(name: str) -> dict:
             "timing_seconds": timings, "repository_bytes_after_first": repo_bytes1,
             "repository_bytes_after_second": repo_bytes2,
             "max_child_rss_kb": resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss,
+            "license": "commercial trial only; ongoing commercial backup requires paid license" if name == "duplicacy" else "open source",
             "not_tested": ["independent remote providers", "tampered pack detection parity",
                            "WORM/deletion resistance", "cold-store costs and recovery root",
                            "single active writer fencing", "representative production load"],
