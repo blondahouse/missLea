@@ -1,0 +1,181 @@
+name: Storage Remote Recovery Trial (STO-003)
+
+on:
+  pull_request:
+    paths:
+      - "labs/storage/remote_recovery.py"
+      - "labs/storage/remote-recovery-protocol.md"
+      - ".github/workflows/storage-remote-recovery.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Deliberately public, deterministic SYNTHETIC fixture passwords only.
+# NEVER replace these with real secrets or reuse for real backups.
+env:
+  RESTIC_PASSWORD: "sto003-public-synthetic-only-restic-password-not-for-real-use"
+  BORG_PASSPHRASE: "sto003-public-synthetic-only-borg-password-not-for-real-use"
+  BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK: "no"
+  BORG_RELOCATED_REPO_ACCESS_IS_OK: "yes"
+
+jobs:
+  restricted-remote-backup:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install restic, BorgBackup and a local OpenSSH server
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq restic borgbackup openssh-server
+      - name: Create two synthetic remote storage services with different permissions
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="$RUNNER_TEMP/sto003"
+          mkdir -p "$ROOT/rest-data" "$ROOT/borg-data"
+          docker run -d --name sto003-rest \
+            --user "$(id -u):$(id -g)" \
+            -p 127.0.0.1:18090:8000 \
+            -e DISABLE_AUTHENTICATION=1 \
+            -e OPTIONS="--append-only" \
+            -v "$ROOT/rest-data:/data" \
+            restic/rest-server:0.14.0 >/dev/null
+          for i in $(seq 1 30); do
+            if curl --silent --output /dev/null --max-time 2 http://127.0.0.1:18090/; then break; fi
+            sleep 1
+          done
+          docker ps --format '{{.Names}}' | grep -qx sto003-rest
+          sudo useradd --create-home --shell /bin/sh mlsto003
+          sudo install -d -m 700 -o mlsto003 -g mlsto003 /home/mlsto003/.ssh
+          sudo install -d -m 700 -o mlsto003 -g mlsto003 /home/mlsto003/repos
+          ssh-keygen -q -t ed25519 -N "" -f "$ROOT/ci-ssh-key"
+          printf 'restrict,command="/usr/bin/borg serve --append-only --restrict-to-path /home/mlsto003/repos" %s\n' \
+            "$(cat "$ROOT/ci-ssh-key.pub")" | sudo tee /home/mlsto003/.ssh/authorized_keys >/dev/null
+          sudo chown mlsto003:mlsto003 /home/mlsto003/.ssh/authorized_keys
+          sudo chmod 600 /home/mlsto003/.ssh/authorized_keys
+          sudo ssh-keygen -A
+          sudo /usr/sbin/sshd -p 12422 -o ListenAddress=127.0.0.1 \
+            -o PasswordAuthentication=no -o PermitRootLogin=no \
+            -o AllowUsers=mlsto003 \
+            -o PidFile="$ROOT/sshd.pid" -o LogLevel=ERROR
+          ssh-keyscan -p 12422 127.0.0.1 2>/dev/null > "$ROOT/known_hosts"
+          test -s "$ROOT/known_hosts"
+          echo "PASS: independent REST and SSH protocol daemons launched (same CI host)"
+      - name: Perform actual encrypted remote backups and deny destructive client actions
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="$RUNNER_TEMP/sto003"
+          export RESTIC_REPOSITORY="rest:http://127.0.0.1:18090/ml-sto-003"
+          export BORG_REPO="ssh://mlsto003@127.0.0.1:12422/home/mlsto003/repos/backup"
+          export BORG_RSH="ssh -F /dev/null -p 12422 -i $ROOT/ci-ssh-key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$ROOT/known_hosts"
+          python -m labs.storage.remote_recovery prepare --root "$ROOT"
+          restic init >/dev/null
+          restic backup "$ROOT/snapshot" >/dev/null
+          restic check --read-data >/dev/null
+          borg init --encryption=repokey "$BORG_REPO" >/dev/null
+          borg create "$BORG_REPO::synthetic-v1" "$ROOT/snapshot" >/dev/null
+          borg check --verify-data "$BORG_REPO" >/dev/null
+          if RESTIC_PASSWORD="wrong-fixture-password" restic snapshots >/dev/null 2>&1; then
+            echo "FAIL: REST password unexpectedly accepted"; exit 1
+          fi
+          if BORG_PASSPHRASE="wrong-fixture-password" borg list "$BORG_REPO" >/dev/null 2>&1; then
+            echo "FAIL: Borg password unexpectedly accepted"; exit 1
+          fi
+          SNAPSHOT="$(restic snapshots --json | python -c 'import json,sys; print(json.load(sys.stdin)[-1]["id"])')"
+          CODE="$(curl --silent -o /dev/null -w '%{http_code}' --max-time 10 \
+            -X DELETE "http://127.0.0.1:18090/ml-sto-003/snapshots/$SNAPSHOT")"
+          if [ "$CODE" != "403" ] && [ "$CODE" != "405" ]; then
+            echo "FAIL: REST append-only did not deny snapshot deletion (HTTP $CODE)"
+            exit 1
+          fi
+          restic snapshots --json | python -c 'import json,sys; assert len(json.load(sys.stdin))>=1'
+          if timeout 8 ssh -F /dev/null -p 12422 -i "$ROOT/ci-ssh-key" \
+              -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+              -o UserKnownHostsFile="$ROOT/known_hosts" \
+              mlsto003@127.0.0.1 'touch /home/mlsto003/repos/unauthorized-shell-access' \
+              >/dev/null 2>&1; then
+            echo "FAIL: restricted Borg SSH identity executed arbitrary shell command"; exit 1
+          fi
+          test ! -e /home/mlsto003/repos/unauthorized-shell-access
+          borg list "$BORG_REPO" | grep -q synthetic-v1
+          sudo cp -a /home/mlsto003/repos/backup "$ROOT/borg-data/backup"
+          sudo chown -R "$(id -u):$(id -g)" "$ROOT/borg-data"
+          # Only archives and their synthetic SHA manifest leave this runner.
+          # Do NOT upload SSH keys, live state, original SQLite or host settings.
+          tar -C "$ROOT" -czf "$RUNNER_TEMP/sto003-encrypted-repos.tgz" \
+            rest-data borg-data expected.json
+          echo "PASS: encrypted REST + SSH archives; REST deletion refused HTTP $CODE; SSH forced-command escape refused"
+      - name: Tear down synthetic remote services
+        if: always()
+        run: |
+          docker rm -f sto003-rest >/dev/null 2>&1 || true
+          if [ -f "$RUNNER_TEMP/sto003/sshd.pid" ]; then
+            sudo kill "$(cat "$RUNNER_TEMP/sto003/sshd.pid")" 2>/dev/null || true
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sto003-encrypted-synthetic-repositories
+          path: ${{ runner.temp }}/sto003-encrypted-repos.tgz
+          retention-days: 1
+          if-no-files-found: error
+
+  clean-host-recovery:
+    needs: restricted-remote-backup
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install backup readers on a NEW runner
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq restic borgbackup
+      - uses: actions/download-artifact@v4
+        with:
+          name: sto003-encrypted-synthetic-repositories
+          path: ${{ runner.temp }}/sto003-input
+      - name: Prove full quarantined restore after losing primary host and each endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="$RUNNER_TEMP/sto003-clean"
+          mkdir -p "$ROOT"
+          tar -C "$ROOT" -xzf "$RUNNER_TEMP/sto003-input/sto003-encrypted-repos.tgz"
+          # This runner has NO original.sqlite, source bundle, server processes,
+          # SSH private key, or privileged remote-server login.
+          test ! -e "$ROOT/original.sqlite"
+          test ! -e "$ROOT/snapshot"
+          test ! -e "$ROOT/ci-ssh-key"
+          test ! -e "$ROOT/sshd.pid"
+          export BORG_REPO="$ROOT/borg-data/backup"
+          export RESTIC_REPOSITORY="$ROOT/rest-data/ml-sto-003"
+          restic check --read-data >/dev/null
+          borg check --verify-data "$BORG_REPO" >/dev/null
+          mkdir -p "$ROOT/restored-restic" "$ROOT/restored-borg"
+          restic restore latest --target "$ROOT/restored-restic" >/dev/null
+          (cd "$ROOT/restored-borg" && borg extract "$BORG_REPO::synthetic-v1") >/dev/null
+          python -m labs.storage.remote_recovery validate --root "$ROOT/restored-restic" --expected "$ROOT/expected.json"
+          python -m labs.storage.remote_recovery validate --root "$ROOT/restored-borg" --expected "$ROOT/expected.json"
+          # Independent failure DOMAIN is not proven: only a whole different
+          # daemon/repository on this separate Actions runner is simulated.
+          mv "$ROOT/rest-data" "$ROOT/unavailable-rest-backend"
+          mkdir "$ROOT/restored-after-rest-failure"
+          (cd "$ROOT/restored-after-rest-failure" && borg extract "$BORG_REPO::synthetic-v1") >/dev/null
+          python -m labs.storage.remote_recovery validate \
+            --root "$ROOT/restored-after-rest-failure" --expected "$ROOT/expected.json"
+          mv "$ROOT/unavailable-rest-backend" "$ROOT/rest-data"
+          mv "$ROOT/borg-data" "$ROOT/unavailable-borg-backend"
+          mkdir "$ROOT/restored-after-borg-failure"
+          restic restore latest --target "$ROOT/restored-after-borg-failure" >/dev/null
+          python -m labs.storage.remote_recovery validate \
+            --root "$ROOT/restored-after-borg-failure" --expected "$ROOT/expected.json"
+          echo "PASS: recovery on separate CI runner from either encrypted repository; failures simulated; no authority activated"
+          echo "NOT TESTED: two real providers; independent account recovery keys; deletion by service administrator; commercial cost"
