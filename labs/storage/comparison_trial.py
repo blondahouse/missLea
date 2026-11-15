@@ -224,6 +224,10 @@ def trial(name: str) -> dict:
         timings["initial_backup_s"] = round(time.monotonic() - start, 3)
         repo_bytes1 = repo_bytes(tool.repo)
 
+        # Filesystem timestamp-based fast paths must see a changed second,
+        # even on clients whose source scanning has coarse mtime resolution.
+        if name == "duplicacy":
+            time.sleep(1.15)
         with sqlite3.connect(db) as con:
             con.execute("INSERT INTO records VALUES(?,?,?,?)",
                         ("memory_revision", "source#5", "synthetic later thought", "current"))
@@ -262,7 +266,10 @@ def trial(name: str) -> dict:
             if checksums == expected_hashes:
                 matched.append(parent)
         if len(matched) != 1:
-            raise TrialError("Restored source files did not match exact manifest")
+            found = [x.parent for x in destination.rglob("manifest.json")]
+            missing = sorted(set(expected_hashes) - set(next((p.name for p in found[0].iterdir() if p.is_file()), []))) if found else sorted(expected_hashes)
+            raise TrialError("Restored files mismatch; manifests=" + str(len(found)) +
+                             "; missing filenames=" + ",".join(missing))
         source = matched[0]
         verify_snapshot(source)
         quarantine = base / "inert-state.sqlite"
