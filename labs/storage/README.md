@@ -42,7 +42,7 @@ The [restic encrypted two-repository trial](restic-trial.md) uses the real backu
 
 ## STO-002 — comparative backup engine research
 
-The [prospective five-candidate protocol](backup-comparison-protocol.md) covers **restic, Kopia, BorgBackup, rustic, and Duplicacy CLI**, with the same synthetic memory fixture, explicit lawful-use licensing requirements, and a reproducible [GitHub Actions matrix](../../.github/workflows/storage-backup-comparison.yml). Real CLI encryption and restoration trials are planned for four open-source tools. **Duplicacy remains in the comparison**, but commercial-license eligibility must be established before any assumption that unattended Live backup is free.
+The [prospective five-candidate protocol](backup-comparison-protocol.md) covers **restic, Kopia, BorgBackup, rustic, and Duplicacy CLI**, with the same synthetic memory fixture, explicit lawful-use licensing requirements, and a reproducible [GitHub Actions matrix](../../.github/workflows/storage-backup-comparison.yml). **All five were tested against real CLIs**, including Duplicacy under its explicitly permitted temporary commercial trial (ongoing commercial backup requires a paid license). [Comparison results and selection gaps](backup-comparison-results-2026-11-15.md) include compression/hash correctness findings and verified read-only restic↔rustic recovery.
 
 All local CI evidence stays distinct from the still-unproven **two genuinely independent remote destinations, separate recovery credentials, and destructive-access isolation**.
 
