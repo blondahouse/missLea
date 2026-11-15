@@ -62,33 +62,29 @@ jobs:
     timeout-minutes: 8
     environment: sto004-b2
     env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.STO004_B2_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.STO004_B2_APPLICATION_KEY }}
       AWS_DEFAULT_REGION: eu-central-003
       AWS_EC2_METADATA_DISABLED: "true"
-      B2_ENDPOINT: https://s3.eu-central-003.backblazeb2.com
-      B2_BUCKET: misslea-storage-lab-b2
       B2_KEY: sto006/${{ github.run_id }}/memory-restic.tar.gz
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
       - uses: actions/download-artifact@v4
         with:
           name: sto006-common-encrypted-synthetic-archive
           path: ${{ runner.temp }}/sto006-upload/
-      - name: Upload exact archive via Backblaze S3 with existing restricted B2 key
+      - name: Upload exact archive via pinned AWS Python S3 SDK
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STO004_B2_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STO004_B2_APPLICATION_KEY }}
         shell: bash
         run: |
           set -euo pipefail
-          test -n "$AWS_ACCESS_KEY_ID" && test -n "$AWS_SECRET_ACCESS_KEY"
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq awscli
-          aws configure set default.s3.addressing_style path
-          FILE="$RUNNER_TEMP/sto006-upload/sto006-common-encrypted.tar.gz"
-          aws s3api put-object --endpoint-url "$B2_ENDPOINT" \
-            --bucket "$B2_BUCKET" --key "$B2_KEY" --body "$FILE" >/dev/null
-          REMOTE_SIZE="$(aws s3api head-object --endpoint-url "$B2_ENDPOINT" \
-            --bucket "$B2_BUCKET" --key "$B2_KEY" --query ContentLength --output text)"
-          test "$REMOTE_SIZE" = "$(stat -c %s "$FILE")"
-          echo "PASS: exact common-generation archive uploaded to real B2, length verified"
+          python -m pip install --quiet "boto3==1.44.3"
+          python -m labs.storage.b2_probe upload \
+            --path "$RUNNER_TEMP/sto006-upload/sto006-common-encrypted.tar.gz" \
+            --key "$B2_KEY"
 
   upload-drive:
     needs: build-one-generation
@@ -133,12 +129,8 @@ jobs:
     timeout-minutes: 10
     environment: sto004-b2
     env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.STO004_B2_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.STO004_B2_APPLICATION_KEY }}
       AWS_DEFAULT_REGION: eu-central-003
       AWS_EC2_METADATA_DISABLED: "true"
-      B2_ENDPOINT: https://s3.eu-central-003.backblazeb2.com
-      B2_BUCKET: misslea-storage-lab-b2
       B2_KEY: sto006/${{ github.run_id }}/memory-restic.tar.gz
     steps:
       - uses: actions/checkout@v4
@@ -149,22 +141,23 @@ jobs:
         with:
           name: sto006-source-checksums-only
           path: ${{ runner.temp }}/sto006-evidence/
-      - name: Restore from ONLY B2 on fresh runner, no Google Drive token or archive artifact
+      - name: Restore from ONLY B2 on fresh runner using pinned AWS S3 SDK
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STO004_B2_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STO004_B2_APPLICATION_KEY }}
         shell: bash
         run: |
           set -euo pipefail
-          test -n "$AWS_ACCESS_KEY_ID" && test -n "$AWS_SECRET_ACCESS_KEY"
           test ! -e "$RUNNER_TEMP/sto006-common-encrypted.tar.gz"
           sudo apt-get update -qq
-          sudo apt-get install -y -qq awscli restic
-          aws configure set default.s3.addressing_style path
+          sudo apt-get install -y -qq restic
+          python -m pip install --quiet "boto3==1.44.3"
           ROOT="$RUNNER_TEMP/b2-only-recovery"
           mkdir -p "$ROOT"
-          aws s3api get-object --endpoint-url "$B2_ENDPOINT" \
-            --bucket "$B2_BUCKET" --key "$B2_KEY" \
-            "$ROOT/downloaded-encrypted.tar.gz" >/dev/null
-          test "$(sha256sum "$ROOT/downloaded-encrypted.tar.gz" | cut -d ' ' -f1)" \
-            = "$(cat "$RUNNER_TEMP/sto006-evidence/archive.sha256")"
+          python -m labs.storage.b2_probe download \
+            --path "$ROOT/downloaded-encrypted.tar.gz" \
+            --key "$B2_KEY" \
+            --sha256 "$(cat "$RUNNER_TEMP/sto006-evidence/archive.sha256")"
           python -m labs.storage.drive_probe unpack \
             --archive "$ROOT/downloaded-encrypted.tar.gz" \
             --dest "$ROOT/unpacked"
