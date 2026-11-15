@@ -21,6 +21,8 @@ jobs:
         run: python -m unittest discover -s labs -t . -p 'test_*.py' -v
       - name: Cloudflare identity lifecycle fixture (offline only)
         run: python -m labs.identity.cloudflare_cli simulate > cloudflare-identity-report.json
+      - name: Validate manual Worker dispatch authentication offline
+        run: node --test labs/security/tests/manual_worker.test.mjs
       - name: Validate Compute Lab Worker syntax (no cloud access)
         run: node --check labs/compute/worker/worker.mjs
       - name: Run synthetic memory benchmark
