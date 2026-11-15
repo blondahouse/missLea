@@ -36,6 +36,10 @@ The snapshot format contains an explicit `encrypted: false` warning. **SHA-256 i
 
 The [proposed memory/storage selection criteria](selection-criteria.md) distinguish primary evidence, operational state, derived memory and recovery copies; they identify the minimum tests needed before selecting a long-term database or encrypted backup topology. These criteria have not yet authorized any live migration or storage subscription.
 
+## Real encryption experiment (separate from the synthetic snapshot fixture)
+
+The [restic encrypted two-repository trial](restic-trial.md) uses the real backup binary on GitHub Actions, detects an altered encrypted pack, and restores source records after primary loss. It uses **two directories on one runner**, not two remote failure domains; do not treat it as proof of geographically independent backups.
+
 ## Research decisions before real storage
 
 For actual Memory/State/Backup selection, evaluate:

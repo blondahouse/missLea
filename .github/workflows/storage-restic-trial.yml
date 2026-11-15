@@ -1,0 +1,36 @@
+name: Storage Restic Research (synthetic encrypted snapshots)
+
+on:
+  pull_request:
+    paths:
+      - "labs/storage/restic_trial.py"
+      - ".github/workflows/storage-restic-trial.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  restic-encrypted-restore:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install maintained restic binary from Ubuntu repository
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq restic
+          restic version
+      - name: Encrypt two independent-key synthetic archives; corrupt and recover
+        run: |
+          mkdir -p reports
+          python -m labs.storage.restic_trial > reports/restic-local-trial.json
+          python -c "import json; r=json.load(open('reports/restic-local-trial.json')); assert r['status']=='PASS_ENCRYPTED_LOCAL_ONLY' and all(r['checks'].values()) and not r['independent_failure_domains']; print('PASS: encrypted local archives and quarantined restore; remote independence NOT TESTED')"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: restic-synthetic-local-evidence
+          path: reports/restic-local-trial.json
+          retention-days: 7
