@@ -68,7 +68,7 @@ jobs:
           set -euo pipefail
           mkdir -p reports
           python -m labs.storage.comparison_trial "$ENGINE" > "reports/sto-002-$ENGINE.json"
-          python -c 'import json,os; x=json.load(open("reports/sto-002-"+os.environ["ENGINE"]+".json")); assert x["status"]=="PASS_LOCAL_COMPARATIVE_TRIAL" and all(x["checks"].values()); assert x["independent_providers_tested"] is False; print("PASS synthetic",x["tool"],x["version"])'
+          python -c 'import json,os; x=json.load(open("reports/sto-002-"+os.environ["ENGINE"]+".json")); assert x["status"]=="PASS_LOCAL_COMPARATIVE_TRIAL" and all(x["checks"].values()); assert x["independent_providers_tested"] is False; print("PASS synthetic",x["tool"],x["version"]); print("METRICS",json.dumps({"engine":x["tool"],"version":x["version"],"times":x["timing_seconds"],"bytes_first":x["repository_bytes_after_first"],"bytes_second":x["repository_bytes_after_second"],"rss_kb":x["max_child_rss_kb"]},sort_keys=True))'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
