@@ -1,0 +1,117 @@
+name: STO-005 Google Drive second-provider trial (MANUAL ONLY)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sto005-google-drive-once
+  cancel-in-progress: false
+
+# Public test-only password; never use with real Miss Lea memory.
+env:
+  RESTIC_PASSWORD: sto005-public-synthetic-fixture-not-a-real-secret
+
+jobs:
+  upload-drive:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: sto005-drive
+    outputs:
+      file_id: ${{ steps.publish.outputs.file_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install official Google client and restic
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq restic
+          python -m pip install --quiet "google-api-python-client==2.202.0" "google-auth==2.62.2" "google-auth-httplib2==0.4.4"
+      - name: Build encrypted synthetic archive, verify and produce manifest
+        run: |
+          set -euo pipefail
+          ROOT="$RUNNER_TEMP/sto005"
+          mkdir -p "$ROOT" "$RUNNER_TEMP/sto005-manifest"
+          python -m labs.storage.remote_recovery prepare --root "$ROOT"
+          restic -r "$ROOT/repository" init >/dev/null
+          restic -r "$ROOT/repository" backup "$ROOT/snapshot" >/dev/null
+          restic -r "$ROOT/repository" check --read-data >/dev/null
+          python -m labs.storage.drive_probe pack \
+            --repo "$ROOT/repository" --archive "$RUNNER_TEMP/sto005-archive.tar.gz"
+          cp "$ROOT/expected.json" "$RUNNER_TEMP/sto005-manifest/expected.json"
+          sha256sum "$RUNNER_TEMP/sto005-archive.tar.gz" | awk '{print $1}' > "$RUNNER_TEMP/sto005-manifest/archive.sha256"
+          test "$(stat -c %s "$RUNNER_TEMP/sto005-archive.tar.gz")" -lt 20971520
+          echo "PASS: synthetic encrypted restic repo packed, no plaintext SQLite exported"
+      - name: Upload to real independent Google Drive account via official API
+        id: publish
+        env:
+          STO005_DRIVE_CLIENT_ID: ${{ secrets.STO005_DRIVE_CLIENT_ID }}
+          STO005_DRIVE_CLIENT_SECRET: ${{ secrets.STO005_DRIVE_CLIENT_SECRET }}
+          STO005_DRIVE_REFRESH_TOKEN: ${{ secrets.STO005_DRIVE_REFRESH_TOKEN }}
+        run: |
+          set -euo pipefail
+          python -m labs.storage.drive_probe upload \
+            --archive "$RUNNER_TEMP/sto005-archive.tar.gz" \
+            --name "misslea-sto005-synthetic-${{ github.run_id }}.tar.gz" \
+            --id-output "$RUNNER_TEMP/sto005-file-id"
+          printf 'file_id=%s\n' "$(cat "$RUNNER_TEMP/sto005-file-id")" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sto005-nonsecret-source-checksums
+          path: ${{ runner.temp }}/sto005-manifest/
+          retention-days: 1
+
+  clean-runner-drive-recovery:
+    needs: upload-drive
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: sto005-drive
+    env:
+      STO005_DRIVE_FILE_ID: ${{ needs.upload-drive.outputs.file_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install restore tools on a fresh CI host
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq restic
+          python -m pip install --quiet "google-api-python-client==2.202.0" "google-auth==2.62.2" "google-auth-httplib2==0.4.4"
+      - uses: actions/download-artifact@v4
+        with:
+          name: sto005-nonsecret-source-checksums
+          path: ${{ runner.temp }}/sto005-manifest/
+      - name: Recover from Google Drive without using Backblaze or original host
+        env:
+          STO005_DRIVE_CLIENT_ID: ${{ secrets.STO005_DRIVE_CLIENT_ID }}
+          STO005_DRIVE_CLIENT_SECRET: ${{ secrets.STO005_DRIVE_CLIENT_SECRET }}
+          STO005_DRIVE_REFRESH_TOKEN: ${{ secrets.STO005_DRIVE_REFRESH_TOKEN }}
+        run: |
+          set -euo pipefail
+          ROOT="$RUNNER_TEMP/sto005-restore"
+          test ! -e "$ROOT/original.sqlite"
+          test ! -e "$ROOT/snapshot"
+          mkdir -p "$ROOT"
+          HASH="$(cat "$RUNNER_TEMP/sto005-manifest/archive.sha256")"
+          python -m labs.storage.drive_probe download \
+            --file-id "$STO005_DRIVE_FILE_ID" \
+            --archive "$ROOT/sto005-archive.tar.gz" \
+            --sha256 "$HASH"
+          python -m labs.storage.drive_probe unpack \
+            --archive "$ROOT/sto005-archive.tar.gz" \
+            --dest "$ROOT/unpacked"
+          restic -r "$ROOT/unpacked/repository" check --read-data >/dev/null
+          mkdir "$ROOT/quarantine"
+          restic -r "$ROOT/unpacked/repository" restore latest --target "$ROOT/quarantine" >/dev/null
+          python -m labs.storage.remote_recovery validate \
+            --root "$ROOT/quarantine" \
+            --expected "$RUNNER_TEMP/sto005-manifest/expected.json"
+          echo "PASS: real Google Drive, new runner, exact quarantined restore"
+          echo "NOT TESTED: B2/Drive common-generation replication, independent key escrow, immutable retention"

@@ -52,6 +52,12 @@ The [predeclared STO-003 protocol](remote-recovery-protocol.md) exercises **real
 
 Both services initially live on the **same CI host and GitHub account**. Even a passing test does **not** prove two genuinely independent cloud providers, production key recovery, or automatic grant fencing. Test unlock strings are publicly known **synthetic fixtures**, never suitable for actual backups.
 
+## STO-005 — second actual provider: Google Drive
+
+[STO-005 browser-only OAuth setup and experiment](sto005-drive-setup.md) prepares the **separate** Miss Lea Google account as a second real remote backend after [B2 STO-004 succeeded](sto004-b2-results-2026-11-15.md). The manual [Google Drive API CI workflow](../../.github/workflows/storage-sto005-real-drive.yml) uploads a **test-only restic-encrypted archive** with the narrow `drive.file` OAuth scope and recovers it on a fresh CI runner without B2 access. It is **not executed until explicit OAuth authorization and protected GitHub environment configuration**.
+
+This is NOT yet proof that the *same generation* of actual memory was replicated to B2 and Google Drive, nor of independent root key custody, administrator-safe retention or GitHub-independent recovery.
+
 ## Research decisions before real storage
 
 For actual Memory/State/Backup selection, evaluate:
