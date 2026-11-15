@@ -48,7 +48,10 @@ def unpack_repository(archive: Path, destination: Path) -> Path:
         raise ValueError("Missing or oversized synthetic archive")
     destination.mkdir(parents=True, exist_ok=True)
     with tarfile.open(archive, mode="r:gz") as stream:
-        for member in stream.getmembers():
+        members = stream.getmembers()
+        if len(members) > 5000 or sum(m.size for m in members) > MAX_ARCHIVE_BYTES:
+            raise ValueError("Unsafe or oversized extracted archive")
+        for member in members:
             name = PurePosixPath(member.name)
             # Defense-in-depth: a remote file is untrusted even when created
             # by the same application. No traversal, links, devices or escapes.
