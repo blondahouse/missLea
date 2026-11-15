@@ -113,6 +113,10 @@ class Tool:
             self.call("init", "--encryption=repokey", str(self.repo))
         else:
             self.call("repository", "create", "filesystem", "--path", str(self.repo))
+            # Kopia disables compression by default. Enable zstd explicitly:
+            # comparing its uncompressed default against compressed peers would
+            # conflate configuration with backup-engine efficiency.
+            self.call("policy", "set", "--global", "--compression=zstd")
 
     def backup(self, source: Path, version: int) -> None:
         if self.name == "duplicacy":
