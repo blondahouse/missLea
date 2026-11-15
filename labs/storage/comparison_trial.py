@@ -116,7 +116,7 @@ class Tool:
 
     def backup(self, source: Path, version: int) -> None:
         if self.name == "duplicacy":
-            self.call("backup", cwd=source)
+            self.call("backup", "-hash", cwd=source)
         elif self.name in ("restic", "rustic"):
             self.call("backup", str(source))
         elif self.name == "borg":
@@ -224,10 +224,6 @@ def trial(name: str) -> dict:
         timings["initial_backup_s"] = round(time.monotonic() - start, 3)
         repo_bytes1 = repo_bytes(tool.repo)
 
-        # Filesystem timestamp-based fast paths must see a changed second,
-        # even on clients whose source scanning has coarse mtime resolution.
-        if name == "duplicacy":
-            time.sleep(1.15)
         with sqlite3.connect(db) as con:
             con.execute("INSERT INTO records VALUES(?,?,?,?)",
                         ("memory_revision", "source#5", "synthetic later thought", "current"))
