@@ -32,6 +32,10 @@ python -m unittest discover -s labs -t . -p 'test_*.py' -v
 
 The snapshot format contains an explicit `encrypted: false` warning. **SHA-256 is not an authentication mechanism** here; an attacker who can edit data and the manifest can forge both. Do not put real memory or secrets through this module. The two demonstration mirrors are directories on the same local filesystem, **not** physically distributed failure domains.
 
+## Next decision record
+
+The [proposed memory/storage selection criteria](selection-criteria.md) distinguish primary evidence, operational state, derived memory and recovery copies; they identify the minimum tests needed before selecting a long-term database or encrypted backup topology. These criteria have not yet authorized any live migration or storage subscription.
+
 ## Research decisions before real storage
 
 For actual Memory/State/Backup selection, evaluate:
