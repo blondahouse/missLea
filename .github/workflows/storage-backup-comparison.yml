@@ -65,7 +65,11 @@ jobs:
               sudo install -m 0755 "$binary" /usr/local/bin/rustic
               ;;
           esac
-          "$ENGINE" --version || "$ENGINE" version
+          if [ "$ENGINE" = duplicacy ]; then
+            echo "Duplicacy 3.3.0: verified official Linux asset SHA256; CLI help uses nonzero exit"
+          else
+            "$ENGINE" --version || "$ENGINE" version
+          fi
       - name: Run same synthetic encrypted backup/restore workload
         env:
           ENGINE: ${{ matrix.engine }}
