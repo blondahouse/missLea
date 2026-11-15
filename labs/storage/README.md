@@ -48,7 +48,7 @@ All local CI evidence stays distinct from the still-unproven **two genuinely ind
 
 ## STO-003 — restricted remote services and clean-host recovery
 
-The [predeclared STO-003 protocol](remote-recovery-protocol.md) exercises **real restic REST append-only and BorgBackup SSH forced-command services** on an isolated CI runner, followed by restoration on a **separate fresh GitHub Actions runner**. It tests denial of destructive commands and recovery after either endpoint becomes unavailable. The exported backup data remain encrypted.
+The [predeclared STO-003 protocol](remote-recovery-protocol.md) exercises **real restic REST append-only and BorgBackup SSH forced-command services** on an isolated CI runner, followed by restoration on a **separate fresh GitHub Actions runner**. [Results of the completed trial](remote-recovery-results-2026-11-15.md): both native backup integrity checks, remote denial controls, exact recovery from either surviving repository and default-inactive state passed. The exported backup data remained encrypted.
 
 Both services initially live on the **same CI host and GitHub account**. Even a passing test does **not** prove two genuinely independent cloud providers, production key recovery, or automatic grant fencing. Test unlock strings are publicly known **synthetic fixtures**, never suitable for actual backups.
 
