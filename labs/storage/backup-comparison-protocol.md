@@ -28,9 +28,9 @@ Choose an **encrypted backup engine** appropriate for a portable, mostly autonom
 | **Kopia 0.23.1** | Apache-2.0 open source | Encrypted snapshots, compression, policies/maintenance, S3/SFTP/Google Drive | Maintenance owner after host change; native Drive and rclone integrations explicitly experimental |
 | **BorgBackup 1.4.x** | BSD open source | Efficient SSH/filesystem encrypted archive, append-only server option | Less direct object-store compatibility; server-side deletion authority and restore migration |
 | **rustic 0.11.4** | Apache-2.0 or MIT open source | Rust client, configurable/multiple backends, restic-compatible format | Cross-client concurrency/locking and version compatibility |
-| **Duplicacy CLI 3.2.5** | Source available; **free personal use, commercial backup requires paid license** | Lock-free multi-client backup and copy, several remote targets | Autonomous commercial use eligibility/cost, repo integrity and maintenance |
+| **Duplicacy CLI 3.3.0** | Source available; **free personal use, commercial backup requires paid license** | Lock-free multi-client backup and copy, several remote targets | Autonomous commercial use eligibility/cost, repo integrity and maintenance |
 
-**Duplicacy trial rule:** metadata/version/docs may be checked without making backups; a CI backup experiment must not silently rely on "free personal use" for a potentially revenue-generating agent. Until license eligibility is explicitly resolved, record operational B2/B3 as `NOT_TESTED_LICENSE_GATE`. This is deliberate inclusion in the selection, not pretending it passed or failed technical gates.
+**Duplicacy trial rule (prospectively updated before first Duplicacy execution):** the official CLI license explicitly permits **commercial trials**, so one disposable synthetic evaluation is permitted. Pin release v3.3.0 and its official SHA-256 asset digest. This does **not** grant a free permanent commercial backup license; operational B1 for Live remains **CONDITIONAL_ON_LICENSE** and its annual cost is part of the comparison. Trial execution may not use real business or agent data.
 
 **rustic trial rule:** because rustic reads restic repositories, compare both its own encrypted local repository and a **read-only restore of an existing restic archive** where compatible; never run competing retention/prune writers against the same repository.
 
