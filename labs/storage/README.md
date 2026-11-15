@@ -40,6 +40,12 @@ The [proposed memory/storage selection criteria](selection-criteria.md) distingu
 
 The [restic encrypted two-repository trial](restic-trial.md) uses the real backup binary on GitHub Actions, detects an altered encrypted pack, and restores source records after primary loss. It uses **two directories on one runner**, not two remote failure domains; do not treat it as proof of geographically independent backups.
 
+## STO-002 — comparative backup engine research
+
+The [prospective five-candidate protocol](backup-comparison-protocol.md) covers **restic, Kopia, BorgBackup, rustic, and Duplicacy CLI**, with the same synthetic memory fixture, explicit lawful-use licensing requirements, and a reproducible [GitHub Actions matrix](../../.github/workflows/storage-backup-comparison.yml). Real CLI encryption and restoration trials are planned for four open-source tools. **Duplicacy remains in the comparison**, but commercial-license eligibility must be established before any assumption that unattended Live backup is free.
+
+All local CI evidence stays distinct from the still-unproven **two genuinely independent remote destinations, separate recovery credentials, and destructive-access isolation**.
+
 ## Research decisions before real storage
 
 For actual Memory/State/Backup selection, evaluate:
