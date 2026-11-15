@@ -1,0 +1,95 @@
+name: STO-004 B2 isolated provider probe (MANUAL ONLY)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Intentionally uses only a public SYNTHETIC restic password, never real
+# Miss Lea memory. The B2 key pair is supplied ONLY as protected environment
+# secrets after an explicit human approval. Do not run on pull_request.
+concurrency:
+  group: sto004-b2-experiment
+  cancel-in-progress: false
+
+jobs:
+  write-b2:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: sto004-b2
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.STO004_B2_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.STO004_B2_APPLICATION_KEY }}
+      AWS_DEFAULT_REGION: eu-central-003
+      AWS_REGION: eu-central-003
+      RESTIC_PASSWORD: sto004-PUBLIC-SYNTHETIC-NOT-FOR-REAL-DATA
+      RESTIC_REPOSITORY: s3:https://s3.eu-central-003.backblazeb2.com/misslea-storage-lab-b2/sto004/${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install real restic client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq restic
+      - name: Upload encrypted synthetic SQLite snapshot to B2
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$AWS_ACCESS_KEY_ID" && test -n "$AWS_SECRET_ACCESS_KEY"
+          mkdir -p "$RUNNER_TEMP/sto004-source" "$RUNNER_TEMP/evidence"
+          python -m labs.storage.remote_recovery prepare --root "$RUNNER_TEMP/sto004-source"
+          restic init >/dev/null
+          restic backup "$RUNNER_TEMP/sto004-source/snapshot" >/dev/null
+          restic check --read-data >/dev/null
+          restic snapshots --json | python -c 'import json,sys; assert len(json.load(sys.stdin))==1'
+          cp "$RUNNER_TEMP/sto004-source/expected.json" "$RUNNER_TEMP/evidence/expected.json"
+          echo "PASS: encrypted synthetic restic snapshot stored and verified in restricted real B2 bucket"
+          echo "NOT TESTED: immutable generations, independent provider recovery, protected root secrets"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sto004-synthetic-hash-manifest
+          path: ${{ runner.temp }}/evidence/expected.json
+          retention-days: 1
+
+  clean-runner-recover-b2:
+    needs: write-b2
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: sto004-b2
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.STO004_B2_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.STO004_B2_APPLICATION_KEY }}
+      AWS_DEFAULT_REGION: eu-central-003
+      AWS_REGION: eu-central-003
+      RESTIC_PASSWORD: sto004-PUBLIC-SYNTHETIC-NOT-FOR-REAL-DATA
+      RESTIC_REPOSITORY: s3:https://s3.eu-central-003.backblazeb2.com/misslea-storage-lab-b2/sto004/${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install restore client on a NEW cloud runner
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq restic
+      - uses: actions/download-artifact@v4
+        with:
+          name: sto004-synthetic-hash-manifest
+          path: ${{ runner.temp }}/sto004-expected
+      - name: Independently recover synthetic source from real B2 over S3
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$AWS_ACCESS_KEY_ID" && test -n "$AWS_SECRET_ACCESS_KEY"
+          test ! -e "$RUNNER_TEMP/sto004-source/snapshot"
+          mkdir -p "$RUNNER_TEMP/sto004-restore"
+          restic check --read-data >/dev/null
+          restic restore latest --target "$RUNNER_TEMP/sto004-restore" >/dev/null
+          python -m labs.storage.remote_recovery validate \
+            --root "$RUNNER_TEMP/sto004-restore" \
+            --expected "$RUNNER_TEMP/sto004-expected/expected.json"
+          echo "PASS: real B2 provider, separate clean runner, exact quarantine restore"
+          echo "NOTE: test archive remains in B2 under sto004/${{ github.run_id }} for later two-provider trials"
