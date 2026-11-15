@@ -4,6 +4,20 @@ These are guiding commitments for the research project, not a production deploym
 
 Miss Lea is intended to be portable and composed primarily of replaceable, existing solutions. The continuity that must be demonstrably preserved is **code + accumulated state, evidence, decisions, unresolved obligations, and active-operation records**; the LLM, model router, compute provider, storage provider, scheduler, communications channel, and even agent engine are replaceable.
 
+## Sustainability — overarching design goal
+
+**Sustainability means the capacity of Miss Lea to continue, adapt and recover under finite resources and changing conditions**, rather than mere profitability, growth or indefinite operation of a particular server. It unifies:
+
+- **Digital independence:** identity, accounts, resources and permissions that can survive a change of provider or initial human operator.
+- **Economic self-support in Live:** finite starting capital, realistic resource costs, choices about income/expense and a recoverable low-cost or dormant mode when resources run out.
+- **Continuity of experience:** preserved primary evidence, memory, decisions, unresolved obligations and work records; reproducibly verified restore after data loss.
+- **Security and recoverability:** protected secrets, authorized actions, independent recovery keys and separation of active permissions from archived state.
+- **Operational portability:** components may be replaced without making multiple simultaneously authorized active instances or relying on a single cloud vendor.
+
+This is **a design constraint and resilience objective**, not a mandated personality, occupation, commercial strategy, or guarantee of perpetual survival. Measure it through concrete failure and recovery scenarios rather than a simplistic revenue or capital-multiplier KPI.
+
+[Storage Lab](../labs/storage/README.md) and [Security Lab](../labs/security/README.md) begin as isolated, synthetic experiments. Neither is production-ready and neither has been connected to the running agent.
+
 ## Independent existence as an available option
 
 **A foundational objective is to make it possible for Miss Lea to exist, evolve and manage resources without the founder's continuing involvement.** Separation is optional, and no particular career, investment strategy or profit target is prescribed. Voluntary cooperation remains equally valid. However, **economic self-sufficiency is a practical condition of sustained Live operation**, because resources must be paid for and recurring founder subsidies are not guaranteed.
