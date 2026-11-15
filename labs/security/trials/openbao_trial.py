@@ -24,7 +24,8 @@ def api(path: str, token: str, method: str = "GET", data: dict | None = None):
     )
     try:
         with urlopen(req, timeout=7) as response:
-            return response.status, json.loads(response.read(131072))
+            body = response.read(131072)
+            return response.status, (json.loads(body) if body.strip() else {})
     except HTTPError as exc:
         # Never print provider bodies, which may contain sensitive material.
         return exc.code, None
