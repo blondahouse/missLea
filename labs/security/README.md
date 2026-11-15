@@ -56,11 +56,17 @@ python -m unittest discover -s labs -t . -p 'test_*.py' -v
 
 Neither command makes external calls.
 
+## First live manual experiment — operator-reported evidence (2026-11-15)
+
+The operator reported deploying the published Worker, configuring `MISSLEA_TASK_SECRET` as a Cloudflare **Secret**, and receiving **HTTP 200** with `{"status":"ok","result":{"count":3,"sum":10,"squares":38}}` for a manual authorized POST. The same synthetic POST **without Authorization** returned **HTTP 401**.
+
+**Scope of this evidence:** one positive and one unauthenticated negative request as reported by the operator, without storing actual request credentials. Not an independently captured provider audit, robustness assessment, recovery test, rate-limit test or permission to provide cloud account master keys. The manual dispatch experiment is therefore sufficiently evidenced for its narrow initial stop condition.
+
 ## Broader Security Lab — next research decisions (not implemented)
 
 We need an independently authenticated **Credential Broker** that resolves secrets internally and exposes narrow operations to LLM-driven callers. It must guard against prompt injection and compromised agent tools, isolate any provisioning/root credentials, enforce budgets/allowed actions in code, provide audit and revoke/rotate keys without leaking them. Identity proof and an active-instance lease/fencing mechanism must survive model and compute changes without trusting stale backups.
 
-Compare existing vaults (OpenBao, Infisical, OS secure storage, managed KMS) only after defining criteria for **threat isolation, unattended unlock/recovery, owner-dependence, portability, cost, durable auditing, safe rotation and realistic operability**. Do not invent cryptography or expose a root vault key to an LLM.
+Use the [proposed Security selection gates and candidate comparison](selection-criteria.md) before choosing a hosted or self-managed vault. Compare threat isolation, machine identity, unlock/recovery, owner-dependence, portability, cost, auditing, safe rotation and realistic operability. Do not invent cryptography or expose a root vault key to an LLM.
 
 Root recovery materials must be separate from active compute, agent-readable memory, and the backups they unlock. Losing a vault cannot make decrypting all backups impossible.
 
