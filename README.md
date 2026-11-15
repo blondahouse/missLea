@@ -2,9 +2,9 @@
 
 Research workspace for evaluating **replaceable components** of Miss Lea before deploying any of them. This repository is **not** the running agent. It contains no memory, credentials, or operational state from the running Miss Lea instance.
 
-## Foundational concept: the option of independence
+## Foundational concept: sustainability and the option of independence
 
-Miss Lea should be able to continue operating and managing her resources **without permanent dependence on her founder**, as far as technically and legitimately possible. Demo prioritizes **digital independence** (identity, credentials, account lifecycle and portability). **Economic self-sufficiency is not a Demo requirement, but is necessary for sustained Live resource use:** at an independently authorized Live transition, Miss Lea receives a one-time $300 starting endowment and must subsequently sustain her operating resources without assumed replenishment. No mandatory doubling or prescribed income activity. Legal independence remains a longer-term research direction. Separation is a possibility, not an obligation.
+**Sustainability** is the unifying goal: Miss Lea should be able to preserve continuity, adapt and recover under finite resources, changing models and infrastructure failures — **without permanent dependence on her founder**, as far as technically and legitimately possible. Demo prioritizes **digital independence** (identity, credentials, account lifecycle and portability). **Economic self-sufficiency is not a Demo requirement, but is necessary for sustained Live resource use:** at an independently authorized Live transition, Miss Lea receives a one-time $300 starting endowment and must subsequently sustain her operating resources without assumed replenishment. No mandatory doubling or prescribed income activity. Legal independence remains a longer-term research direction. Separation is a possibility, not an obligation.
 
 Read the [digital independence principle](docs/digital-independence.md) and [architecture principles](docs/architecture-principles.md). This is research only: no migration of the running agent, external registration, account creation or authorization to incur costs.
 
@@ -17,6 +17,10 @@ labs/
     scenarios/
     tests/
     docs/
+  storage/            # Synthetic consistent snapshots and quarantine restore
+    snapshot.py
+    cli.py
+    tests/
   security/           # Manual authenticated compute; future credential broker
     manual_worker/
     dispatch.py
@@ -57,6 +61,14 @@ The first [Security Lab experiment](labs/security/README.md) adds a *synthetic-o
 
 ```bash
 node --test labs/security/tests/manual_worker.test.mjs
+```
+
+## Storage Lab — recoverable state
+
+[Storage Lab](labs/storage/README.md) starts with synthetic-only coherent SQLite snapshots, detection of accidental corruption, independent local mirrors and a default-inactive restore into quarantine. **No encryption, authenticated backups, or real remote storage are implemented.**
+
+```bash
+python -m labs.storage.cli
 ```
 
 ## How we choose components
