@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "labs/storage/comparison_trial.py"
+      - "labs/storage/cross_client_trial.py"
       - "labs/storage/backup-comparison-protocol.md"
       - ".github/workflows/storage-backup-comparison.yml"
   workflow_dispatch:
@@ -97,3 +98,38 @@ jobs:
           grep -q 'Duplicacy CLI 3.3.0' labs/storage/backup-comparison-protocol.md
           grep -q 'CONDITIONAL_ON_LICENSE' labs/storage/backup-comparison-protocol.md
           echo "Duplicacy included under vendor commercial-trial permission; ongoing commercial backup is PAID, not a free Demo-to-Live promise."
+
+
+  restic-rustic-cross-restore:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install restic and verified rustic release
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq restic
+          curl --fail --silent --show-error --location --retry 2 \
+            "https://github.com/rustic-rs/rustic/releases/download/v0.11.4/rustic-v0.11.4-x86_64-unknown-linux-gnu.tar.gz" -o /tmp/rustic.tar.gz
+          echo "c20bc3682c6275de3cfbc9317101dca5c0800a2fb5c610d0f9ef2addfd27cf81  /tmp/rustic.tar.gz" | sha256sum --check
+          mkdir -p /tmp/rustic-unpack
+          tar -xzf /tmp/rustic.tar.gz -C /tmp/rustic-unpack
+          binary="$(find /tmp/rustic-unpack -type f -name rustic -print -quit)"
+          test -n "$binary"
+          sudo install -m 0755 "$binary" /usr/local/bin/rustic
+      - name: Verify two-direction cross-client encrypted snapshot restore (read only)
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          python -m labs.storage.cross_client_trial > reports/restic-rustic-cross-client.json
+          python -c 'import json; x=json.load(open("reports/restic-rustic-cross-client.json")); assert len(x["results"])==2 and all(z["bit_exact_restore"] and z["authority_inactive"] for z in x["results"]); print("PASS: restic/rustic read-only restoration in both directions; shared writes NOT TESTED")'
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: sto-002-cross-restic-rustic
+          path: reports/restic-rustic-cross-client.json
+          retention-days: 7
