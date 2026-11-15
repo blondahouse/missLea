@@ -62,7 +62,7 @@ This alone did **not** prove that one identical generation of memory was sent to
 
 The [predeclared STO-006 acceptance protocol](sto006-dual-provider-protocol.md) and [manual GitHub Actions workflow](../../.github/workflows/storage-sto006-dual-provider.yml) prepare a **single synthetic restic snapshot** and submit its **same archive bytes** to real B2 and Google Drive, using separately restricted existing GitHub environments. Two additional clean runners attempt recovery from each provider **without credentials to the other**. Exact byte hashes and original source records are checked, and restored authority stays inactive.
 
-This stage is **not automatically deployed**: the workflow needs an explicit manual dispatch from `main` and review of the existing `sto004-b2` and `sto005-drive` environments. It is a limited provider transport/failover experiment, not a test of actual deletion-proof retention, protected recovery encryption keys or loss of GitHub itself.
+**[STO-006 verified evidence](sto006-dual-provider-results-2026-11-16.md): PASS** on a manual run. Both providers received byte-identical encrypted test bytes (one SHA-256) and both fresh runners restored exact source records, with the other provider's credentials absent. The tested workflow requires manual dispatch and protected environment approval; it is **not** a scheduled service. No actual provider outage, deletion-proof retention, protected recovery encryption keys or loss of GitHub was tested.
 
 ## Research decisions before real storage
 
