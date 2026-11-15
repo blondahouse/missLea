@@ -62,6 +62,10 @@ The operator reported deploying the published Worker, configuring `MISSLEA_TASK_
 
 **Scope of this evidence:** one positive and one unauthenticated negative request as reported by the operator, without storing actual request credentials. Not an independently captured provider audit, robustness assessment, recovery test, rate-limit test or permission to provide cloud account master keys. The manual dispatch experiment is therefore sufficiently evidenced for its narrow initial stop condition.
 
+## First real vault candidate experiments
+
+[SEC-001 isolated vendor trials](trials/README.md) run real OpenBao (limited machine token access and revocation) and self-hosted Infisical (startup/health only) in ephemeral GitHub Actions. They use synthetic credentials and never deploy a master Cloudflare token. **The scopes of evidence differ; no winner or production authorization is implied.**
+
 ## Broader Security Lab — next research decisions (not implemented)
 
 We need an independently authenticated **Credential Broker** that resolves secrets internally and exposes narrow operations to LLM-driven callers. It must guard against prompt injection and compromised agent tools, isolate any provisioning/root credentials, enforce budgets/allowed actions in code, provide audit and revoke/rotate keys without leaking them. Identity proof and an active-instance lease/fencing mechanism must survive model and compute changes without trusting stale backups.
