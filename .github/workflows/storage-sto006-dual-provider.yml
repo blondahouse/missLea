@@ -1,0 +1,229 @@
+name: STO-006 dual real-provider same-generation failover (MANUAL ONLY)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sto006-dual-provider-trial
+  cancel-in-progress: false
+
+# Deliberately public and SYNTHETIC. Never use for real memory.
+env:
+  RESTIC_PASSWORD: sto006-public-synthetic-only-not-for-real-memory
+
+jobs:
+  build-one-generation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Make one consistent synthetic source, encrypt ONCE, verify
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq restic
+          ROOT="$RUNNER_TEMP/sto006"
+          mkdir -p "$ROOT" "$RUNNER_TEMP/sto006-evidence"
+          python -m labs.storage.remote_recovery prepare --root "$ROOT"
+          restic -r "$ROOT/repository" init >/dev/null
+          restic -r "$ROOT/repository" backup "$ROOT/snapshot" >/dev/null
+          restic -r "$ROOT/repository" check --read-data >/dev/null
+          python -m labs.storage.drive_probe pack \
+            --repo "$ROOT/repository" \
+            --archive "$RUNNER_TEMP/sto006-common-encrypted.tar.gz"
+          cp "$ROOT/expected.json" "$RUNNER_TEMP/sto006-evidence/expected.json"
+          sha256sum "$RUNNER_TEMP/sto006-common-encrypted.tar.gz" \
+            | cut -d ' ' -f1 > "$RUNNER_TEMP/sto006-evidence/archive.sha256"
+          test "$(stat -c %s "$RUNNER_TEMP/sto006-common-encrypted.tar.gz")" -lt 20971520
+          echo "PASS: one synthetic memory generation encrypted exactly once; no provider keys used"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sto006-common-encrypted-synthetic-archive
+          path: ${{ runner.temp }}/sto006-common-encrypted.tar.gz
+          retention-days: 1
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sto006-source-checksums-only
+          path: ${{ runner.temp }}/sto006-evidence/
+          retention-days: 1
+          if-no-files-found: error
+
+  upload-b2:
+    needs: build-one-generation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    environment: sto004-b2
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.STO004_B2_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.STO004_B2_APPLICATION_KEY }}
+      AWS_DEFAULT_REGION: eu-central-003
+      AWS_EC2_METADATA_DISABLED: "true"
+      B2_ENDPOINT: https://s3.eu-central-003.backblazeb2.com
+      B2_BUCKET: misslea-storage-lab-b2
+      B2_KEY: sto006/${{ github.run_id }}/memory-restic.tar.gz
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: sto006-common-encrypted-synthetic-archive
+          path: ${{ runner.temp }}/sto006-upload/
+      - name: Upload exact archive via Backblaze S3 with existing restricted B2 key
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$AWS_ACCESS_KEY_ID" && test -n "$AWS_SECRET_ACCESS_KEY"
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq awscli
+          aws configure set default.s3.addressing_style path
+          FILE="$RUNNER_TEMP/sto006-upload/sto006-common-encrypted.tar.gz"
+          aws s3api put-object --endpoint-url "$B2_ENDPOINT" \
+            --bucket "$B2_BUCKET" --key "$B2_KEY" --body "$FILE" >/dev/null
+          REMOTE_SIZE="$(aws s3api head-object --endpoint-url "$B2_ENDPOINT" \
+            --bucket "$B2_BUCKET" --key "$B2_KEY" --query ContentLength --output text)"
+          test "$REMOTE_SIZE" = "$(stat -c %s "$FILE")"
+          echo "PASS: exact common-generation archive uploaded to real B2, length verified"
+
+  upload-drive:
+    needs: build-one-generation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    environment: sto005-drive
+    outputs:
+      file_id: ${{ steps.publish.outputs.file_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/download-artifact@v4
+        with:
+          name: sto006-common-encrypted-synthetic-archive
+          path: ${{ runner.temp }}/sto006-upload/
+      - name: Install pinned Google client library
+        run: |
+          python -m pip install --quiet \
+            "google-api-python-client==2.202.0" \
+            "google-auth==2.62.2" "google-auth-httplib2==0.4.4"
+      - name: Upload identical archive to Google Drive with its OWN OAuth credentials
+        id: publish
+        env:
+          STO005_DRIVE_CLIENT_ID: ${{ secrets.STO005_DRIVE_CLIENT_ID }}
+          STO005_DRIVE_CLIENT_SECRET: ${{ secrets.STO005_DRIVE_CLIENT_SECRET }}
+          STO005_DRIVE_REFRESH_TOKEN: ${{ secrets.STO005_DRIVE_REFRESH_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m labs.storage.drive_probe upload \
+            --archive "$RUNNER_TEMP/sto006-upload/sto006-common-encrypted.tar.gz" \
+            --name "misslea-sto006-synthetic-${{ github.run_id }}.tar.gz" \
+            --id-output "$RUNNER_TEMP/sto006-drive-file-id"
+          printf 'file_id=%s\n' "$(cat "$RUNNER_TEMP/sto006-drive-file-id")" >> "$GITHUB_OUTPUT"
+          echo "PASS: exact common-generation archive uploaded to real Google Drive"
+
+  restore-from-b2-without-drive:
+    needs: [upload-b2, upload-drive]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: sto004-b2
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.STO004_B2_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.STO004_B2_APPLICATION_KEY }}
+      AWS_DEFAULT_REGION: eu-central-003
+      AWS_EC2_METADATA_DISABLED: "true"
+      B2_ENDPOINT: https://s3.eu-central-003.backblazeb2.com
+      B2_BUCKET: misslea-storage-lab-b2
+      B2_KEY: sto006/${{ github.run_id }}/memory-restic.tar.gz
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/download-artifact@v4
+        with:
+          name: sto006-source-checksums-only
+          path: ${{ runner.temp }}/sto006-evidence/
+      - name: Restore from ONLY B2 on fresh runner, no Google Drive token or archive artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$AWS_ACCESS_KEY_ID" && test -n "$AWS_SECRET_ACCESS_KEY"
+          test ! -e "$RUNNER_TEMP/sto006-common-encrypted.tar.gz"
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq awscli restic
+          aws configure set default.s3.addressing_style path
+          ROOT="$RUNNER_TEMP/b2-only-recovery"
+          mkdir -p "$ROOT"
+          aws s3api get-object --endpoint-url "$B2_ENDPOINT" \
+            --bucket "$B2_BUCKET" --key "$B2_KEY" \
+            "$ROOT/downloaded-encrypted.tar.gz" >/dev/null
+          test "$(sha256sum "$ROOT/downloaded-encrypted.tar.gz" | cut -d ' ' -f1)" \
+            = "$(cat "$RUNNER_TEMP/sto006-evidence/archive.sha256")"
+          python -m labs.storage.drive_probe unpack \
+            --archive "$ROOT/downloaded-encrypted.tar.gz" \
+            --dest "$ROOT/unpacked"
+          restic -r "$ROOT/unpacked/repository" check --read-data >/dev/null
+          mkdir "$ROOT/quarantine"
+          restic -r "$ROOT/unpacked/repository" restore latest --target "$ROOT/quarantine" >/dev/null
+          python -m labs.storage.remote_recovery validate \
+            --root "$ROOT/quarantine" \
+            --expected "$RUNNER_TEMP/sto006-evidence/expected.json"
+          echo "PASS: exact common-generation recovery from B2 with NO Google Drive credentials"
+
+  restore-from-drive-without-b2:
+    needs: [upload-b2, upload-drive]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: sto005-drive
+    env:
+      STO006_DRIVE_FILE_ID: ${{ needs.upload-drive.outputs.file_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/download-artifact@v4
+        with:
+          name: sto006-source-checksums-only
+          path: ${{ runner.temp }}/sto006-evidence/
+      - name: Install pinned Google client and restic
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq restic
+          python -m pip install --quiet \
+            "google-api-python-client==2.202.0" \
+            "google-auth==2.62.2" "google-auth-httplib2==0.4.4"
+      - name: Restore from ONLY Drive on fresh runner, no B2 token or archive artifact
+        env:
+          STO005_DRIVE_CLIENT_ID: ${{ secrets.STO005_DRIVE_CLIENT_ID }}
+          STO005_DRIVE_CLIENT_SECRET: ${{ secrets.STO005_DRIVE_CLIENT_SECRET }}
+          STO005_DRIVE_REFRESH_TOKEN: ${{ secrets.STO005_DRIVE_REFRESH_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -e "$RUNNER_TEMP/sto006-common-encrypted.tar.gz"
+          ROOT="$RUNNER_TEMP/drive-only-recovery"
+          mkdir -p "$ROOT"
+          HASH="$(cat "$RUNNER_TEMP/sto006-evidence/archive.sha256")"
+          python -m labs.storage.drive_probe download \
+            --file-id "$STO006_DRIVE_FILE_ID" \
+            --archive "$ROOT/downloaded-encrypted.tar.gz" \
+            --sha256 "$HASH"
+          python -m labs.storage.drive_probe unpack \
+            --archive "$ROOT/downloaded-encrypted.tar.gz" \
+            --dest "$ROOT/unpacked"
+          restic -r "$ROOT/unpacked/repository" check --read-data >/dev/null
+          mkdir "$ROOT/quarantine"
+          restic -r "$ROOT/unpacked/repository" restore latest --target "$ROOT/quarantine" >/dev/null
+          python -m labs.storage.remote_recovery validate \
+            --root "$ROOT/quarantine" \
+            --expected "$RUNNER_TEMP/sto006-evidence/expected.json"
+          echo "PASS: exact common-generation recovery from Drive with NO Backblaze credentials"
