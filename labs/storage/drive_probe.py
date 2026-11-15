@@ -101,7 +101,7 @@ def google_service():
 
 
 def upload(archive: Path, name: str, id_output: Path) -> None:
-    if (not re.fullmatch(r"misslea-sto005-synthetic-[0-9]+[.]tar[.]gz", name)
+    if (not re.fullmatch(r"misslea-sto00[56]-synthetic-[0-9]+[.]tar[.]gz", name)
             or archive.stat().st_size > MAX_ARCHIVE_BYTES):
         raise ValueError("Invalid laboratory archive name or size")
     from googleapiclient.http import MediaFileUpload

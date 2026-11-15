@@ -54,9 +54,15 @@ Both services initially live on the **same CI host and GitHub account**. Even a 
 
 ## STO-005 — second actual provider: Google Drive
 
-[STO-005 browser-only OAuth setup and experiment](sto005-drive-setup.md) prepares the **separate** Miss Lea Google account as a second real remote backend after [B2 STO-004 succeeded](sto004-b2-results-2026-11-15.md). The manual [Google Drive API CI workflow](../../.github/workflows/storage-sto005-real-drive.yml) uploads a **test-only restic-encrypted archive** with the narrow `drive.file` OAuth scope and recovers it on a fresh CI runner without B2 access. It is **not executed until explicit OAuth authorization and protected GitHub environment configuration**.
+[STO-005 browser-only OAuth setup](sto005-drive-setup.md) established access to the **separate** Miss Lea Google account after [B2 STO-004 succeeded](sto004-b2-results-2026-11-15.md). The manual [Google Drive API CI workflow](../../.github/workflows/storage-sto005-real-drive.yml) **succeeded** in uploading a test-only restic-encrypted archive with narrow `drive.file` OAuth scope and recovering it on a different CI runner without B2 access. See [verified STO-005 evidence](sto005-drive-results-2026-11-15.md).
 
-This is NOT yet proof that the *same generation* of actual memory was replicated to B2 and Google Drive, nor of independent root key custody, administrator-safe retention or GitHub-independent recovery.
+This alone did **not** prove that one identical generation of memory was sent to both providers, or independent root key custody, administrator-safe retention or GitHub-independent recovery.
+
+## STO-006 — identical backup generation in both real providers
+
+The [predeclared STO-006 acceptance protocol](sto006-dual-provider-protocol.md) and [manual GitHub Actions workflow](../../.github/workflows/storage-sto006-dual-provider.yml) prepare a **single synthetic restic snapshot** and submit its **same archive bytes** to real B2 and Google Drive, using separately restricted existing GitHub environments. Two additional clean runners attempt recovery from each provider **without credentials to the other**. Exact byte hashes and original source records are checked, and restored authority stays inactive.
+
+This stage is **not automatically deployed**: the workflow needs an explicit manual dispatch from `main` and review of the existing `sto004-b2` and `sto005-drive` environments. It is a limited provider transport/failover experiment, not a test of actual deletion-proof retention, protected recovery encryption keys or loss of GitHub itself.
 
 ## Research decisions before real storage
 
