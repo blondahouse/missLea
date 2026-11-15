@@ -267,9 +267,16 @@ def trial(name: str) -> dict:
                 matched.append(parent)
         if len(matched) != 1:
             found = [x.parent for x in destination.rglob("manifest.json")]
-            missing = sorted(set(expected_hashes) - set(next((p.name for p in found[0].iterdir() if p.is_file()), []))) if found else sorted(expected_hashes)
+            recovered = {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+                         for p in found[0].iterdir() if p.is_file()} if found else {}
+            missing = sorted(set(expected_hashes) - set(recovered))
+            changed = sorted(name for name in expected_hashes if name in recovered
+                             and expected_hashes[name] != recovered[name])
+            extra = sorted(set(recovered) - set(expected_hashes))
             raise TrialError("Restored files mismatch; manifests=" + str(len(found)) +
-                             "; missing filenames=" + ",".join(missing))
+                             "; missing=" + ",".join(missing) +
+                             "; changed=" + ",".join(changed) +
+                             "; extra=" + ",".join(extra))
         source = matched[0]
         verify_snapshot(source)
         quarantine = base / "inert-state.sqlite"
