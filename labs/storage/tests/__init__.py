@@ -1,0 +1,1 @@
+"""Synthetic Storage Lab tests."""
