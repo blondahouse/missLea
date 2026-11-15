@@ -1,0 +1,97 @@
+name: Security Vault Research (synthetic isolated providers)
+
+on:
+  pull_request:
+    paths:
+      - "labs/security/trials/**"
+      - ".github/workflows/security-vault-trials.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  openbao-scoped-api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Start ephemeral OpenBao v2.7.2 (localhost only, no persistent state)
+        run: |
+          set -euo pipefail
+          root="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
+          echo "::add-mask::$root"
+          echo "BAO_ROOT_TEST_TOKEN=$root" >> "$GITHUB_ENV"
+          docker run -d --name ml-openbao \
+            -p 127.0.0.1:18200:8200 \
+            -e BAO_DEV_ROOT_TOKEN_ID="$root" \
+            ghcr.io/openbao/openbao:2.7.2 \
+            server -dev -dev-listen-address=0.0.0.0:8200 >/dev/null
+      - name: Exercise real restricted secret read / denial / revoke
+        run: |
+          set -euo pipefail
+          python labs/security/trials/openbao_trial.py > openbao-report.json
+          python -c "import json; x=json.load(open('openbao-report.json')); assert x['status']=='PASS_SCOPED_SMOKE'; assert all(x['checks']['out_of_scope_denied'].values()); print('PASS: OpenBao real API scopes/revoke, synthetic only')"
+      - name: Report service version and stop
+        if: always()
+        run: |
+          docker image inspect ghcr.io/openbao/openbao:2.7.2 --format '{{.Id}}' || true
+          docker rm -f ml-openbao >/dev/null 2>&1 || true
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: openbao-synthetic-evidence
+          path: openbao-report.json
+          retention-days: 7
+
+  infisical-health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run pinned self-hosted Infisical plus ephemeral PostgreSQL/Redis
+        run: |
+          set -euo pipefail
+          docker network create ml-vault-net >/dev/null
+          dbpass="$(python -c 'import secrets; print(secrets.token_hex(24))')"
+          enc="$(python -c 'import secrets; print(secrets.token_hex(16))')"
+          auth="$(python -c 'import secrets; print(secrets.token_urlsafe(48))')"
+          echo "::add-mask::$dbpass"
+          echo "::add-mask::$enc"
+          echo "::add-mask::$auth"
+          docker run -d --name ml-inf-pg --network ml-vault-net \
+            -e POSTGRES_USER=infisical -e POSTGRES_DB=infisical \
+            -e POSTGRES_PASSWORD="$dbpass" \
+            postgres:16-alpine >/dev/null
+          docker run -d --name ml-inf-redis --network ml-vault-net redis:7-alpine >/dev/null
+          docker run -d --name ml-inf-app --network ml-vault-net \
+            -p 127.0.0.1:18080:8080 \
+            -e NODE_ENV=production -e TELEMETRY_ENABLED=false \
+            -e SITE_URL=http://localhost:18080 \
+            -e "DB_CONNECTION_URI=postgresql://infisical:$dbpass@ml-inf-pg:5432/infisical" \
+            -e "REDIS_URL=redis://ml-inf-redis:6379" \
+            -e "ENCRYPTION_KEY=$enc" -e "AUTH_SECRET=$auth" \
+            infisical/infisical:v0.167.10 >/dev/null
+      - name: Verify only real Infisical health, explicitly no authorization claim
+        run: |
+          set -euo pipefail
+          python labs/security/trials/infisical_health.py > infisical-report.json
+          python -c "import json; x=json.load(open('infisical-report.json')); assert x['status']=='PASS_HEALTH_ONLY_NOT_COMPARABLE_SECURITY'; print('PASS: Infisical startup only; capabilities NOT TESTED')"
+      - name: Record image identity and destroy all containers
+        if: always()
+        run: |
+          docker image inspect infisical/infisical:v0.167.10 --format '{{.Id}}' || true
+          docker rm -f ml-inf-app ml-inf-pg ml-inf-redis >/dev/null 2>&1 || true
+          docker network rm ml-vault-net >/dev/null 2>&1 || true
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: infisical-health-only-evidence
+          path: infisical-report.json
+          retention-days: 7
