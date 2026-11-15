@@ -85,6 +85,9 @@ def run_trial() -> dict:
         if not packs:
             raise RuntimeError("No restic data pack created")
         pack = packs[0]
+        # restic intentionally protects packs as read-only; simulate a privileged
+        # storage-layer corruption, not a normal backup-writer operation.
+        pack.chmod(pack.stat().st_mode | 0o200)
         with pack.open("r+b") as stream:
             stream.seek(max(0, pack.stat().st_size // 2))
             byte = stream.read(1)
