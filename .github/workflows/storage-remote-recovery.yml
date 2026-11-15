@@ -59,6 +59,7 @@ jobs:
           sudo chown mlsto003:mlsto003 /home/mlsto003/.ssh/authorized_keys
           sudo chmod 600 /home/mlsto003/.ssh/authorized_keys
           sudo ssh-keygen -A
+          sudo mkdir -p /run/sshd
           sudo /usr/sbin/sshd -p 12422 -o ListenAddress=127.0.0.1 \
             -o PasswordAuthentication=no -o PermitRootLogin=no \
             -o AllowUsers=mlsto003 \
