@@ -71,6 +71,10 @@ node --test labs/security/tests/manual_worker.test.mjs
 python -m labs.storage.cli
 ```
 
+## Backup-engine comparison
+
+[STO-002](labs/storage/backup-comparison-protocol.md) prospectively compares **restic, Kopia, BorgBackup, rustic and Duplicacy**, rather than treating the first successful restic proof as a selection. Local encrypted-backup CI checks are research evidence only, not a live storage deployment.
+
 ## How we choose components
 
 Start with the [project-wide evaluation policy](docs/evaluation-policy.md): **selection criteria first, tests second**. For every lab, define mandatory gates, evidence needs and a stopping rule before comparing candidates. Historical Router Lab criteria were recorded after exploratory results and are explicitly marked as retrospective; future evaluations must not repeat that order.

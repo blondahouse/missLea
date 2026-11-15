@@ -1,0 +1,135 @@
+name: Storage Backup Engine Comparison (STO-002)
+
+on:
+  pull_request:
+    paths:
+      - "labs/storage/comparison_trial.py"
+      - "labs/storage/cross_client_trial.py"
+      - "labs/storage/backup-comparison-protocol.md"
+      - ".github/workflows/storage-backup-comparison.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  comparable-local-trials:
+    name: real-cli-${{ matrix.engine }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [restic, kopia, borg, rustic, duplicacy]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install versioned backup engine
+        env:
+          ENGINE: ${{ matrix.engine }}
+        run: |
+          set -euo pipefail
+          case "$ENGINE" in
+            restic)
+              sudo apt-get update -qq
+              sudo apt-get install -y -qq restic
+              ;;
+            borg)
+              sudo apt-get update -qq
+              sudo apt-get install -y -qq borgbackup
+              ;;
+            kopia)
+              curl --fail --silent --show-error --location --retry 2 \
+                "https://github.com/kopia/kopia/releases/download/v0.23.1/kopia-0.23.1-linux-x64.tar.gz" -o /tmp/backup-tool.tar.gz
+              echo "416d0f84a3dbb321a8b2d8f0997b1a0a6e915babe79ee76fa6e4d2bd1e1c5178  /tmp/backup-tool.tar.gz" | sha256sum --check
+              mkdir /tmp/ml-backup-bin
+              tar -xzf /tmp/backup-tool.tar.gz -C /tmp/ml-backup-bin
+              binary="$(find /tmp/ml-backup-bin -type f -name kopia -print -quit)"
+              test -n "$binary"
+              sudo install -m 0755 "$binary" /usr/local/bin/kopia
+              ;;
+            duplicacy)
+              curl --fail --silent --show-error --location --retry 2                 "https://github.com/gilbertchen/duplicacy/releases/download/v3.3.0/duplicacy_linux_x64_3.3.0" -o /tmp/duplicacy-binary
+              echo "a2ac4db7018633b116506e081a029dd6635e9619cf24b85c33144640613416ee  /tmp/duplicacy-binary" | sha256sum --check
+              sudo install -m 0755 /tmp/duplicacy-binary /usr/local/bin/duplicacy
+              ;;
+            rustic)
+              curl --fail --silent --show-error --location --retry 2 \
+                "https://github.com/rustic-rs/rustic/releases/download/v0.11.4/rustic-v0.11.4-x86_64-unknown-linux-gnu.tar.gz" -o /tmp/backup-tool.tar.gz
+              echo "c20bc3682c6275de3cfbc9317101dca5c0800a2fb5c610d0f9ef2addfd27cf81  /tmp/backup-tool.tar.gz" | sha256sum --check
+              mkdir /tmp/ml-backup-bin
+              tar -xzf /tmp/backup-tool.tar.gz -C /tmp/ml-backup-bin
+              binary="$(find /tmp/ml-backup-bin -type f -name rustic -print -quit)"
+              test -n "$binary"
+              sudo install -m 0755 "$binary" /usr/local/bin/rustic
+              ;;
+          esac
+          if [ "$ENGINE" = duplicacy ]; then
+            echo "Duplicacy 3.3.0: verified official Linux asset SHA256; CLI help uses nonzero exit"
+          else
+            "$ENGINE" --version || "$ENGINE" version
+          fi
+      - name: Run same synthetic encrypted backup/restore workload
+        env:
+          ENGINE: ${{ matrix.engine }}
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          python -m labs.storage.comparison_trial "$ENGINE" > "reports/sto-002-$ENGINE.json"
+          python -c 'import json,os; x=json.load(open("reports/sto-002-"+os.environ["ENGINE"]+".json")); assert x["status"]=="PASS_LOCAL_COMPARATIVE_TRIAL" and all(x["checks"].values()); assert x["independent_providers_tested"] is False; print("PASS synthetic",x["tool"],x["version"]); print("METRICS",json.dumps({"engine":x["tool"],"version":x["version"],"times":x["timing_seconds"],"bytes_first":x["repository_bytes_after_first"],"bytes_second":x["repository_bytes_after_second"],"rss_kb":x["max_child_rss_kb"]},sort_keys=True))'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sto-002-${{ matrix.engine }}
+          path: reports/sto-002-${{ matrix.engine }}.json
+          retention-days: 7
+          if-no-files-found: ignore
+
+  duplicacy-license-gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify commercial trial is allowed but paid license required for permanent Live use
+        run: |
+          set -euo pipefail
+          grep -q 'Duplicacy CLI 3.3.0' labs/storage/backup-comparison-protocol.md
+          grep -q 'CONDITIONAL_ON_LICENSE' labs/storage/backup-comparison-protocol.md
+          echo "Duplicacy included under vendor commercial-trial permission; ongoing commercial backup is PAID, not a free Demo-to-Live promise."
+
+
+  restic-rustic-cross-restore:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install restic and verified rustic release
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq restic
+          curl --fail --silent --show-error --location --retry 2 \
+            "https://github.com/rustic-rs/rustic/releases/download/v0.11.4/rustic-v0.11.4-x86_64-unknown-linux-gnu.tar.gz" -o /tmp/rustic.tar.gz
+          echo "c20bc3682c6275de3cfbc9317101dca5c0800a2fb5c610d0f9ef2addfd27cf81  /tmp/rustic.tar.gz" | sha256sum --check
+          mkdir -p /tmp/rustic-unpack
+          tar -xzf /tmp/rustic.tar.gz -C /tmp/rustic-unpack
+          binary="$(find /tmp/rustic-unpack -type f -name rustic -print -quit)"
+          test -n "$binary"
+          sudo install -m 0755 "$binary" /usr/local/bin/rustic
+      - name: Verify two-direction cross-client encrypted snapshot restore (read only)
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          python -m labs.storage.cross_client_trial > reports/restic-rustic-cross-client.json
+          python -c 'import json; x=json.load(open("reports/restic-rustic-cross-client.json")); assert len(x["results"])==2 and all(z["bit_exact_restore"] and z["authority_inactive"] for z in x["results"]); print("PASS: restic/rustic read-only restoration in both directions; shared writes NOT TESTED")'
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: sto-002-cross-restic-rustic
+          path: reports/restic-rustic-cross-client.json
+          retention-days: 7
