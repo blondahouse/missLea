@@ -17,6 +17,10 @@ labs/
     scenarios/
     tests/
     docs/
+  security/           # Manual authenticated compute; future credential broker
+    manual_worker/
+    dispatch.py
+    tests/
   identity/           # Identity & Capability Hub synthetic foundation
     hub.py
     cli.py
@@ -45,6 +49,14 @@ Explore a resource inventory, independent account-holder/operator/billing/recove
 
 ```bash
 python -m labs.identity.cli demo
+```
+
+## Security Lab — manual task execution
+
+The first [Security Lab experiment](labs/security/README.md) adds a *synthetic-only* Cloudflare Worker endpoint with separate task authorization and a local client that prompts for a secret. **This does not require a Cloudflare account API token to invoke a Worker**, and is not a deployed vault or automated agent capability.
+
+```bash
+node --test labs/security/tests/manual_worker.test.mjs
 ```
 
 ## How we choose components
