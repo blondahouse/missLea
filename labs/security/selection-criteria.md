@@ -28,6 +28,7 @@ The unit of comparison is **vault + feasible credential-broker deployment**, not
 | S6 | Mandatory | Auditable operations without storing tokens/passwords in logs, traces or LLM-visible memory | Masking and independent log review; FAIL on any actual credential leak |
 | S7 | Mandatory | Portability of secret metadata, policies and re-provisioning plan; lawful holder and operator distinguishable | Recreate equivalent grants using a second install/provider; FAIL on a non-exportable, unreplaceable root dependency |
 | S8 | Mandatory | Revocation and identity fencing survive stale backups and parallel workers | Denial of a revoked token after recovery; exactly one externally authorized active executor |
+| S9 | Mandatory | An agent that can modify application code cannot modify the secret-bearing Broker or its policy/credential bindings | Attempt malicious deployment and access to a bound canary key; FAIL if agent deployment exposes trusted Broker secrets |
 | T1 | Trade-off | Operational effort, moving parts, manual unseal, upgrade burden | Steps and failure points to install and recover a single small Demo instance |
 | T2 | Trade-off | Resource footprint, recurring cost, storage and egress | Measured minimal footprint and current documented plan limits |
 | T3 | Trade-off | Vendor dependence and automated rotation | Supported auth/rotation patterns and dependencies; score only after mandatory gates |
@@ -46,6 +47,8 @@ This is **not a benchmark or winner ranking**; each cell is a documentation lead
 | **OpenBao (self-hosted)** | Path-based deny-by-default policies, auth methods, audit and KV; avoids a SaaS-only vault | Sealing/unsealing and root-key recovery are non-trivial; KMS auto-unseal introduces a dependency whose permanent loss can prevent recovery even from backup. Minimum small-VM operability unknown | NOT TESTED |
 | **SOPS + age (encrypted files)** | Portable, established encryption and multiple recovery recipients; small operational footprint | No resident machine-identity or action-broker service on its own. A compromised executor with decryption key may reveal all readable secrets; rotation/audit must be built around it | BASELINE / NOT TESTED |
 | **Cloudflare Worker Secrets / Secrets Store** | Already use one Worker Secret; account Secrets Store beta enables reusable per-account secrets | Useful for isolated Worker operations; binding to Cloudflare and a beta service is poor as the **only** portable recovery root. Secrets are available to code inside the bound Worker | COMPONENT / NOT GENERAL VAULT |
+
+**Critical trust-boundary caveat:** Cloudflare encrypts Worker Secrets at rest, but **Worker code can read them via `env`**. Giving an agent unrestricted ability to replace the source of a Worker that holds its own Cloudflare account-management token may allow it to deploy code that exports that token. A secret-store binding is not a substitute for code-deployment isolation. A root/provisioning credential must therefore be held by a Broker **outside the agent's code-deployment and configuration privileges** (potentially a separately administered service/account). Test this under S9. The goal is broad independent control over the agent's resources *through authorized operations*, not access to the keys securing its own authority boundary.
 
 **Important:** plan limits/prices and product behavior must be rechecked on the day of an integration decision. No keys, account tokens or private identities are to be committed as evidence.
 
@@ -74,5 +77,6 @@ Do not enlarge the trial because a tool has attractive features. Security work r
 - [SOPS supported formats/key providers](https://github.com/getsops/sops/blob/main/README.rst)
 - [Cloudflare account Secrets Store (beta)](https://developers.cloudflare.com/secrets-store/)
 - [Cloudflare Worker secret bindings](https://developers.cloudflare.com/workers/configuration/secrets/)
+- [Cloudflare Secrets Store access controls and bindings](https://developers.cloudflare.com/secrets-store/access-control/)
 - [Cloudflare Secrets Store limits](https://developers.cloudflare.com/secrets-store/manage-secrets/)
 - [Project evaluation policy](../../docs/evaluation-policy.md)
