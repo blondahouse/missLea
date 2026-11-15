@@ -31,7 +31,7 @@ jobs:
           set -euo pipefail
           sudo apt-get update -qq
           sudo apt-get install -y -qq restic
-          python -m pip install --quiet "google-api-python-client>=2.0,<3.0" "google-auth>=2.0,<3.0" "google-auth-httplib2>=0.2.0,<1.0"
+          python -m pip install --quiet "google-api-python-client==2.202.0" "google-auth==2.62.2" "google-auth-httplib2==0.4.4"
       - name: Build encrypted synthetic archive, verify and produce manifest
         run: |
           set -euo pipefail
@@ -83,7 +83,7 @@ jobs:
           set -euo pipefail
           sudo apt-get update -qq
           sudo apt-get install -y -qq restic
-          python -m pip install --quiet "google-api-python-client>=2.0,<3.0" "google-auth>=2.0,<3.0" "google-auth-httplib2>=0.2.0,<1.0"
+          python -m pip install --quiet "google-api-python-client==2.202.0" "google-auth==2.62.2" "google-auth-httplib2==0.4.4"
       - uses: actions/download-artifact@v4
         with:
           name: sto005-nonsecret-source-checksums
