@@ -58,7 +58,7 @@ class DualProviderWorkflowContract(unittest.TestCase):
         self.assertEqual(self.source.count(
             "name: sto006-common-encrypted-synthetic-archive"), 3)
         self.assertIn("--archive \"$RUNNER_TEMP/sto006-common-encrypted.tar.gz\"", self.source)
-        self.assertIn("aws s3api get-object", self.jobs["restore-from-b2-without-drive"])
+        self.assertIn("labs.storage.b2_probe download", self.jobs["restore-from-b2-without-drive"])
         self.assertIn("labs.storage.drive_probe download",
                       self.jobs["restore-from-drive-without-b2"])
         self.assertEqual(self.source.count("archive.sha256"), 3)
