@@ -45,7 +45,9 @@ jobs:
               echo "416d0f84a3dbb321a8b2d8f0997b1a0a6e915babe79ee76fa6e4d2bd1e1c5178  /tmp/backup-tool.tar.gz" | sha256sum --check
               mkdir /tmp/ml-backup-bin
               tar -xzf /tmp/backup-tool.tar.gz -C /tmp/ml-backup-bin
-              sudo install -m 0755 /tmp/ml-backup-bin/kopia /usr/local/bin/kopia
+              binary="$(find /tmp/ml-backup-bin -type f -name kopia -print -quit)"
+              test -n "$binary"
+              sudo install -m 0755 "$binary" /usr/local/bin/kopia
               ;;
             rustic)
               curl --fail --silent --show-error --location --retry 2 \
@@ -53,7 +55,9 @@ jobs:
               echo "c20bc3682c6275de3cfbc9317101dca5c0800a2fb5c610d0f9ef2addfd27cf81  /tmp/backup-tool.tar.gz" | sha256sum --check
               mkdir /tmp/ml-backup-bin
               tar -xzf /tmp/backup-tool.tar.gz -C /tmp/ml-backup-bin
-              sudo install -m 0755 /tmp/ml-backup-bin/rustic /usr/local/bin/rustic
+              binary="$(find /tmp/ml-backup-bin -type f -name rustic -print -quit)"
+              test -n "$binary"
+              sudo install -m 0755 "$binary" /usr/local/bin/rustic
               ;;
           esac
           "$ENGINE" --version || "$ENGINE" version
