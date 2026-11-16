@@ -11,10 +11,14 @@ class FakeHTTP:
     def send(self, method, url, *, headers=None, body=None):
         self.calls.append((method,url,headers,body))
         if url.endswith("/api/v1/auth/universal-auth/login"):
-            return {"accessToken":"test-vault-session"}
+            return {"accessToken":"root-session" if b"root-id" in body else "ops-session"}
         if "/api/v4/secrets/" in url:
             if method=="GET":
                 key=url.split("/api/v4/secrets/")[1].split("?")[0]
+                if key=="ROOT_ACCESS_CANARY":
+                    if headers.get("Authorization")!="Bearer root-session":
+                        raise OperatorError("provider_operation_failed")
+                    return {"secret":{"secretValue":"fake-boundary-canary"}}
                 values={"CLOUDFLARE_ACCOUNT_ID":"a"*32,
                     "CLOUDFLARE_WORKERS_ADMIN_TOKEN":"ops-only-fake-token",
                     "CLOUDFLARE_PROVISIONING_TOKEN":"root-only-fake-token",
@@ -53,6 +57,11 @@ class OperatorTests(unittest.TestCase):
     def setUp(self):
         self.http=FakeHTTP()
         self.vault=InfisicalVault(self.http,ENV)
+
+    def test_vault_canary_proves_ops_cannot_read_root_project(self):
+        verdict=self.vault.check_isolation()
+        self.assertEqual(verdict["operational_identity_root_access"],"denied")
+        self.assertNotIn("fake-boundary-canary",json.dumps(verdict))
 
     def test_separate_machine_identity_and_vault_scope(self):
         self.assertEqual(self.vault.get("OPS","CLOUDFLARE_ACCOUNT_ID"),"a"*32)
