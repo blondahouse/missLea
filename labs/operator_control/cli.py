@@ -12,11 +12,18 @@ def main(argv=None):
     parser.add_argument("--manifest",default="labs/operator_control/accounts.example.json")
     parser.add_argument("--command-file",help="Path to non-secret JSON command; privileged runner only")
     parser.add_argument("--list-accounts",action="store_true")
+    parser.add_argument("--check-vault-isolation",action="store_true",
+                        help="Live canary check with ROOT/OPS machine identities; never prints secret value")
     args=parser.parse_args(argv)
     try:
+        if args.list_accounts and args.check_vault_isolation:
+            raise OperatorError("conflicting_modes")
         if args.list_accounts:
             data=validate_manifest(json.loads(Path(args.manifest).read_text()))
             result={"accounts":public_account_index(data)}
+        elif args.check_vault_isolation:
+            http=HTTP()
+            result=InfisicalVault(http).check_isolation()
         else:
             if not args.command_file:
                 raise OperatorError("missing_command")
