@@ -182,6 +182,8 @@ class CloudflareAdapter:
         if not KEY.fullmatch(secret_name):
             raise OperatorError("invalid_secret_handle")
         token, account = self._credentials(root=True)
+        if resource_scope != "com.cloudflare.api.account." + account:
+            raise OperatorError("wrong_cloudflare_account_scope")
         body = json.dumps({"name":name,"policies":[{
             "effect":"allow","permission_groups":[{"id":permission_group_id}],
             "resources":{resource_scope:"*"}
