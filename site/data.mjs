@@ -164,7 +164,7 @@ export const nodes=[
     "id": "email",
     "stage": "control",
     "title": "Почта и новые аккаунты",
-    "provider": "Gmail • misslea931@gmail.com",
+    "provider": "Gmail • отдельный аккаунт",
     "owner": "external",
     "status": "planned",
     "subtitle": "Identity / Recovery / регистрация",
