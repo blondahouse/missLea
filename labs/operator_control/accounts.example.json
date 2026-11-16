@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "accounts": [
+    {
+      "id": "misslea-cloudflare",
+      "provider": "cloudflare",
+      "principal": "Miss Lea Cloudflare account",
+      "legal_holder": "Founder-controlled",
+      "operator": "Trusted operator",
+      "billing_party": "none (free only)",
+      "recovery_authority": "Founder escrow initially",
+      "root_ref": "ROOT:CLOUDFLARE_PROVISIONING_TOKEN",
+      "ops_ref": "OPS:CLOUDFLARE_WORKERS_ADMIN_TOKEN"
+    },
+    {
+      "id": "misslea-google",
+      "provider": "google",
+      "principal": "missLea931@gmail.com",
+      "legal_holder": "Founder-controlled",
+      "operator": "Trusted operator",
+      "billing_party": "none (free only)",
+      "recovery_authority": "Founder escrow initially",
+      "root_ref": "ROOT:GOOGLE_ACCOUNT_RECOVERY",
+      "ops_ref": "OPS:GMAIL_REFRESH_TOKEN"
+    }
+  ]
+}

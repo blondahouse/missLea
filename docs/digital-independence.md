@@ -24,6 +24,18 @@ A human may still be needed for initial legal acceptance, verification, recovery
 
 Digital independence does **not** imply unrestricted authority. No access to the founder's personal accounts, other projects, payment instruments or undisclosed resources; no assumption that possession of a backup or key grants revoked permissions. Authorizations remain explicit and bounded. Recovery and cloning must not result in competing active instances carrying out the same external actions.
 
+## Delegated operator control — decision of 2026-11-16
+
+The founder explicitly delegates broad administrative stewardship of **Miss Lea's dedicated digital accounts** to a trusted operator. The desired maximum covers new service provisioning, credential issuance/rotation/revocation, cloud administration, dedicated email access, account recovery, migration and continuity; the founder must not remain a routine manual-click dependency. Operations are still bounded by provider APIs/terms, lawful account ownership and separately authorized financial commitments.
+
+Implement this with one portable **Operator Control Plane**: a secret-free account and authority registry, separately held **Root Vault** (full recovery/provisioning credentials) and **Operational Vault** (revocable everyday tokens), plus an isolated trusted executor. The trusted executor may use root authority to rescue or re-provision, but should prefer scoped credentials for routine calls. Root secrets must not be delivered into an LLM context, untrusted agent tool, agent-editable source or GitHub Actions running that source. The founder can remain an initial recovery escrow; full independent recovery is an explicit technical goal, not a capability already proved.
+
+The currently trusted operator is the ChatGPT assistant acting under the founder's direction **through available connected tools or a separately authenticated broker**, not a permanently running process with implicit account access. After verifying the protections and provider rules, the same portable control structure may be delegated to Miss Lea's future trusted executor without exporting the secrets to the agent model. This delegation must never silently create a second active administrator or reinstate revoked authority from a backup.
+
+Route `missLea931@gmail.com` via this trusted operator and delegated Google OAuth, not via the founder's personal Gmail connector. Google-account owner/recovery authentication and the Gmail API are distinct powers. No autonomous registrations, paid commitments or master credentials are granted merely by this architectural decision; they require actual lawful account authorization.
+
+The active engineering reference is [Operator Control Plane V1](../labs/operator_control/README.md). Its public repository implementation is currently synthetic; protected private execution, Free vault-role denial and independent recovery remain mandatory before adding actual root credentials.
+
 ## 2. Economic independence — a practical condition of Live
 
 **Demo is an exploration and preparation stage, not a self-funding test.** Prioritize free resources and investigate ways to obtain, earn, allocate and pay for resources. Income or profitability is not required during Demo. The presence of a free trial does not imply that it will remain free.
