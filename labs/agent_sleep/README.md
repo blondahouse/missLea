@@ -43,22 +43,21 @@ Sources:
 - https://supabase.com/docs/guides/platform/free-project-pausing
 - https://supabase.com/docs/guides/functions/quickstart-dashboard
 
-## Optional Deno cloud trial — not preferred due April 2027 shutdown
+## Cloudflare setup + real two-wake test
 
-The source repository is public, but all runtime secrets remain within each provider's **Secret** settings. Do not use the existing `late-glade-5dde` Worker or any live TinyFund accounts. User login/consent may be needed for linking GitHub to providers.
+This research is **not deployed** just because CI passes. Only anonymous synthetic records are used. Do not modify the existing `late-glade-5dde` Worker or real TinyFund resources. The two clouds are independent at runtime; GitHub is only a source-code host for Cloudflare's one-time deployment.
 
-**1. Deno Deploy Free (OPTIONAL / DEPRECATED FOR FUTURE DESIGN)** (https://console.deno.com): Create a separate Free organization/app if necessary, select GitHub repository `blondahouse/missLea`, set **App directory** to `labs/agent_sleep`, use the supplied `deno.json` (Dynamic / `executor.mjs`). Do not add a payment method or paid plan. In app Environment Variables add secret `LAB_EXECUTOR_TOKEN` (at least 32 random characters) for Production. Deploy and note the actual HTTPS app URL. Verify `GET /health` returns `{"role":"synthetic_executor","status":"ready"}`.
+1. Under Cloudflare Workers Free, create a **new** Worker linked to GitHub repository `blondahouse/missLea`; name it `misslea-anonymous-sleep-lab` and set **Root directory** to `labs/agent_sleep`. Use `npx wrangler deploy`, the committed `wrangler.toml`, and SQLite-backed Durable Objects; disable preview builds. Cloudflare's integrated build system can create its own deployment token without storing it in this repo.
+2. In Worker Settings → Variables and Secrets, add `LAB_ADMIN_TOKEN` as a random 32+-character **Secret** (distinct from all other tokens), `EXECUTOR_TOKEN` as a **Secret** (same value as the external compute provider's `LAB_EXECUTOR_TOKEN`), and `EXECUTOR_URL` as the chosen executor's HTTPS URL (ordinary variable, since URLs are not confidential).
+3. Open `https://<NEW-WORKER>.workers.dev/control` in a phone browser. Enter only the lab-specific admin token, then select **Запустить два пробуждения**. The page sends it through a same-origin HTTPS Authorization header and clears the field; it does not save it locally, add it to URLs, or call any third-party script.
+4. Select **Проверить состояние**. Only real Cloudflare alarms can produce `{"role":"wake_dispatcher","status":"completed","wakes":2,"completed":true}`. No GitHub runner participates in the actual wake/compute cycle. The authorized `/status` endpoint gives full synthetic events; public `/health` gives sanitized state.
+5. Check external executor logs for two authenticated POSTs, Cloudflare alarms and usage dashboards for a zero-cost run. Publish a sanitized receipt as the final PASS evidence. Do not treat local CI as proof of real cloud execution.
 
-**2. Cloudflare Workers Free** (https://dash.cloudflare.com): Create a NEW Worker connected to the same GitHub repository, Worker name `misslea-anonymous-sleep-lab`, **Root directory** `labs/agent_sleep`, deploy via `npx wrangler deploy` using `wrangler.toml` and its SQLite Durable Object migration. Keep preview builds disabled. Cloudflare's native Git integration can manage a deployment token internally, avoiding owner-supplied API credentials. In Worker Settings → Variables and Secrets configure:
-- `LAB_ADMIN_TOKEN` — a different random 32+-character **Secret**;
-- `EXECUTOR_TOKEN` — the exact same random value as Deno `LAB_EXECUTOR_TOKEN`, **Secret**;
-- `EXECUTOR_URL` — actual Deno HTTPS endpoint URL, **plaintext variable** (not a credential).
+## Optional disposable Deno alternative (sunsets April 2027)
 
-**3. Real two-wake run, no GitHub runner (Supabase preferred; Deno optional)**: Open `https://<YOUR-NEW-WORKER>.workers.dev/control` in a browser; enter the lab-only admin token, click **Запустить два пробуждения**, then refresh **Проверить состояние**. The HTML does not persist the entered token or send it to other origins. After two actual alarms, unauthenticated `GET /health` on Cloudflare must report `{"role":"wake_dispatcher","status":"completed","wakes":2,"completed":true}`. Authorized `GET /status` (via trusted HTTP client) gives full synthetic events. The Cloudflare alarm, state writes and Deno calls execute in the two providers alone; GitHub supplies deployment source but **does not perform scheduling or execution**.
+The experimental `executor.mjs` can also run on the **new** Deno Deploy Free (https://console.deno.com) as a second provider, but is **not preferred** for the first persistent assembly because Deno Deploy is being shut down. If used temporarily: create a Free app linked to `blondahouse/missLea`, App directory `labs/agent_sleep`, with the committed `deno.json`; configure Production Secret `LAB_EXECUTOR_TOKEN`, and set Cloudflare `EXECUTOR_URL` to the deployed HTTPS URL. No paid features or card.
 
-**4. Evidence and exit**: Observe external executor request logs (two authenticated POSTs) and Cloudflare Durable Object alarms/state. Record sanitized receipt, actual Free-plan usage and any quota failures. Delete/revoke the two lab tokens or remove the lab services afterward. No claims of actual cloud PASS until these observations exist.
-
-**Not done by repository changes:** signing into provider accounts, connecting GitHub applications, setting runtime secrets and clicking Deploy. These are interactive provider-side operations.
+**Not done by repository changes:** provider login, new isolated account/project creation, connecting GitHub to Cloudflare, configuring secrets, actual live invocation, and cleanup. These require authorized access to the provider dashboards.
 
 **Limits:** shared header tokens are sufficient for harmless lab arithmetic, not a production broker. Remote execution is at-least-once; task retries are safe only because it is pure computation. Operator-only deployment rights must remain separate from any future self-modifying agent. Free quotas can change; exhausting a quota means sleep or block, never paid fallback.
 
