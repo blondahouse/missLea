@@ -1,0 +1,15 @@
+name = "misslea-cloudflare-only-lab"
+main = "src/index.mjs"
+compatibility_date = "2026-11-16"
+compatibility_flags = ["nodejs_compat"]
+
+[ai]
+binding = "AI"
+
+[[durable_objects.bindings]]
+name = "AnonymousFreeAgent"
+class_name = "AnonymousFreeAgent"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["AnonymousFreeAgent"]
