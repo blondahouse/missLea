@@ -20,14 +20,18 @@ Free's basic project role boundaries need a real denial test: an Ops identity at
 
 ### Deposit securely without sharing with ChatGPT
 
+**Do not deposit real master credentials yet.** First confirm project isolation in a live trusted environment using a fake canary. This avoids storing a root password in a Free-tier configuration whose basic role boundaries have not been tested.
+
 1. You log in to Infisical **directly** in your browser (not via ChatGPT or a link with an encoded token) using the dedicated Miss Lea-controlled organization; verify the HTTPS origin.
-2. In `misslea-root`, add values via **Add Secret → Name / Value**:
+2. Create the two separate projects and their Root/OPS machine identities; add **only** a synthetic `ROOT_ACCESS_CANARY` secret to the `misslea-root` project. Once the private protected operator runner is established, run `python -m labs.operator_control.cli --check-vault-isolation` there. It must report `operational_identity_root_access=denied`. This is a genuine provider-side denial test, not just a simulated one.
+3. Only after that PASS, add real account secrets through Infisical's protected **Add Secret** form.
+   In `misslea-root`, add values via **Add Secret → Name / Value**:
    - `CLOUDFLARE_PROVISIONING_TOKEN` — high-privilege account-owned API token with Account API Tokens Write and intended provisioning powers. **Not necessarily** equivalent to Cloudflare web account Super Administrator;
    - `CLOUDFLARE_RECOVERY_LOGIN`, `CLOUDFLARE_RECOVERY_PASSWORD`, `CLOUDFLARE_RECOVERY_CODES` if available;
    - `GOOGLE_ACCOUNT_RECOVERY` and recovery codes/instructions for `missLea931@gmail.com`. Full recovery of the Google account is not granted by Gmail OAuth.
-3. In `misslea-operations`, add `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_WORKERS_ADMIN_TOKEN` (account-wide Workers Admin for normal provisioning, **not** Cloudflare root), and later `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN`. The last three must be acquired with a one-time genuine OAuth grant from the Miss Lea Google account, **not** your currently connected personal Gmail.
-4. Create **Root** and **Ops** Infisical machine identities with Universal Auth and assign them as above. Bootstrap credentials for the *runner itself* go into its own protected environment, not into `misslea` agent runtime. The free Infisical UI is the only normal ingestion path; no tokens are pasted in ChatGPT, logs, source, screenshots, or CLI arguments.
-5. Record only the Infisical project IDs, role boundaries, operational status and secret *names* in the metadata registry. Do **not** publish actual private account IDs, user-identifying recovery details, Client ID/Client Secret or credential values in this repository.
+   In `misslea-operations`, add `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_WORKERS_ADMIN_TOKEN` (account-wide Workers Admin for normal provisioning, **not** Cloudflare root), and later `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN`. The last three must be acquired with a one-time genuine OAuth grant from the Miss Lea Google account, **not** your currently connected personal Gmail.
+   Create **Root** and **Ops** Infisical machine identities with Universal Auth and assign them as above. Bootstrap credentials for the *runner itself* go into its own protected environment, not into `misslea` agent runtime. The free Infisical UI is the only normal ingestion path; no tokens are pasted in ChatGPT, logs, source, screenshots, or CLI arguments.
+   Record only the Infisical project IDs, role boundaries, operational status and secret *names* in the metadata registry. Do **not** publish actual private account IDs, user-identifying recovery details, Client ID/Client Secret or credential values in this repository.
 
 ### Separate trusted execution environment
 
