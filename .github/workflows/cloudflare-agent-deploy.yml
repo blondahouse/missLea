@@ -1,0 +1,84 @@
+name: Cloudflare Lab — automatic deployment
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'labs/cloudflare_agent/**'
+      - '.github/workflows/cloudflare-agent-deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-agent-lab-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: cloudflare-agent-lab
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check one-time bootstrap
+        id: bootstrap
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          LAB_TOKEN: ${{ secrets.LAB_ADMIN_TOKEN }}
+        run: |
+          if [[ -n "$CF_TOKEN" && -n "$CF_ACCOUNT" && ${#LAB_TOKEN} -ge 32 ]]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Cloudflare autonomous deployment not bootstrapped: create the dedicated Worker and configure three protected environment secrets."
+          fi
+      - name: Install dependencies
+        if: steps.bootstrap.outputs.ready == 'true'
+        working-directory: labs/cloudflare_agent
+        run: npm install --ignore-scripts
+      - name: Validate synthetic lab
+        if: steps.bootstrap.outputs.ready == 'true'
+        working-directory: labs/cloudflare_agent
+        run: npm run check && npm run build:check
+      - name: Deploy only the dedicated Cloudflare Worker
+        if: steps.bootstrap.outputs.ready == 'true'
+        working-directory: labs/cloudflare_agent
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy
+      - name: Set lab-only launch secret
+        if: steps.bootstrap.outputs.ready == 'true'
+        working-directory: labs/cloudflare_agent
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          LAB_TOKEN: ${{ secrets.LAB_ADMIN_TOKEN }}
+        run: |
+          printf "%s" "$LAB_TOKEN" | npx wrangler secret put LAB_ADMIN_TOKEN
+      - name: Trigger bounded synthetic run
+        if: steps.bootstrap.outputs.ready == 'true'
+        env:
+          LAB_TOKEN: ${{ secrets.LAB_ADMIN_TOKEN }}
+          LAB_URL: ${{ vars.CLOUDFLARE_LAB_URL }}
+        run: |
+          if [[ -z "$LAB_URL" ]]; then
+            echo "::notice::Worker deployed. Set environment variable CLOUDFLARE_LAB_URL to enable automatic synthetic start."
+            exit 0
+          fi
+          if [[ "$LAB_URL" != https://* || "$LAB_URL" == *"?"* || "$LAB_URL" == *"#"* ]]; then
+            echo "::error::Invalid HTTPS lab URL."
+            exit 1
+          fi
+          curl --fail --silent --show-error --max-time 20 -X POST \
+            -H "Authorization: Bearer $LAB_TOKEN" \
+            "$LAB_URL/start"
+          echo
+          echo "::notice::Synthetic run requested. The two scheduled wakes are performed by Cloudflare, not GitHub Actions."

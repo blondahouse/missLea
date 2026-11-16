@@ -23,6 +23,10 @@ No KV database, separate VM, external router, Infisical, or memory SaaS is requi
 
 The login token `LAB_ADMIN_TOKEN` is stored as a Worker Secret, never in GitHub. `/status` is public only because this lab uses fabricated data; production agents must authenticate it. Public `/` shows a tiny mobile-friendly start/status page. The token is used once and cleared from the field.
 
+## Cloudflare deployment options
+
+**Preferred for ongoing unattended operation:** [one-time machine authorization and automatic main-branch deployment](AUTONOMY.md). The option below uses Cloudflare's own Git integration and is also valid, but its automatically generated build token currently has broader default permissions.
+
 ## Deploy via Cloudflare's GitHub integration (manual provider access)
 
 1. In the separate Miss Lea Cloudflare account, check Workers plan is **Free**; do not upgrade or add a payment method. Create a **new** Worker `misslea-cloudflare-only-lab`; keep the existing `late-glade-5dde` Worker unchanged.
