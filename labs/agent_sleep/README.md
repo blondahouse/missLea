@@ -25,20 +25,38 @@ Can a Cloudflare SQLite-backed Durable Object hold a wake schedule and small eve
 
 **Local/offline check** (on GitHub Actions, not the owner's PC): `node --test labs/agent_sleep/tests.mjs`.
 
-## Live cloud trial — minimal dashboard setup (not yet performed)
+## Preferred external executor: Supabase Edge Functions Free
+
+**Why the change (2026-11-16):** Deno announced that **Deno Deploy shuts down in April 2027** (https://deno.com/blog/cloudflare). Keep the Deno profile as a disposable compatibility option, **not** a long-term operational dependency. The current recommended second cloud is **Supabase Edge Functions Free**: 500,000 invocations/month, up to 2 CPU seconds/request and 150 s wall time on Free. Free projects may pause after a week of insufficient activity. No guarantee of indefinite free availability.
+
+- Use a **separate Miss Lea laboratory Supabase account/project** on the Free plan, not the founder's other Supabase projects. Never use personal project credentials or upgrade to paid.
+- Deploy a function named `anonymous-sleep-executor` with files: `index.ts` from `supabase_index.ts` and `executor.mjs` from this directory. The index module just boots the same tested handler.
+- Configure **secret** `LAB_EXECUTOR_TOKEN` with a fresh random 32+-character value in that project.
+- Deploy with **Supabase JWT pre-verification disabled**, because the handler performs its own exact Bearer-token check; no other operations are exposed. The function is intentionally limited to anonymous synthetic arithmetic. Supabase project management credentials must not enter the Worker.
+- Verify public `GET https://<PROJECT_REF>.supabase.co/functions/v1/anonymous-sleep-executor/health` returns `{"role":"synthetic_executor","status":"ready"}`. Set Cloudflare `EXECUTOR_URL` to that function's base HTTPS URL (without `/health`).
+- Set the exact same `LAB_EXECUTOR_TOKEN` value as Cloudflare Worker secret `EXECUTOR_TOKEN`. Do not put it in GitHub, reports, this chat, or the URL.
+- A connected Supabase deployment capability can install the function once the dedicated project/account is accessible; alternatively use the Supabase dashboard. The 2-wake runtime runs without GitHub or a user computer.
+
+Sources:
+- https://supabase.com/docs/guides/functions/limits
+- https://supabase.com/docs/guides/functions/pricing
+- https://supabase.com/docs/guides/platform/free-project-pausing
+- https://supabase.com/docs/guides/functions/quickstart-dashboard
+
+## Optional Deno cloud trial — not preferred due April 2027 shutdown
 
 The source repository is public, but all runtime secrets remain within each provider's **Secret** settings. Do not use the existing `late-glade-5dde` Worker or any live TinyFund accounts. User login/consent may be needed for linking GitHub to providers.
 
-**1. Deno Deploy Free** (https://console.deno.com): Create a separate Free organization/app if necessary, select GitHub repository `blondahouse/missLea`, set **App directory** to `labs/agent_sleep`, use the supplied `deno.json` (Dynamic / `executor.mjs`). Do not add a payment method or paid plan. In app Environment Variables add secret `LAB_EXECUTOR_TOKEN` (at least 32 random characters) for Production. Deploy and note the actual HTTPS app URL. Verify `GET /health` returns `{"role":"synthetic_executor","status":"ready"}`.
+**1. Deno Deploy Free (OPTIONAL / DEPRECATED FOR FUTURE DESIGN)** (https://console.deno.com): Create a separate Free organization/app if necessary, select GitHub repository `blondahouse/missLea`, set **App directory** to `labs/agent_sleep`, use the supplied `deno.json` (Dynamic / `executor.mjs`). Do not add a payment method or paid plan. In app Environment Variables add secret `LAB_EXECUTOR_TOKEN` (at least 32 random characters) for Production. Deploy and note the actual HTTPS app URL. Verify `GET /health` returns `{"role":"synthetic_executor","status":"ready"}`.
 
 **2. Cloudflare Workers Free** (https://dash.cloudflare.com): Create a NEW Worker connected to the same GitHub repository, Worker name `misslea-anonymous-sleep-lab`, **Root directory** `labs/agent_sleep`, deploy via `npx wrangler deploy` using `wrangler.toml` and its SQLite Durable Object migration. Keep preview builds disabled. Cloudflare's native Git integration can manage a deployment token internally, avoiding owner-supplied API credentials. In Worker Settings → Variables and Secrets configure:
 - `LAB_ADMIN_TOKEN` — a different random 32+-character **Secret**;
 - `EXECUTOR_TOKEN` — the exact same random value as Deno `LAB_EXECUTOR_TOKEN`, **Secret**;
 - `EXECUTOR_URL` — actual Deno HTTPS endpoint URL, **plaintext variable** (not a credential).
 
-**3. Real two-wake run, no GitHub runner**: Open `https://<YOUR-NEW-WORKER>.workers.dev/control` in a browser; enter the lab-only admin token, click **Запустить два пробуждения**, then refresh **Проверить состояние**. The HTML does not persist the entered token or send it to other origins. After two actual alarms, unauthenticated `GET /health` on Cloudflare must report `{"role":"wake_dispatcher","status":"completed","wakes":2,"completed":true}`. Authorized `GET /status` (via trusted HTTP client) gives full synthetic events. The Cloudflare alarm, state writes and Deno calls execute in the two providers alone; GitHub supplies deployment source but **does not perform scheduling or execution**.
+**3. Real two-wake run, no GitHub runner (Supabase preferred; Deno optional)**: Open `https://<YOUR-NEW-WORKER>.workers.dev/control` in a browser; enter the lab-only admin token, click **Запустить два пробуждения**, then refresh **Проверить состояние**. The HTML does not persist the entered token or send it to other origins. After two actual alarms, unauthenticated `GET /health` on Cloudflare must report `{"role":"wake_dispatcher","status":"completed","wakes":2,"completed":true}`. Authorized `GET /status` (via trusted HTTP client) gives full synthetic events. The Cloudflare alarm, state writes and Deno calls execute in the two providers alone; GitHub supplies deployment source but **does not perform scheduling or execution**.
 
-**4. Evidence and exit**: Observe Deno request logs (two authenticated POSTs) and Cloudflare Durable Object alarms/state. Record sanitized receipt, actual Free-plan usage and any quota failures. Delete/revoke the two lab tokens or remove the lab services afterward. No claims of actual cloud PASS until these observations exist.
+**4. Evidence and exit**: Observe external executor request logs (two authenticated POSTs) and Cloudflare Durable Object alarms/state. Record sanitized receipt, actual Free-plan usage and any quota failures. Delete/revoke the two lab tokens or remove the lab services afterward. No claims of actual cloud PASS until these observations exist.
 
 **Not done by repository changes:** signing into provider accounts, connecting GitHub applications, setting runtime secrets and clicking Deploy. These are interactive provider-side operations.
 
@@ -46,7 +64,8 @@ The source repository is public, but all runtime secrets remain within each prov
 
 ## First provider roles, not winners
 - **Cloudflare Workers + Durable Objects:** free scheduler, alarm, small durable memory.
-- **Deno Deploy Free:** first remote compute candidate (published 10 active CPU hours and 150 GiB-hours memory/month as of 2026-11-16).
+- **Supabase Edge Functions Free:** preferred remote executor; single constrained HTTPS function and no VM. Free project idle-pausing is a documented risk.
+- **Deno Deploy Free:** disposable portability comparator only; provider announced April 2027 shutdown.
 - **GitHub Actions:** test/CI executor, not assumed production general-purpose compute.
 - **Modal Starter / Google Cloud Run Jobs:** later alternatives only after hard no-charge protections are established.
 - **Cloudflare Pi harness / Memory engines:** next evaluation after the simple wake/offload contract is proven. This lab deliberately does not simulate semantic memory or a personality.
