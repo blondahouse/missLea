@@ -6,6 +6,8 @@ from labs.operator_control.registry import validate_manifest, public_account_ind
 class FakeHTTP:
     def __init__(self):
         self.calls=[]
+        self.fail_vault_write=False
+        self.fail_revoke=False
     def send(self, method, url, *, headers=None, body=None):
         self.calls.append((method,url,headers,body))
         if url.endswith("/api/v1/auth/universal-auth/login"):
@@ -21,6 +23,8 @@ class FakeHTTP:
                     "GMAIL_REFRESH_TOKEN":"refresh-secret"}
                 return {"secret":{"secretValue":values[key]}}
             if method=="POST":
+                if self.fail_vault_write:
+                    return {"approval":{"id":"pending"}}
                 return {"secret":{"id":"stored"}}
         if url.endswith("/workers/scripts") and method=="GET":
             return {"success":True,"result":[{"id":"misslea-existing"}]}
@@ -29,7 +33,7 @@ class FakeHTTP:
         if method=="POST" and url.endswith("/tokens"):
             return {"success":True,"result":{"id":"token-id-1234","value":"issued-secret-never-shown"}}
         if method=="DELETE" and "/tokens/" in url:
-            return {"success":True}
+            return {"success":not self.fail_revoke}
         if url=="https://oauth2.googleapis.com/token":
             return {"access_token":"oauth-access-secret"}
         if url.endswith("/gmail/v1/users/me/profile"):
@@ -84,6 +88,19 @@ class OperatorTests(unittest.TestCase):
         self.assertEqual(len(writes),1)
         self.assertIn(b"issued-secret-never-shown",writes[0][3])
         self.assertEqual(len([c for c in self.http.calls if c[0]=="DELETE"]),0)
+
+    def test_failed_secret_storage_revokes_and_fails_closed(self):
+        self.http.fail_vault_write=True
+        cmd={"operation":"cloudflare.token.issue","name":"Lab Worker Editor",
+            "permission_group_id":"a"*32,
+            "resource_scope":"com.cloudflare.api.account."+"a"*32,
+            "secret_name":"CLOUDFLARE_NEW_WORKER_TOKEN"}
+        with self.assertRaisesRegex(OperatorError,"token_storage_failed_revoked"):
+            execute(cmd,http=self.http,vault=self.vault)
+        self.assertEqual(len([c for c in self.http.calls if c[0]=="DELETE"]),1)
+        self.http.fail_revoke=True
+        with self.assertRaisesRegex(OperatorError,"token_storage_failed_revocation_unknown"):
+            execute(cmd,http=self.http,vault=self.vault)
 
     def test_gmail_oauth_profile_not_direct_chatgpt_connector(self):
         obj=execute({"operation":"gmail.profile"},http=self.http,vault=self.vault)
