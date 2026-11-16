@@ -1,11 +1,8 @@
 name: Cloudflare Lab — automatic deployment
 
+# Optional legacy deployment path, disabled for automatic pushes.
+# The verified deployment path is the private misslea-operator workflow.
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'labs/cloudflare_agent/**'
-      - '.github/workflows/cloudflare-agent-deploy.yml'
   workflow_dispatch:
 
 permissions:

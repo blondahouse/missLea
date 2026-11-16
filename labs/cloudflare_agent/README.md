@@ -1,6 +1,6 @@
 # Cloudflare-only Agent + Memory + Sleep Lab
 
-**Status: implemented source, NOT deployed; no live CPU, AI or Alarm results yet.**
+**Status: LIVE VERIFIED (2026-11-17) for bounded synthetic test.** Trusted operator deployed to `misslea-cloudflare-only-lab`. Actual receipt: `status=completed, wakes=2, modelCalls=2, events=3, blockedReason=null` after two native scheduled wakes, two Workers AI calls and retained tool output (38). [Verified private operator run](https://github.com/blondahouse/misslea-operator/actions/runs/43979791125) and [public synthetic status endpoint](https://misslea-cloudflare-only-lab.misslea931.workers.dev/status). Cloudflare Free usage/billing metrics have **not** been independently inspected; there is no claim of measured ongoing zero cost.
 Independent of running TinyFund. No user data, personal conversations, model API keys, paid providers, autonomous purchases, or external side effects.
 
 ## Goal and scope
@@ -25,7 +25,7 @@ The login token `LAB_ADMIN_TOKEN` is stored as a Worker Secret, never in GitHub.
 
 ## Cloudflare deployment options
 
-**Preferred for ongoing unattended operation:** [one-time machine authorization and automatic main-branch deployment](AUTONOMY.md). The option below uses Cloudflare's own Git integration and is also valid, but its automatically generated build token currently has broader default permissions.
+**Verified path:** the separate private trusted operator `blondahouse/misslea-operator` deploys a pinned public lab commit with an Operations-only token from Infisical OIDC. An ephemeral random lab-only secret is installed and used to initiate the bounded trial; its value is **not** persisted. The alternative [public-repository deployment workflow](AUTONOMY.md) remains reference material and is not the live deployment path. The Cloudflare Git integration instructions below are another manual alternative.
 
 ## Deploy via Cloudflare's GitHub integration (manual provider access)
 
@@ -35,7 +35,7 @@ The login token `LAB_ADMIN_TOKEN` is stored as a Worker Secret, never in GitHub.
 4. Open the new `workers.dev` address on a phone. `/health` should return `{"lab":"cloudflare-only-free-agent","ready":true}`. At `/`, enter the secret and press **Запустить**. After scheduled execution, select **Проверить состояние**.
 5. A genuine PASS requires a persisted public `/status` receipt with `completed, wakes=2, modelCalls=2`; check actual Free-plan usage in Workers / Durable Objects / Workers AI dashboards. Record only a sanitized receipt. The page itself cannot fake completed status: state comes from the Agent Durable Object.
 
-**This repo's CI does not deploy or call models.** It only checks the portable core and compiles the actual Workers bundle. CI success is **not** cloud deployment success. The optional external compute lab remains preserved at `labs/agent_sleep`.
+**This public repo's offline CI does not deploy or call models.** The separate private trusted operator performed the proven real deployment and model calls. Local CI success alone is still not provider evidence. The optional external compute lab remains preserved at `labs/agent_sleep`.
 
 ## Known limits
 
