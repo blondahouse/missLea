@@ -1,8 +1,10 @@
 # Autonomous Cloudflare lab operations — one-time bootstrap
 
-**Status:** automation code prepared; **no Cloudflare account access is available to ChatGPT**, **no real Worker deployment has occurred**, and an empty GitHub environment makes this job a documented no-op rather than pretending success.
+**Status (2026-11-17):** The synthetic lab was deployed and a two-wake cycle was **verified live** through the **private trusted operator**, not through this public repository's optional deployment workflow. [Verified operator Actions](https://github.com/blondahouse/misslea-operator/actions/runs/43979791125). The public workflow described below is a legacy alternative and has **not** been bootstrapped with Cloudflare API credentials. Do not confuse offline CI or its no-op outcome with a live deployment.
 
-## Purpose
+## Purpose — optional legacy deployment route
+
+For current experiments, prefer the verified private operator using Infisical Operations OIDC. The instructions below document an alternative only; it should not be activated concurrently with the private deployer.
 
 After one deliberate human authorization, GitHub is a **control plane**, not an agent runtime. The assistant can author and merge changes in this repository. A main-branch push within `labs/cloudflare_agent` triggers GitHub Actions to deploy a **single** synthetic Cloudflare Worker. GitHub Actions stops after deployment and a one-time start request; Cloudflare Agents SDK schedules and executes subsequent wakes.
 
