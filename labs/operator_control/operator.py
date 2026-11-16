@@ -102,6 +102,19 @@ class InfisicalVault:
             raise OperatorError("secret_unavailable")
         return value
 
+    def check_isolation(self):
+        """Real preflight: Root canary must exist and OPS identity MUST be denied on Root project."""
+        self.get("ROOT", "ROOT_ACCESS_CANARY")
+        root_project = self._identity("ROOT")[2]
+        ops_token = self._token("OPS")
+        params = urlencode({"projectId":root_project,"environment":"prod","secretPath":"/"})
+        url = self.base + "/api/v4/secrets/ROOT_ACCESS_CANARY?" + params
+        try:
+            self.http.send("GET",url,headers={"Authorization":"Bearer "+ops_token})
+        except OperatorError:
+            return {"root_project_canary":"present","operational_identity_root_access":"denied"}
+        raise OperatorError("vault_isolation_failed")
+
     def put_operational(self, key, value):
         """Root identity must be granted write access to the operations project."""
         if not KEY.fullmatch(key) or not isinstance(value,str) or not value:
