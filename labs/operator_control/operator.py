@@ -196,8 +196,10 @@ class CloudflareAdapter:
         except (OperatorError, RuntimeError):
             # Do not leave an orphan privileged token silently in the provider.
             try:
-                self.http.send("DELETE",f"https://api.cloudflare.com/client/v4/accounts/{account}/tokens/{quote(str(result['id']))}",
+                revoke = self.http.send("DELETE",f"https://api.cloudflare.com/client/v4/accounts/{account}/tokens/{quote(str(result['id']))}",
                    headers={"Authorization":"Bearer "+token})
+                if revoke.get("success") is not True:
+                    raise OperatorError("revocation_not_confirmed")
             except Exception:
                 raise OperatorError("token_storage_failed_revocation_unknown") from None
             raise OperatorError("token_storage_failed_revoked") from None
