@@ -177,7 +177,7 @@ class CloudflareAdapter:
             raise OperatorError("invalid_token_name")
         if not isinstance(permission_group_id,str) or not re.fullmatch(r"[0-9a-f]{32}",permission_group_id):
             raise OperatorError("invalid_permission_group")
-        if not isinstance(resource_scope,str) or not re.fullmatch(r"com\\.cloudflare\\.api\\.account\\.[0-9a-f]{32}",resource_scope):
+        if not isinstance(resource_scope,str) or not re.fullmatch(r"com\.cloudflare\.api\.account\.[0-9a-f]{32}",resource_scope):
             raise OperatorError("invalid_resource_scope")
         if not KEY.fullmatch(secret_name):
             raise OperatorError("invalid_secret_handle")
