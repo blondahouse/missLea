@@ -3,10 +3,56 @@ const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status, headers: {"content-type":"application/json; charset=utf-8","cache-control":"no-store"}
 });
 
+// Phone-friendly synthetic test control. No external JS, no token persistence.
+const control = () => new Response(`<!doctype html>
+<html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Anonymous Sleep Lab</title>
+<style>body{font:16px system-ui;max-width:36rem;margin:2rem auto;padding:0 1rem;line-height:1.5}
+input,button{font:inherit;padding:.65rem;width:100%;box-sizing:border-box;margin:.5rem 0}
+pre{white-space:pre-wrap;overflow-wrap:anywhere}small{color:#666}</style>
+<h1>Anonymous Sleep Lab</h1><p>Два пробуждения Cloudflare → Deno. Только синтетические данные.</p>
+<label for="secret">Одноразовый пароль управления (не сохраняется)</label>
+<input id="secret" type="password" autocomplete="off" spellcheck="false" />
+<button id="start" type="button">Запустить два пробуждения</button>
+<button id="check" type="button">Проверить состояние</button>
+<pre id="output" aria-live="polite">Ожидает запуска</pre>
+<small>Нет модели, личной памяти, платных вызовов или постоянного процесса.</small>
+<script>
+async function inspect(){
+ const r=await fetch('/health',{cache:'no-store'});
+ document.querySelector('#output').textContent=JSON.stringify(await r.json(),null,2);
+}
+document.querySelector('#check').addEventListener('click',inspect);
+document.querySelector('#start').addEventListener('click',async()=>{
+ const input=document.querySelector('#secret');
+ const token=input.value; input.value='';
+ try {
+  const r=await fetch('/schedule',{method:'POST',headers:{
+   'authorization':'Bearer '+token,'content-type':'application/json'},
+   body:JSON.stringify({delay_seconds:10})});
+  document.querySelector('#output').textContent=JSON.stringify(await r.json(),null,2);
+ } catch {document.querySelector('#output').textContent='Запрос не удался';}
+});
+inspect();
+</script></html>`, {
+ status:200, headers:{
+ 'content-type':'text/html; charset=utf-8','cache-control':'no-store',
+ 'x-content-type-options':'nosniff','referrer-policy':'no-referrer',
+ 'content-security-policy':"default-src 'none'; connect-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+ }
+});
+
 export class LabClock {
   constructor(ctx, env) { this.ctx = ctx; this.env = env; }
   async fetch(request) {
     const path = new URL(request.url).pathname;
+    if (request.method === "GET" && path === "/health") {
+      const state = (await this.ctx.storage.get("lab")) ?? {};
+      return json({
+        role:"wake_dispatcher", status:state.status ?? "not_started",
+        wakes:state.wakes ?? 0, completed:state.status === "completed"
+      });
+    }
     if (request.method === "GET" && path === "/status")
       return json((await this.ctx.storage.get("lab")) ?? {status:"not_started"});
     if (request.method !== "POST" || path !== "/schedule")
@@ -87,6 +133,12 @@ export class LabClock {
 }
 export default {
   async fetch(request, env) {
+    const path = new URL(request.url).pathname;
+    if (request.method === "GET" && path === "/control") return control();
+    if (request.method === "GET" && path === "/health") {
+      const id = env.LAB_CLOCK.idFromName("anonymous-sleep-lab");
+      return env.LAB_CLOCK.get(id).fetch(request);
+    }
     if (!env.LAB_ADMIN_TOKEN ||
         request.headers.get("authorization") !== `Bearer ${env.LAB_ADMIN_TOKEN}`)
       return json({error:"unauthorized"}, 401);

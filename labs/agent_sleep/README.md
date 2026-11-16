@@ -1,6 +1,6 @@
 # Agent + Memory + Sleep Lab — free hybrid prototype
 
-**Status:** synthetic offline implementation; actual cloud wake and execution **NOT TESTED**.
+**Status:** deploy-ready synthetic implementation; actual cross-cloud alarms/compute **NOT YET TESTED**.
 No real Miss Lea memory, personal data, cloud account mutation, paid work or TinyFund migration.
 
 ## Decision
@@ -20,15 +20,27 @@ Can a Cloudflare SQLite-backed Durable Object hold a wake schedule and small eve
 - `executor.mjs`: stateless Deno Deploy endpoint accepting a restricted, authenticated, repeatable arithmetic task (2²+3²+5²=38). No external network access or storage.
 - `tests.mjs`: runnable native Node tests with in-process fake storage, actual task contract and simulated alarms.
 - `wrangler.toml`: isolated lab Worker name and SQLite Durable Object migration.
+- `deno.json`: documented Deno Deploy dynamic entrypoint when application directory is `labs/agent_sleep`.
+- `GET /control` on Cloudflare: small mobile-friendly **lab-only** control panel; enters token only in memory, sends it in an HTTPS authorization header and clears the field. `GET /health` on both services gives only synthetic readiness/cycle status.
 
 **Local/offline check** (on GitHub Actions, not the owner's PC): `node --test labs/agent_sleep/tests.mjs`.
 
-## Operator-approved cloud trial (not deployed by this PR)
-1. Confirm **Workers Free** and **new Deno Deploy Free** plans have zero-cost stop behavior; do not create paid subscriptions or enable automatic overage. The old Deno Deploy product is being sunset; use the current new platform, not a legacy app.
-2. Deploy `executor.mjs` to a lab-only Deno app and set a fresh random 32+-character `LAB_EXECUTOR_TOKEN` in platform secrets.
-3. Deploy `wrangler.toml` from this directory to a **new lab-only** Cloudflare Worker. Configure `LAB_ADMIN_TOKEN` (different 32+-character secret), `EXECUTOR_TOKEN` (matching Deno's lab token), and `EXECUTOR_URL` (HTTPS endpoint) as secrets.
-4. With a trusted operator client, authenticated POST `/schedule` with `{"delay_seconds":10}`. Check `GET /status` later with the admin token. Never insert a token in source, URL, ChatGPT, shell command history, GitHub Actions or a screenshot.
-5. Accept only actual `status=completed`, `wakes=2`, three ordered events, no paid usage, and distinct platform receipts. Revoke tokens and remove test services when evidence is collected.
+## Live cloud trial — minimal dashboard setup (not yet performed)
+
+The source repository is public, but all runtime secrets remain within each provider's **Secret** settings. Do not use the existing `late-glade-5dde` Worker or any live TinyFund accounts. User login/consent may be needed for linking GitHub to providers.
+
+**1. Deno Deploy Free** (https://console.deno.com): Create a separate Free organization/app if necessary, select GitHub repository `blondahouse/missLea`, set **App directory** to `labs/agent_sleep`, use the supplied `deno.json` (Dynamic / `executor.mjs`). Do not add a payment method or paid plan. In app Environment Variables add secret `LAB_EXECUTOR_TOKEN` (at least 32 random characters) for Production. Deploy and note the actual HTTPS app URL. Verify `GET /health` returns `{"role":"synthetic_executor","status":"ready"}`.
+
+**2. Cloudflare Workers Free** (https://dash.cloudflare.com): Create a NEW Worker connected to the same GitHub repository, Worker name `misslea-anonymous-sleep-lab`, **Root directory** `labs/agent_sleep`, deploy via `npx wrangler deploy` using `wrangler.toml` and its SQLite Durable Object migration. Keep preview builds disabled. Cloudflare's native Git integration can manage a deployment token internally, avoiding owner-supplied API credentials. In Worker Settings → Variables and Secrets configure:
+- `LAB_ADMIN_TOKEN` — a different random 32+-character **Secret**;
+- `EXECUTOR_TOKEN` — the exact same random value as Deno `LAB_EXECUTOR_TOKEN`, **Secret**;
+- `EXECUTOR_URL` — actual Deno HTTPS endpoint URL, **plaintext variable** (not a credential).
+
+**3. Real two-wake run, no GitHub runner**: Open `https://<YOUR-NEW-WORKER>.workers.dev/control` in a browser; enter the lab-only admin token, click **Запустить два пробуждения**, then refresh **Проверить состояние**. The HTML does not persist the entered token or send it to other origins. After two actual alarms, unauthenticated `GET /health` on Cloudflare must report `{"role":"wake_dispatcher","status":"completed","wakes":2,"completed":true}`. Authorized `GET /status` (via trusted HTTP client) gives full synthetic events. The Cloudflare alarm, state writes and Deno calls execute in the two providers alone; GitHub supplies deployment source but **does not perform scheduling or execution**.
+
+**4. Evidence and exit**: Observe Deno request logs (two authenticated POSTs) and Cloudflare Durable Object alarms/state. Record sanitized receipt, actual Free-plan usage and any quota failures. Delete/revoke the two lab tokens or remove the lab services afterward. No claims of actual cloud PASS until these observations exist.
+
+**Not done by repository changes:** signing into provider accounts, connecting GitHub applications, setting runtime secrets and clicking Deploy. These are interactive provider-side operations.
 
 **Limits:** shared header tokens are sufficient for harmless lab arithmetic, not a production broker. Remote execution is at-least-once; task retries are safe only because it is pure computation. Operator-only deployment rights must remain separate from any future self-modifying agent. Free quotas can change; exhausting a quota means sleep or block, never paid fallback.
 

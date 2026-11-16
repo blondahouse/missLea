@@ -22,6 +22,8 @@ test("executor rejects unauthenticated and malformed tasks", async () => {
     job_id:"aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa:1",
     values:[2,3,5],prior_event_count:1
   };
+  const publicHealth = await run(new Request("https://lab.invalid/health"));
+  assert.deepEqual(await publicHealth.json(),{role:"synthetic_executor",status:"ready"});
   const good = await run(request("/compute","POST",task));
   assert.equal(good.status,200);
   assert.deepEqual(await good.json(),{
@@ -47,6 +49,13 @@ test("two bounded wakes preserve synthetic memory across restarted instance", as
   try {
     assert.equal((await worker.fetch(
       new Request("https://lab.invalid/status"),env)).status,401);
+    const control = await worker.fetch(new Request("https://lab.invalid/control"),env);
+    assert.equal(control.status,200);
+    const body = await control.text();
+    assert.ok(body.includes('Запустить два пробуждения'));
+    assert.ok(!body.includes(token));
+    assert.equal((await worker.fetch(
+      new Request("https://lab.invalid/health"),env)).status,200);
     assert.equal((await worker.fetch(
       request("/schedule","POST",{delay_seconds:5}),env)).status,202);
     assert.ok(storage.alarmTime);
@@ -63,6 +72,10 @@ test("two bounded wakes preserve synthetic memory across restarted instance", as
     assert.equal(state.events.length,3);
     assert.equal(state.status,"completed");
     assert.equal(state.next_at,null);
+    const health = await worker.fetch(new Request("https://lab.invalid/health"),env);
+    assert.deepEqual(await health.json(),{
+      role:"wake_dispatcher",status:"completed",wakes:2,completed:true
+    });
   } finally { globalThis.fetch = oldFetch; }
 });
 test("provider failures stop after one retry without switching to paid services", async () => {

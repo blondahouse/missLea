@@ -4,6 +4,8 @@ const json = (data, status = 200) => new Response(JSON.stringify(data), {
 });
 export function createExecutorHandler(token) {
   return async function handle(request) {
+    if (request.method === "GET" && new URL(request.url).pathname === "/health")
+      return json({role:"synthetic_executor", status:"ready"});
     if (!token || request.headers.get("authorization") !== `Bearer ${token}`)
       return json({error:"unauthorized"}, 401);
     if (request.method !== "POST") return json({error:"method_not_allowed"}, 405);
