@@ -1,42 +1,31 @@
-# Unified Living Memory — D1 Phase 1
+# Unified Living Memory — Cloudflare D1 Phase 1
 
-Status (17 November 2026): LIVE PASS for the isolated synthetic D1 memory service. The three-request trial verified creation, revision, reinterpretation, FTS5 index updates and persistence across requests. The autonomous Agent Core remains a separate Worker without a Memory Manager binding; complete Phase 1 acceptance is still pending.
+**Status (2026-11-18):** The standalone synthetic D1 service has an independent live PASS for create/revise/reinterpret/FTS5 across three authenticated requests. **It has since been connected** to an isolated autonomous Agent Core in `misslea-core-memory-lab`. Cross-wake writes and reads are live-verified, but the overall unattended synthetic trial is now `blocked` by an invalid model decision; full Phase 1 acceptance remains open.
 
-Cloudflare D1 is a managed SQLite database with FTS5, not an AI memory service. A replaceable Memory Manager provides remember, read, revise, reinterpret, budgeted recall, current-state export and an explicit unavailable external-evidence interface. D1 handles persistent records, parameterized SQL and full-text indexing.
+## Actual boundaries
 
-Subjective records include a stable ID, schema version, mutable content, kind, strength, confidence, significance, accessibility, stability, revision, timestamps and an optional source link. Reinterpretation produces a new present-day memory, not a rollback. Read access does not increase memory strength.
+Cloudflare **D1** is the authoritative SQLite/FTS5 record store; it is **not** an AI memory service. Our replaceable `src/manager.mjs` is the Memory Manager (remember, read, revise, reinterpret, budgeted recall and batch export). `src/d1.mjs` is the parameterized D1 adapter. The integrated Cloudflare Worker calls them through a narrow in-process port; there is no independent memory daemon, paid memory SaaS, VM, public general-purpose SQL endpoint or second active writer.
 
-There is no voluntary whole-record delete, age-based TTL, routine snapshot of former personalities, arbitrary record-count limit or automatic eviction until genuine storage pressure can be measured. Associations, non-linear decay, protected documents and historical inspection are future phases.
+D1 records have stable IDs, schema versions, revisions, mutable content, kind, five distinct weight fields, timestamps and optional derivation source. The manager does not expose whole-record voluntary deletion; read does not automatically strengthen a memory. The model is only allowed to remember, recall, revise or reinterpret using a bounded context and last-known record pointer, not arbitrary SQL or public exports.
 
-Worker operational state, credentials, signed contracts, financial obligations and granted authority must remain outside this subjective store. Neither the D1 adapter nor current export can be accessed over a public HTTP endpoint.
+The Agent SDK's SQLite-backed Durable Object stores the **operational wake state**, counters, provisional intent/notes and most recent D1 memory ID. It does not contain the authoritative subjective record text. Privileged credentials, legal documents, contracts and external authority do not belong in subjective memory.
 
-Offline tests, no external accounts or credits:
+## Current verified evidence
 
-    node --test labs/living_memory/test/*.test.mjs
-    python -m unittest discover -s labs/living_memory/test -p 'test_*.py' -v
+- [Standalone D1 smoke evidence](D1_LIVE_STATUS_2026-11-17.md): create/revise/reinterpret, persistence and full-text index updates across multiple HTTP requests.
+- [Current integrated Core evidence](../cloudflare_agent/CORE_MEMORY_INTEGRATION.md): the read-only status at 2026-11-17 22:03:52 UTC reported **4 wakes, 2 memory writes, 4 memory reads and 3 memory contexts**. The final state is `blocked` with `invalid_decision`, not a broken D1 binding. [Operator diagnostic](https://github.com/blondahouse/misslea-operator/actions/runs/44148862213).
 
-A dedicated D1 database is already provisioned with the migration and an isolated synthetic Worker binding. Before connecting it to Agent Core, verify the actual Free-plan quotas and add a narrowly scoped memory port. The existing live Agent Core Worker remains unchanged.
+The integrated Worker and standalone D1 smoke Worker are distinct. The trusted private Operator provisions/reuses the dedicated synthetic D1 database, verifies its migration, binds it to the integrated Worker and deploys pinned source. GitHub Actions is **not** the agent's wake scheduler.
 
-## Dedicated live D1 smoke adapter
+## Deliberately absent
 
-A separate synthetic Worker source is available at src/cloudflare_smoke.mjs.
-The related Wrangler configuration intentionally has no database identifier.
-Only the private trusted operator may create a dedicated D1 database, apply the
-SQL migration, add the runtime MEMORY_DB binding and deploy the Worker.
+Decay, link/association traversal, autonomously triggered consolidation, physical eviction on real storage pressure, safe historical testimony, personal memory import, independent replication and real provider quota/cost measurements are not implemented. The current interface is a staged implementation of the [adopted memory concept](../../docs/memory-concept.md), not the complete concept.
 
-Its fixed synthetic trial uses three separate authenticated HTTP requests:
-create and retrieve a fabricated memory, revise it and create an interpretation,
-and verify persistence and FTS5 index changes from a fresh Worker invocation.
-No private content, generic SQL, external record editing or public memory APIs
-are exposed. This lab is distinct from the deployed autonomous Agent Core.
+Offline verification (no Cloudflare credentials):
 
-Successful live evidence and historical failures: [D1 live status](D1_LIVE_STATUS_2026-11-17.md).
+```bash
+node --test labs/living_memory/test/*.test.mjs
+python -m unittest discover -s labs/living_memory/test -p 'test_*.py' -v
+```
 
-
-## Model-facing integration
-
-The isolated memory-aware Agent Core uses a narrow Memory Manager port for
-model-selected writes and later reads. The D1 database remains the
-source of truth; the Durable Object keeps only record pointers and counters.
-This does not add decay, autonomous consolidation or personal-memory import.
-See [integration design](../cloudflare_agent/CORE_MEMORY_INTEGRATION.md).
+See [Cloudflare-first roadmap](../../docs/memory-cloudflare-roadmap.md) and [integration record](../cloudflare_agent/CORE_MEMORY_INTEGRATION.md).
