@@ -39,6 +39,6 @@ assert.ok(memoryHtml.includes('id="exposure"'));
 assert.ok(memoryHtml.includes("Unified Living Memory"));
 assert.ok(memoryDecision.includes("Adopted primary memory concept"));
 assert.ok(memoryPlan.includes("Cloudflare first"));
-const pageSources=[html,js,memoryHtml,readFileSync(new URL("./data.mjs",import.meta.url),"utf8")];
+const pageSources=[html,js,css,memoryHtml,readFileSync(new URL("./data.mjs",import.meta.url),"utf8")];
 for(const src of pageSources) assert.ok(!/[\u0400-\u04FF]/u.test(src),"site must contain English-only content");
 console.log("PASS:",nodes.length,"nodes,",edges.length,"evidence-linked edges,",categories.length,"domains");
