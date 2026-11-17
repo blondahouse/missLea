@@ -258,7 +258,8 @@ test("safe resume continues the same run and D1 memory without replaying a faile
   const memory=store(),schedules=[];
   const replies=[
     reply("memory.remember","I saw a synthetic comet"),
-    "{ invalid json", // wake two: one returned invalid decision
+    "{ invalid json", // first invalid decision, no side effects
+    "{ also invalid json", // invalid correction, still no side effects
     reply("memory.recall","comet",null,"A new observation",null)
   ];
   const io={runId:"resume-original",memory,clock:()=>now,
@@ -267,7 +268,7 @@ test("safe resume continues the same run and D1 memory without replaying a faile
     schedule:async item=>schedules.push(item),
     infer:async messages=>{
       calls++;
-      if(calls===3) {
+      if(calls===4) {
         assert.equal(state.wakes,3);
         assert.equal(state.runId,"resume-original");
         assert.ok(messages[1].content.includes("I saw a synthetic comet"));
@@ -279,10 +280,14 @@ test("safe resume continues the same run and D1 memory without replaying a faile
   now=Date.parse(state.nextWakeAt);
   await wakeWithMemory(io);
   assert.equal(memory.records.size,1);
-  // Simulate an existing blocked invalid decision from the previous version:
-  // no model correction occurred, and no tool ran during the failed wake.
-  state={...state,status:"blocked",reason:"invalid_decision",
-    nextWakeAt:null,wakes:2,modelCalls:2};
+  now=Date.parse(state.nextWakeAt);
+  const blocked=await wakeWithMemory(io);
+  assert.equal(blocked.status,"blocked");
+  assert.equal(blocked.reason,"invalid_decision");
+  assert.equal(state.modelCalls,3);
+  assert.equal(calls,3);
+  // Both attempted replies were invalid: no second tool or memory write.
+  assert.equal(state.toolCalls,1);
   assert.equal(state.events.length,1);
   const originalId=state.lastMemoryId;
   const originalWrites=state.memoryWrites;
@@ -293,23 +298,23 @@ test("safe resume continues the same run and D1 memory without replaying a faile
   assert.equal(state.lastMemoryId,originalId);
   assert.equal(state.memoryWrites,originalWrites);
   assert.equal(state.wakes,2);
-  assert.equal(state.modelCalls,2);
+  assert.equal(state.modelCalls,3);
   assert.equal(state.resumeCount,1);
-  assert.equal(calls,1);
+  assert.equal(calls,3);
   assert.equal(schedules.length,3);
   assert.equal(schedules[2].runId,"resume-original");
   await assert.rejects(resumeMemoryRun(io),/resume_not_safe/);
   now=Date.parse(state.nextWakeAt);
   await wakeWithMemory(io);
   assert.equal(state.wakes,3);
-  assert.equal(state.modelCalls,3);
+  assert.equal(state.modelCalls,4);
   assert.equal(state.status,"paused");
   assert.equal(memory.records.size,1);
   assert.equal(state.lastMemoryId,originalId);
   assert.equal(state.memoryWrites,originalWrites);
   assert.ok(state.memoryReads>=1);
   assert.ok(state.memoryContexts>=1);
-  assert.equal(calls,2);
+  assert.equal(calls,4);
 });
 test("resume refuses uncertainty, unrelated reasons, paused state, or exhausted budgets",()=>{
   const base={...initialMemoryState("closed",start),
