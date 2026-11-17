@@ -1,12 +1,13 @@
 # Memory implementation roadmap — Cloudflare first, replaceable internals
 
-**Status:** Proposed incremental delivery plan implementing the [adopted Unified Living Memory concept](memory-concept.md). The steps are design milestones, **not approved deployments, account creation, paid services or live-data migration**.
+**Status (2026-11-18):** Incremental delivery plan implementing the [adopted Unified Living Memory concept](memory-concept.md). **Phase 1 synthetic Cloudflare Core + Memory Manager + D1 is now deployed with confirmed cross-wake memory continuity**, but the trial has stopped on an invalid model decision and full acceptance (including resource usage verification) remains open. Later phases are designs, **not approvals** for personal memory import, paid services or new external resources.
 
 ## Starting evidence
 
 - [Cloudflare Agent Lab](../labs/cloudflare_agent/README.md) **verified** two native wakes, two Workers AI calls and persisted synthetic state on 17 Nov 2026. That proves a bounded lifecycle, **not** production memory quality, free-tier headroom or general agent reliability.
 - [Memory Lab](../labs/memory/README.md) currently has a **synthetic SQLite lexical-retrieval baseline only**. No memory framework has won a fair comparison.
-- The existing stateful agent uses a SQLite-backed Durable Object. Keep its wake coordination/operational state separate from the agent's **subjective** memory. This avoids accidental restoration of authorizations or pending operations through the memory interface.
+- The current synthetic Core uses an Agents SDK SQLite-backed Durable Object for wake coordination/operational state, and a separate authoritative **D1** database for subjective records through the Memory Manager. This separation prevents old subjective memories from restoring authority or pending operations.
+- [Integrated Core + D1 evidence](../labs/cloudflare_agent/CORE_MEMORY_INTEGRATION.md): 4 native autonomous wakes, 2 memory writes and 3 memory contexts observed on 17 November UTC. Current state is **blocked / invalid_decision**, with no alarm; model-output recovery and quotas still require validation.
 
 ## Non-negotiable interfaces from day one
 
@@ -24,7 +25,7 @@ Evaluate what the current retrieval baseline can and cannot do; specify comparab
 
 **Ready when:** the baseline and missing capabilities are explicit, with bounded costs and reproducible synthetic tests. No personal memory enters the public lab.
 
-**Implementation update (17 Nov 2026):** standalone Memory Manager, parameterized D1 adapter and FTS5 schema exist at labs/living_memory. A dedicated D1 and independent Worker are live-verified for the full synthetic create/revise/reinterpret/recall sequence across three authenticated requests. Agent Core remains unbound, and actual Cloudflare quotas/costs are not independently measured. Phase 1 acceptance as an integrated autonomous agent remains open.
+**Implementation update (18 Nov 2026):** the standalone Memory Manager, parameterized D1 adapter and FTS5 schema at `labs/living_memory` passed an independent three-request D1 smoke trial. They are **now bound** to the isolated `misslea-core-memory-lab` Agent Core. A later read-only status confirmed 4 wakes / 4 inference calls / 2 memory writes / 4 memory reads / 3 memory contexts. The run then stopped with `invalid_decision`; no further wake is scheduled. Cross-wake memory delivery is verified, but arbitrary record revision by the agent, recovery from malformed model output, and actual Cloudflare CPU/Neuron/D1 quota/cost measurements are **not** established.
 
 ## Phase 1 — minimal native Living Memory
 
@@ -32,7 +33,7 @@ Evaluate what the current retrieval baseline can and cannot do; specify comparab
 
 Provide create, read, revise, short recall, explicit token/context budget and a small current-context assembler. Miss Lea may edit content, redact fragments and adjust subjective weights but cannot issue a whole-record delete; no full autobiographical logging is required. Protect the endpoint with existing agent capability boundaries.
 
-**Ready when:** a synthetic agent can wake, create and later retrieve/revise a record, and use it without reading unrelated memory; quota, failed writes and model-token cost are measured on the Free configuration. Maintain one authoritative writer and no second active identity.
+**Ready when:** a synthetic agent can wake, create and later retrieve/revise a record, and use it without reading unrelated memory; quota, failed writes and model-token cost are measured on the Free configuration. Maintain one authoritative writer and no second active identity. **Current evidence satisfies native wake + create + later D1-backed context; other acceptance items remain open.**
 
 ## Phase 2 — economical memory behavior
 
