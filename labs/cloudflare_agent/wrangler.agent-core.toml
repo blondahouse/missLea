@@ -1,0 +1,15 @@
+name = "misslea-agent-core-lab"
+main = "src/autonomous.mjs"
+compatibility_date = "2026-11-16"
+compatibility_flags = ["nodejs_compat"]
+
+[ai]
+binding = "AI"
+
+[[durable_objects.bindings]]
+name = "SyntheticCoreAgent"
+class_name = "SyntheticCoreAgent"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["SyntheticCoreAgent"]

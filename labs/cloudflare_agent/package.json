@@ -5,7 +5,9 @@
   "scripts": {
     "check": "node --test test/*.test.mjs",
     "build:check": "wrangler deploy --dry-run --outdir=.wrangler-dry-run",
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "check:core": "node --test ../agent_core/test/*.test.mjs test/autonomous_support.test.mjs",
+    "build:core": "wrangler deploy --config wrangler.agent-core.toml --dry-run --outdir=.wrangler-core-dry-run"
   },
   "dependencies": {
     "agents": "0.33.0"
