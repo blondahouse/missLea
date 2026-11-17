@@ -1,6 +1,6 @@
 # Unified Living Memory — D1 Phase 1
 
-Status: offline implementation and tests only. No Cloudflare D1 database was provisioned by this change.
+Status (17 November 2026): offline implementation passes. A separate D1 database was created, its schema verified and a synthetic Worker deployed. The three-request live smoke remains FAILED; the service is not ready to attach to Agent Core.
 
 Cloudflare D1 is a managed SQLite database with FTS5, not an AI memory service. A replaceable Memory Manager provides remember, read, revise, reinterpret, budgeted recall, current-state export and an explicit unavailable external-evidence interface. D1 handles persistent records, parameterized SQL and full-text indexing.
 
@@ -29,3 +29,5 @@ create and retrieve a fabricated memory, revise it and create an interpretation,
 and verify persistence and FTS5 index changes from a fresh Worker invocation.
 No private content, generic SQL, external record editing or public memory APIs
 are exposed. This lab is distinct from the deployed autonomous Agent Core.
+
+Live evidence and known blockers: [D1 live status](D1_LIVE_STATUS_2026-11-17.md).
