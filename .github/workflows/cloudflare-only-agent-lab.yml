@@ -28,3 +28,5 @@ jobs:
       - run: python -m unittest discover -s ../living_memory/test -p 'test_*.py' -v
       - run: npm run build:check
       - run: npm run build:core
+      - run: npm run build:memory
+      - run: npm run check:memory
