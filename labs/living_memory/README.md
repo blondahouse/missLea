@@ -31,3 +31,12 @@ No private content, generic SQL, external record editing or public memory APIs
 are exposed. This lab is distinct from the deployed autonomous Agent Core.
 
 Successful live evidence and historical failures: [D1 live status](D1_LIVE_STATUS_2026-11-17.md).
+
+
+## Model-facing integration
+
+The isolated memory-aware Agent Core uses a narrow Memory Manager port for
+model-selected writes and later reads. The D1 database remains the
+source of truth; the Durable Object keeps only record pointers and counters.
+This does not add decay, autonomous consolidation or personal-memory import.
+See [integration design](../cloudflare_agent/CORE_MEMORY_INTEGRATION.md).

@@ -1,0 +1,18 @@
+name = "misslea-core-memory-lab"
+main = "src/core_memory.mjs"
+compatibility_date = "2026-11-16"
+compatibility_flags = ["nodejs_compat"]
+
+[ai]
+binding = "AI"
+
+[[durable_objects.bindings]]
+name = "CoreMemoryAgent"
+class_name = "CoreMemoryAgent"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["CoreMemoryAgent"]
+
+# The trusted operator alone appends the existing synthetic D1 MEMORY_DB
+# binding, using an immutable database ID never stored in public source.

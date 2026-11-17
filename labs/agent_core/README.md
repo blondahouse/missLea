@@ -13,3 +13,10 @@ Run the offline tests (no credits required):
     node --test labs/agent_core/test/*.test.mjs
 
 **Live evidence:** two scheduled Cloudflare wakes, two real model calls and two fabricated tool calls with durable operational state. Intent remained unset in the observed receipt; long-term goal selection is not yet validated. See the [live run record](../cloudflare_agent/AGENT_CORE_LIVE_2026-11-17.md). Next milestones are the separate Living Memory Manager (D1), Telegram and a free-model router. Independent Recovery and detailed Monitoring remain future work.
+
+
+## Synthetic D1 integration
+
+The separate portable orchestration layer at `src/memory_cycle.mjs` adds
+model-selected memory actions and later D1-backed recall without changing the
+previous verified standalone Core Worker. See the [integration record](../cloudflare_agent/CORE_MEMORY_INTEGRATION.md).
