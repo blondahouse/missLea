@@ -12,6 +12,25 @@ const exactKeys = ["intent","note","tool","memoryContent","sleepSeconds"];
 const memoryActions = new Set(MEMORY_TOOLS);
 const allowedReasons = new Set(["invalid_decision","model_or_quota_failed",
   "tool_failed","schedule_failed"]);
+// Extra inference is only allowed for a known-invalid response, before any tool
+// side effect, and is persisted/accounted before dispatch. Never retry transport
+// failures or uncertain model calls.
+export const MAX_DECISION_REPAIRS = 2;
+export const DECISION_VALIDATION_CODES = Object.freeze([
+  "response_missing","response_too_long","invalid_json","invalid_shape",
+  "invalid_intent","invalid_note","unknown_tool","invalid_memory_content",
+  "invalid_sleep","memory_content_required","unexpected_memory_content"
+]);
+const validationCodes = new Set(DECISION_VALIDATION_CODES);
+function invalid(code) {
+  const error = new Error("invalid_decision");
+  error.validationCode = code;
+  return error;
+}
+function isInvalid(error) {
+  return error?.message === "invalid_decision" &&
+    validationCodes.has(error.validationCode);
+}
 
 function nowIso(clock) {
   const value = clock();
@@ -32,23 +51,35 @@ function readRaw(response) {
 }
 export function parseMemoryDecision(response) {
   const raw=readRaw(response);
-  if(typeof raw!=="string" || raw.length>4096)throw Error("invalid_decision");
+  if(typeof raw!=="string")throw invalid("response_missing");
+  if(raw.length>4096)throw invalid("response_too_long");
+  // A complete markdown code fence is presentation noise, not new authority.
+  // Do not fish a JSON object out of arbitrary prose or multiple candidates.
+  let text=raw.trim();
+  const fence=/^```(?:json)?\s*\r?\n([\s\S]*?)\r?\n```$/i.exec(text);
+  if(fence)text=fence[1].trim();
   let d;
-  try{d=JSON.parse(raw);}catch{throw Error("invalid_decision");}
+  try{d=JSON.parse(text);}catch{throw invalid("invalid_json");}
   if(!d || typeof d!=="object" || Array.isArray(d) ||
       Object.keys(d).length!==exactKeys.length ||
-      !exactKeys.every(key=>Object.hasOwn(d,key)) ||
-      (d.intent!==null && (typeof d.intent!=="string" || d.intent.length>240)) ||
-      typeof d.note!=="string" || d.note.length>320 ||
-      (d.tool!==null && !allowed.has(d.tool)) ||
-      typeof d.memoryContent!=="string" || d.memoryContent.length>320 ||
-      (d.sleepSeconds!==null && (!Number.isSafeInteger(d.sleepSeconds) ||
-        d.sleepSeconds<60 || d.sleepSeconds>86400)))
-    throw Error("invalid_decision");
+      !exactKeys.every(key=>Object.hasOwn(d,key)))
+    throw invalid("invalid_shape");
+  if(d.intent!==null && (typeof d.intent!=="string" || d.intent.length>240))
+    throw invalid("invalid_intent");
+  if(typeof d.note!=="string" || d.note.length>320)
+    throw invalid("invalid_note");
+  if(d.tool!==null && !allowed.has(d.tool))
+    throw invalid("unknown_tool");
+  if(typeof d.memoryContent!=="string" || d.memoryContent.length>320)
+    throw invalid("invalid_memory_content");
+  if(d.sleepSeconds!==null && (!Number.isSafeInteger(d.sleepSeconds) ||
+      d.sleepSeconds<60 || d.sleepSeconds>86400))
+    throw invalid("invalid_sleep");
   const content=d.memoryContent.trim();
   if(memoryActions.has(d.tool) && d.tool!=="memory.recall" && !content)
-    throw Error("invalid_decision");
-  if(!memoryActions.has(d.tool) && content)throw Error("invalid_decision");
+    throw invalid("memory_content_required");
+  if(!memoryActions.has(d.tool) && content)
+    throw invalid("unexpected_memory_content");
   return {intent:d.intent===null?null:d.intent.trim(),note:d.note.trim(),
     tool:d.tool,memoryContent:content,sleepSeconds:d.sleepSeconds};
 }
@@ -87,7 +118,8 @@ export function memoryMessages(state,previous) {
 }
 export function initialMemoryState(runId,at=Date.now()) {
   return {...initialState(runId,at),lastMemoryId:null,
-    memoryWrites:0,memoryReads:0,memoryContexts:0};
+    memoryWrites:0,memoryReads:0,memoryContexts:0,
+    decisionRepairs:0,lastDecisionValidationCode:null};
 }
 export function memoryReceipt(state) {
   return {...publicReceipt(state),lab:"synthetic-core-memory-d1-v1",
@@ -144,8 +176,9 @@ async function chooseTool(memory,decision,lastMemoryId) {
     id:record.id,writes:1,reads:1};
 }
 
-// Same no-replay semantics as core runtime: persist "running" before I/O
-// and fail closed on any uncertain external write/inference. No retry loop.
+// Same no-replay semantics as core runtime: persist "running" before I/O.
+// A bounded correction is permitted ONLY after a returned response fails local
+// schema validation and BEFORE any tool call. Other failures are never retried.
 export async function wakeWithMemory({
   runId,load,save,schedule,infer,memory,clock=Date.now
 }) {
@@ -184,10 +217,37 @@ export async function wakeWithMemory({
   }
   let decision;
   try {
-    decision=parseMemoryDecision(await infer(memoryMessages(running,previous)));
+    const messages=memoryMessages(running,previous);
+    const first=await infer(messages);
+    try {
+      decision=parseMemoryDecision(first);
+    }catch(error) {
+      if(!isInvalid(error) || (running.decisionRepairs??0)>=MAX_DECISION_REPAIRS)
+        throw error;
+      // The returned decision is untrusted and has caused no tool effects.
+      // Record the extra model attempt before dispatch (including the same
+      // no-replay guarantee if the process fails mid-inference).
+      running={...running,
+        modelCalls:running.modelCalls+1,
+        decisionRepairs:(running.decisionRepairs??0)+1,
+        lastDecisionValidationCode:error.validationCode};
+      await save(running);
+      const correction={
+        role:"user",
+        content:"The preceding answer was rejected by the JSON validator (code: "+
+          error.validationCode+"). Return a NEW complete JSON object with EXACTLY "+
+          "intent, note, tool, memoryContent, sleepSeconds. Use null for no tool "+
+          "or no next wake; use an empty memoryContent unless selecting a memory "+
+          "tool; sleepSeconds must be null or an integer from 60 to 86400. "+
+          "Use only the allowed tool names from the system instruction. "+
+          "No Markdown, explanation, extra keys or other text."
+      };
+      decision=parseMemoryDecision(await infer([...messages,correction]));
+    }
   }catch(error) {
-    const reason=error?.message==="invalid_decision"?"invalid_decision":"model_or_quota_failed";
-    const blocked=stop(running,reason);
+    const invalidOutput=isInvalid(error);
+    const blocked={...stop(running,invalidOutput?"invalid_decision":"model_or_quota_failed"),
+      ...(invalidOutput?{lastDecisionValidationCode:error.validationCode}:{})};
     await save(blocked);return memoryReceipt(blocked);
   }
   let result;

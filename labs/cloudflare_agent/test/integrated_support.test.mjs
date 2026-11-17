@@ -53,3 +53,19 @@ test("safe callback failure phase is retained but arbitrary error text is not",(
   assert.equal(unsafe.callbackFailurePhase,null);
   assert.equal(JSON.stringify(unsafe).includes("SQL_ERROR"),false);
 });
+
+test("safe status classifies invalid decisions without revealing model content",()=>{
+  const state={...initialMemoryState("format",Date.UTC(2026,10,18,0)),
+    status:"blocked",reason:"invalid_decision",modelCalls:2,
+    decisionRepairs:1,lastDecisionValidationCode:"invalid_json",
+    secret:"secret-from-inference",notes:["private note"]};
+  const receipt=safeIntegratedStatus(state),serialized=JSON.stringify(receipt);
+  assert.equal(receipt.decisionRepairs,1);
+  assert.equal(receipt.lastDecisionValidationCode,"invalid_json");
+  assert.equal(serialized.includes("secret-from-inference"),false);
+  assert.equal(serialized.includes("private note"),false);
+  assert.equal(safeIntegratedStatus({...state,
+    decisionRepairs:999,lastDecisionValidationCode:"exception database password"})
+    .lastDecisionValidationCode,null);
+  assert.equal(safeIntegratedStatus({...state,decisionRepairs:999}).decisionRepairs,0);
+});

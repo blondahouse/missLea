@@ -44,6 +44,14 @@ A subsequent **read-only** [Operator status workflow #44148862213, attempt 2](ht
 
 The final `invalid_decision` is a strict model-output validation rejection; this sanitized receipt alone does **not** identify the exact malformed field or prove a provider error. Do not reveal raw model output or memory content to diagnose it.
 
+## Pending resilience fix (source only; live deployment not yet verified)
+
+A model response can be syntactically invalid even though Workers AI inference itself succeeded. The updated Core adapter accepts only a complete JSON object, optionally surrounded by a single complete `json` Markdown code fence; it still rejects unknown tools, extra/missing fields, invalid sleep bounds and any non-empty memory content without an associated memory action.
+
+If validation rejects the first **returned** model decision, the Core may request **one** new complete decision in that wake, **before** performing any memory write or synthetic tool action. The additional inference attempt is durably counted before dispatch; at most **two such repairs per synthetic run** are allowed. There are no retries of transport/model exceptions, uncertain inference outcomes, D1 writes or any side effect. Repeated malformed decisions still `block` the run.
+
+Read-only status can expose a bounded `decisionRepairs` count and an allowlisted `lastDecisionValidationCode`, never the raw reply, memory text or internal identifiers. The previous four-wake experimental run remains blocked until an explicitly authorized restart/resume; deploying code does not silently reset it. This is a reliability improvement for future wakes, not a retrospective explanation of the precise fourth-response defect.
+
 ## Operational/architecture caveats
 
 - Bounded synthetic-only limits: 12 total wakes, 4 per UTC day; sleep delay 60–86,400 seconds.
