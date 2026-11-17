@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {initialMemoryState} from "../../agent_core/src/memory_cycle.mjs";
-import {safeIntegratedStatus,canRestartUnarmedTrial} from "../src/integrated_support.mjs";
+import {safeIntegratedStatus,canRestartUnarmedTrial,scheduledCallbackRejection} from "../src/integrated_support.mjs";
 test("status contains only bounded counters and tool choice, never D1 IDs or content",()=>{
   const state={...initialMemoryState("test",Date.UTC(2026,10,17,16)),
     lastMemoryId:"private_memory_id",
@@ -27,4 +27,19 @@ test("only an overdue unarmed zero-wake trial may be restarted",()=>{
   assert.equal(canRestartUnarmedTrial(base,0,Date.now(),now),false);
   assert.equal(canRestartUnarmedTrial({...base,status:"running"},0,null,now),false);
   assert.equal(canRestartUnarmedTrial(base,0,null,Date.UTC(2026,10,17,16)),false);
+});
+
+test("scheduled callback rejection categories reveal no payload content",()=>{
+  const at=Date.UTC(2026,10,17,17);
+  const state=initialMemoryState("run",at);
+  assert.equal(scheduledCallbackRejection(state,{runId:"run",scheduledAt:state.nextWakeAt}),null);
+  assert.equal(scheduledCallbackRejection(state,null),"payload_missing");
+  assert.equal(scheduledCallbackRejection(state,{scheduledAt:state.nextWakeAt}),"run_id_missing");
+  assert.equal(scheduledCallbackRejection(state,{runId:"other",scheduledAt:state.nextWakeAt}),"stale_run");
+  assert.equal(scheduledCallbackRejection(state,{runId:"run",scheduledAt:"other"}),"time_mismatch");
+  const receipt=safeIntegratedStatus({...state,callbackAttempts:2,callbackRejected:1,
+    callbackRejectCode:"time_mismatch",secret:"do-not-print"});
+  assert.equal(receipt.callbackAttempts,2);
+  assert.equal(receipt.callbackRejectCode,"time_mismatch");
+  assert.equal(JSON.stringify(receipt).includes("do-not-print"),false);
 });
