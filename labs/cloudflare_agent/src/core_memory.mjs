@@ -6,7 +6,7 @@ import {blockWake} from "../../agent_core/src/core.mjs";
 import {createMemoryManager} from "../../living_memory/src/manager.mjs";
 import {createD1MemoryStore} from "../../living_memory/src/d1.mjs";
 import {canHandleScheduledWake} from "./autonomous_support.mjs";
-import {safeIntegratedStatus} from "./integrated_support.mjs";
+import {safeIntegratedStatus,canRestartUnarmedTrial} from "./integrated_support.mjs";
 
 const MODEL="@cf/google/gemma-4-26b-a4b-it";
 const INSTANCE="synthetic-core-memory-v1";
@@ -41,19 +41,40 @@ export class CoreMemoryAgent extends Agent {
   }
   async startExperiment() {
     if(!this.env.MEMORY_DB || !this.env.AI)return {error:"binding_missing"};
-    if(["running","scheduled"].includes(this.state?.status))
-      return {error:"already_running"};
     try {
-      return await startMemoryRun({
+      // RPC does not automatically initialize Agent SDK Lifecycle; without this,
+      // a reported "scheduled" state may have zero persisted jobs/physical alarm.
+      await this.lifecycle.start();
+      const current=this.state;
+      if(["running","scheduled"].includes(current?.status)) {
+        const jobs=await this.listSchedules();
+        const alarm=await this.ctx.storage.getAlarm();
+        if(!canRestartUnarmedTrial(current,Array.isArray(jobs)?jobs.length:null,
+            alarm,Date.now()))return {error:"already_running"};
+      }
+      const result=await startMemoryRun({
         runId:crypto.randomUUID(),
         save:async state=>this.setState(state),
         schedule:params=>this.scheduleNext(params)
       });
+      if(result.status!=="scheduled")return {error:"schedule_failed"};
+      // A successful RPC is not proof of a durable scheduled callback:
+      // check both the SDK queue and the underlying Durable Object alarm.
+      const jobs=await this.listSchedules();
+      const alarm=await this.ctx.storage.getAlarm();
+      if(!Array.isArray(jobs)||jobs.length===0||!Number.isFinite(alarm)){
+        this.setState(blockWake(this.state,"schedule_failed"));
+        return {error:"schedule_failed"};
+      }
+      return result;
     }catch{
+      if(this.state?.status==="scheduled")
+        this.setState(blockWake(this.state,"schedule_failed"));
       return {error:"start_failed"};
     }
   }
   async receipt(){
+    await this.lifecycle.start();
     const result=safeIntegratedStatus(this.state??initialState());
     // Synthetic-only alarm diagnostics: never include payloads, memory texts,
     // SQL contents, internal DO identifiers or credentials.
