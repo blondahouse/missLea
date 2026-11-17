@@ -10,7 +10,12 @@ export function safeIntegratedStatus(state) {
     callbackRejected:Number.isSafeInteger(state.callbackRejected)?state.callbackRejected:0,
     callbackRejectCode:["not_scheduled","payload_missing","run_id_missing",
       "stale_run","time_missing","time_mismatch"].includes(state.callbackRejectCode)
-      ?state.callbackRejectCode:null};
+      ?state.callbackRejectCode:null,
+    callbackFailurePhase:["memory_port","cycle_entry","load_state",
+      "persist_running","persist_outcome","memory_read","memory_recall",
+      "memory_remember","memory_revise","memory_reinterpret",
+      "model_inference","schedule_next"].includes(state.callbackFailurePhase)
+      ?state.callbackFailurePhase:null};
 }
 
 export function canRestartUnarmedTrial(state,jobCount,alarmAt,now){
