@@ -51,6 +51,7 @@ export function scheduledCallbackRejection(state,payload){
 
 export function canStartFreshTrial(state,jobCount,alarmAt,now){
   return (state?.schema===1 && state.mode==="synthetic" &&
-    state.status==="not_started" && state.wakes===0 && state.modelCalls===0) ||
+    state.status==="not_started" && state.wakes===0 && state.modelCalls===0 &&
+    jobCount===0 && alarmAt===null) ||
     canRestartUnarmedTrial(state,jobCount,alarmAt,now);
 }
