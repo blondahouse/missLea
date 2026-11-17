@@ -1,6 +1,6 @@
 # Unified Living Memory — D1 Phase 1
 
-Status (17 November 2026): offline implementation passes. A separate D1 database was created, its schema verified and a synthetic Worker deployed. The three-request live smoke remains FAILED; the service is not ready to attach to Agent Core.
+Status (17 November 2026): LIVE PASS for the isolated synthetic D1 memory service. The three-request trial verified creation, revision, reinterpretation, FTS5 index updates and persistence across requests. The autonomous Agent Core remains a separate Worker without a Memory Manager binding; complete Phase 1 acceptance is still pending.
 
 Cloudflare D1 is a managed SQLite database with FTS5, not an AI memory service. A replaceable Memory Manager provides remember, read, revise, reinterpret, budgeted recall, current-state export and an explicit unavailable external-evidence interface. D1 handles persistent records, parameterized SQL and full-text indexing.
 
@@ -15,7 +15,7 @@ Offline tests, no external accounts or credits:
     node --test labs/living_memory/test/*.test.mjs
     python -m unittest discover -s labs/living_memory/test -p 'test_*.py' -v
 
-Before live deployment, the trusted operator must provision a dedicated D1 database, apply the migration, bind the immutable database ID to a separate synthetic Worker, and verify permissions and Free quotas. The existing live Agent Core Worker remains unchanged.
+A dedicated D1 database is already provisioned with the migration and an isolated synthetic Worker binding. Before connecting it to Agent Core, verify the actual Free-plan quotas and add a narrowly scoped memory port. The existing live Agent Core Worker remains unchanged.
 
 ## Dedicated live D1 smoke adapter
 
@@ -30,4 +30,4 @@ and verify persistence and FTS5 index changes from a fresh Worker invocation.
 No private content, generic SQL, external record editing or public memory APIs
 are exposed. This lab is distinct from the deployed autonomous Agent Core.
 
-Live evidence and known blockers: [D1 live status](D1_LIVE_STATUS_2026-11-17.md).
+Successful live evidence and historical failures: [D1 live status](D1_LIVE_STATUS_2026-11-17.md).
