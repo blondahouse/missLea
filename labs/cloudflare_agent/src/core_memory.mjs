@@ -1,0 +1,107 @@
+// Isolated synthetic Cloudflare Agent Core using authoritative D1 Living Memory.
+// Not a personal agent and not a replacement for previously verified lab Workers.
+import {Agent,getAgentByName} from "agents";
+import {startMemoryRun,wakeWithMemory,memoryReceipt} from "../../agent_core/src/memory_cycle.mjs";
+import {blockWake} from "../../agent_core/src/core.mjs";
+import {createMemoryManager} from "../../living_memory/src/manager.mjs";
+import {createD1MemoryStore} from "../../living_memory/src/d1.mjs";
+import {canHandleScheduledWake} from "./autonomous_support.mjs";
+import {safeIntegratedStatus} from "./integrated_support.mjs";
+
+const MODEL="@cf/google/gemma-4-26b-a4b-it";
+const INSTANCE="synthetic-core-memory-v1";
+const initialState=()=>({
+  schema:1,mode:"synthetic",runId:null,status:"not_started",
+  intent:null,notes:[],events:[],wakes:0,modelCalls:0,toolCalls:0,
+  daily:{date:"1970-01-01",wakes:0},nextWakeAt:null,reason:null,
+  lastMemoryId:null,memoryWrites:0,memoryReads:0,memoryContexts:0
+});
+function json(value,status=200) {
+  return Response.json(value,{status,headers:{
+    "cache-control":"no-store",
+    "x-content-type-options":"nosniff"
+  }});
+}
+function authorized(request,env) {
+  return typeof env.LAB_ADMIN_TOKEN==="string" &&
+    env.LAB_ADMIN_TOKEN.length>=32 &&
+    request.headers.get("authorization")==="Bearer "+env.LAB_ADMIN_TOKEN;
+}
+
+export class CoreMemoryAgent extends Agent {
+  initialState=initialState();
+
+  async scheduleNext({runId,at}) {
+    const when=Date.parse(at);
+    if(!Number.isFinite(when))throw Error("invalid_schedule");
+    await this.schedule(new Date(when+2000),"wake",{runId,scheduledAt:at});
+  }
+  memoryPort() {
+    return createMemoryManager(createD1MemoryStore(this.env.MEMORY_DB));
+  }
+  async startExperiment() {
+    if(!this.env.MEMORY_DB || !this.env.AI)return {error:"binding_missing"};
+    if(["running","scheduled"].includes(this.state?.status))
+      return {error:"already_running"};
+    try {
+      return await startMemoryRun({
+        runId:crypto.randomUUID(),
+        save:async state=>this.setState(state),
+        schedule:params=>this.scheduleNext(params)
+      });
+    }catch{
+      return {error:"start_failed"};
+    }
+  }
+  async receipt(){
+    return safeIntegratedStatus(this.state??initialState());
+  }
+  async wake(payload) {
+    if(!canHandleScheduledWake(this.state,payload))return;
+    try{
+      await wakeWithMemory({
+        runId:payload.runId,
+        load:async()=>this.state,
+        save:async state=>this.setState(state),
+        schedule:params=>this.scheduleNext(params),
+        memory:this.memoryPort(),
+        infer:async messages=>this.env.AI.run(MODEL,{
+          messages,
+          max_tokens:384,
+          chat_template_kwargs:{enable_thinking:false}
+        })
+      });
+    }catch{
+      // State is already marked running before LLM/D1 effects. Never replay
+      // an uncertain model call or uncertain D1 write after an exception.
+      if(this.state?.status==="running")
+        this.setState(blockWake(this.state,"tool_failed"));
+    }
+  }
+}
+
+export default {
+  async fetch(request,env) {
+    const path=new URL(request.url).pathname;
+    if(request.method==="GET" && path==="/health")
+      return json({lab:"synthetic-core-memory-d1-v1",
+        ready:!!env.MEMORY_DB && !!env.AI});
+    if(request.method==="GET" && path==="/status"){
+      const agent=await getAgentByName(env.CoreMemoryAgent,INSTANCE);
+      return json(await agent.receipt());
+    }
+    if(request.method==="POST" && path==="/trial/ready"){
+      if(!authorized(request,env))return json({error:"unauthorized"},401);
+      if(!env.MEMORY_DB || !env.AI)return json({error:"binding_missing"},503);
+      return json({status:"authorized",memoryBound:true,modelBound:true});
+    }
+    if(request.method==="POST" && path==="/start"){
+      if(!authorized(request,env))return json({error:"unauthorized"},401);
+      if(!env.MEMORY_DB || !env.AI)return json({error:"binding_missing"},503);
+      const agent=await getAgentByName(env.CoreMemoryAgent,INSTANCE);
+      const response=await agent.startExperiment();
+      return json(response,response.error?409:202);
+    }
+    return json({error:"not_found"},404);
+  }
+};

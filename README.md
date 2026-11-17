@@ -12,6 +12,8 @@ Read the [digital independence principle](docs/digital-independence.md), [archit
 
 The [Living Memory D1 foundation](labs/living_memory/README.md) is independently live-verified on Cloudflare: create, revise, reinterpret and FTS5 recall persisted across three authenticated requests. It is NOT yet attached to the autonomous Agent Core; real D1 Free-tier metrics were not measured. See [D1 live acceptance](labs/living_memory/D1_LIVE_STATUS_2026-11-17.md).
 
+An [isolated synthetic Agent Core ↔ Living Memory ↔ D1 integration](labs/cloudflare_agent/CORE_MEMORY_INTEGRATION.md) is under development. Separate live acceptance is required before claiming an autonomous memory-enabled agent.
+
 ## Structure
 
 ```text
