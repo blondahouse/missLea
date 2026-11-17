@@ -86,7 +86,15 @@ test("D1 adapter only sends parameterized SQL",async()=>{
   assert.equal(queries.at(-1).params.includes("private ' text"),true);
   assert.equal(await store.updateIfRevision({...r,revision:2},1),true);
   // A base-row update also touches FTS and other indexes in real D1 metadata.
-  const multi={prepare(sql){return {bind(){return {run:async()=>({success:true,meta:{changes:5}})}}}};}};
+  const multi = {
+    prepare() {
+      return {
+        bind() {
+          return {run: async () => ({success:true, meta:{changes:5}})};
+        }
+      };
+    }
+  };
   assert.equal(await createD1MemoryStore(multi).updateIfRevision({...r,revision:2},1),true);
   assert.equal(typeof store.delete,"undefined");
 });
