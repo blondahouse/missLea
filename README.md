@@ -1,6 +1,6 @@
 # Miss Lea — Architecture Lab
 
-Research workspace for evaluating **replaceable components** of Miss Lea before deploying any of them. This repository is **not** the running agent. It contains no memory, credentials, or operational state from the running Miss Lea instance.
+English-only research workspace for evaluating **replaceable components** of Miss Lea before deploying them. English is required for committed documentation, source text, fixtures and public HTML. CI validates this policy. This repository is **not** the running agent. It contains no memory, credentials, or operational state from the running Miss Lea instance.
 
 ## Foundational concept: sustainability and the option of independence
 
