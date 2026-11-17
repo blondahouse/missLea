@@ -33,10 +33,11 @@ export default {
     if(request.method==="GET" && path==="/status")
       return json({lab:"living-memory-d1-v1",synthetic:true,
         databaseBound:!!env.MEMORY_DB,containsPersonalData:false});
-    if(request.method!=="POST" || !["/trial/remember","/trial/revise","/trial/verify"].includes(path))
+    if(request.method!=="POST" || !["/trial/ready","/trial/remember","/trial/revise","/trial/verify"].includes(path))
       return json({error:"not_found"},404);
     if(!authorized(request,env))return json({error:"unauthorized"},401);
     if(!env.MEMORY_DB)return json({error:"memory_not_configured"},503);
+    if(path==="/trial/ready")return json({status:"authorized",databaseBound:true});
     const memory=createMemoryManager(createD1MemoryStore(env.MEMORY_DB));
     let stage="not_started";
     try {
