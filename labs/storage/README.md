@@ -1,6 +1,6 @@
-# Storage Lab — sustainable state, recoverable memory and distributed backups
+# Storage Lab — recoverable operational state and evidence (historical experiments)
 
-**Research scope:** preserve Miss Lea's **code, accumulated state, primary evidence, decisions, unresolved obligations, active-operation records and memory** across server/provider/model loss. This lab is separate from the running TinyFund instance and from the existing [Memory Lab](../memory/README.md): Memory Lab evaluates what information is extracted and retrieved; Storage Lab evaluates how the underlying records survive.
+**Research scope:** benchmark durability, cryptographic backup, failure-domain separation and isolated restoration on **synthetic fixtures**. These earlier studies used snapshots of simulated experiences and are valid **experimental evidence**, but do **not** define the target retention policy of Miss Lea's subjective memory. Under the adopted [Unified Living Memory concept](../../docs/memory-concept.md), personal memory may be revised, forgotten and evicted irreversibly; external records (contracts, permissions, unresolved obligations and operational state) have their own retention rules. The [Cloudflare-first roadmap](../../docs/memory-cloudflare-roadmap.md) begins with a Cloudflare-native store; cross-provider current-state mirroring is a later milestone, not a launch precondition.
 
 **Sustainability principle:** operations must be recoverable without treating the founder, one provider, one live LLM or one machine as an irreplaceable component.
 
@@ -66,7 +66,7 @@ The [predeclared STO-006 acceptance protocol](sto006-dual-provider-protocol.md) 
 
 ## Research decisions before real storage
 
-For actual Memory/State/Backup selection, evaluate:
+For future **external evidence / operational recovery** selection (not an obligation to preserve all personal recollections), evaluate:
 
 | Dimension | Minimum required evidence |
 | --- | --- |
@@ -83,10 +83,10 @@ A promising existing tool is **restic**, which provides encrypted, verifiable ba
 
 ### Proposed data tiers (architecture research, not yet deployed)
 
-- **Live/primary:** one authoritative writable database plus verifiable event/decision evidence; avoid premature multi-writer distributed memory.
-- **Recovery:** snapshots encrypted before uploading, copied to at least two failure domains/providers under distinct credentials and retention.
+- **Live/primary:** one authoritative writer for operational records and the current Living Memory state; do not treat each autobiographical event as permanent primary evidence. Protect externally binding records separately.
+- **Recovery:** retain and protect independent **external-state / document** recovery material according to its actual retention requirements. For subjective Living Memory, the target is replication of the *current* state when justified, without automatic historical rollback or permanent snapshot retention.
 - **Root keys:** keys to decrypt backups must be recoverable **outside the systems they unlock**; avoid circular dependency between Storage and Security.
-- **Dormant mode:** if compute funds are depleted, retain recoverable memory and ownership/obligation records without keeping costly workers running.
+- **Dormant mode:** preserve independently retained identity/ownership/obligation records and any surviving current Living Memory, with no guarantee of restoring memories already evicted or lost.
 
 The selected backup product, vault, retention, backup integrity proof, multi-host fencing and recovery operator will be decided by later research. `labs/storage` makes no external calls, costs nothing, and grants no real privileges.
 
