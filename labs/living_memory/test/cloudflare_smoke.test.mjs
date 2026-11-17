@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import app from "../src/cloudflare_smoke.mjs";
+import app,{classifyD1Error} from "../src/cloudflare_smoke.mjs";
 const url="https://example.invalid";
 const token="synthetic-only-".repeat(3);
 test("public endpoints never reveal memory contents",async()=>{
@@ -22,4 +22,25 @@ test("authorized requests fail closed without dedicated D1 binding",async()=>{
     method:"POST",headers:{authorization:"Bearer "+token}}),{
     LAB_ADMIN_TOKEN:token});
   assert.equal(r.status,503);
+});
+
+test("D1 error categories never disclose raw messages or record content",()=>{
+  assert.equal(classifyD1Error(new Error("D1_ERROR: database disk image is malformed")), "index_integrity");
+  assert.equal(classifyD1Error(new Error("D1_ERROR: no such table: living_memory")), "schema_missing");
+  assert.equal(classifyD1Error(new Error("D1_ERROR: quota exceeded")), "resource_limit");
+  assert.equal(classifyD1Error(new Error("D1_ERROR: private synthetic record")), "d1_query");
+});
+test("authenticated live trial returns a bounded failure stage without SQL text",async()=>{
+  const env={
+    LAB_ADMIN_TOKEN:token,
+    MEMORY_DB:{prepare(sql){
+      return {bind(){return {run:async()=>{throw Error("D1_ERROR: database disk image is malformed: private-data");}};}}
+    }}
+  };
+  const r=await app.fetch(new Request(url+"/trial/remember",{method:"POST",
+    headers:{authorization:"Bearer "+token}}),env);
+  assert.equal(r.status,409);
+  const data=await r.json();
+  assert.deepEqual(data,{error:"memory_trial_failed",stage:"remember_write",category:"index_integrity"});
+  assert.equal(JSON.stringify(data).includes("private-data"),false);
 });
