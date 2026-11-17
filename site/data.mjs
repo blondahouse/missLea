@@ -219,7 +219,7 @@ export const nodes=[
     "owner": "external",
     "status": "verified",
     "subtitle": "Current integrated synthetic Cloudflare Worker",
-    "detail": "The distinct misslea-core-memory-lab Worker hosts the current isolated Core + Memory Manager + D1 experiment. Live read-only evidence (2026-11-17 22:03:52 UTC): 4 native wakes, 4 Workers AI calls, 2 D1 memory writes, 4 reads and 3 memory contexts. The model then returned an invalid decision; the synthetic run is blocked, with no pending alarm. Full autonomous recovery and Free quota verification remain open.",
+    "detail": "The distinct misslea-core-memory-lab Worker hosts the current isolated Core + Memory Manager + D1 experiment. Live read-only evidence (2026-11-17 22:03:52 UTC): 4 native wakes, 4 Workers AI calls, 2 D1 memory writes, 4 reads and 3 memory contexts. A malformed decision blocked that run, but an explicitly authorized same-run resume at 2026-11-17 23:04 UTC preserved D1 state and counters, set resumeCount=1, and verified a physical alarm for 2026-11-18 00:01 UTC. The fifth wake has not yet been observed. General autonomous recovery and Free quota verification remain open.",
     "tags": [
       "HTTP",
       "Free",
@@ -235,7 +235,7 @@ export const nodes=[
     "owner": "hybrid",
     "status": "verified",
     "subtitle": "Native Agent Core, alarms and memory orchestration",
-    "detail": "The Agents SDK hosts the portable synthetic Core inside a Durable Object, scheduling callbacks without a GitHub runner. The current integrated Worker used four native wakes and then blocked on invalid_decision; no automatic recovery is yet implemented.",
+    "detail": "The Agents SDK hosts the portable synthetic Core inside a Durable Object, scheduling callbacks without a GitHub runner. The current integrated Worker completed four native wakes, blocked on invalid_decision, then was safely re-armed in the same run through a bounded authenticated resume. A fifth wake is scheduled but not yet verified; recovery from unknown effects remains unimplemented.",
     "tags": [
       "Agent",
       "Session",
@@ -251,7 +251,7 @@ export const nodes=[
     "owner": "external",
     "status": "verified",
     "subtitle": "Native scheduled callbacks (4 verified)",
-    "detail": "A Durable Object alarm woke the Core for four scheduled callbacks; all were accepted. After a later invalid model decision the synthetic run blocked and no alarm remains; this is not a still-running service.",
+    "detail": "A Durable Object alarm woke the Core for four scheduled callbacks; all were accepted. A malformed decision temporarily blocked that run; a subsequent authorized resume verified a fresh physical alarm for 2026-11-18 00:01 UTC without replaying the failed wake. Future actual model inference is not yet verified.",
     "tags": [
       "Schedule",
       "Wake",
@@ -347,7 +347,7 @@ export const nodes=[
     "owner": "external",
     "status": "verified",
     "subtitle": "4 model calls in integrated synthetic trial",
-    "detail": "Gemma 4 on Cloudflare Workers AI produced four model decisions in the integrated Core + D1 lab. The fourth ended in strict invalid_decision blocking. Free-tier billing/quota headroom is still unverified.",
+    "detail": "Gemma 4 on Cloudflare Workers AI produced four model decisions in the integrated Core + D1 lab. The fourth ended in strict invalid_decision blocking, later followed by a scheduled same-run resume (no fifth model call claimed yet). Free-tier billing/quota headroom is still unverified.",
     "tags": [
       "Inference",
       "Gemma",

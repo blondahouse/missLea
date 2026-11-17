@@ -1,6 +1,6 @@
 # Unified Living Memory — Cloudflare D1 Phase 1
 
-**Status (2026-11-18):** The standalone synthetic D1 service has an independent live PASS for create/revise/reinterpret/FTS5 across three authenticated requests. **It has since been connected** to an isolated autonomous Agent Core in `misslea-core-memory-lab`. Cross-wake writes and reads are live-verified, but the overall unattended synthetic trial is now `blocked` by an invalid model decision; full Phase 1 acceptance remains open.
+**Status (2026-11-18):** The standalone synthetic D1 service has an independent live PASS for create/revise/reinterpret/FTS5 across three authenticated requests. **It has since been connected** to an isolated autonomous Agent Core in `misslea-core-memory-lab`. Cross-wake writes and reads are live-verified, and its previous `invalid_decision` block was safely re-armed **in the same run** on 18 November (Kyiv local time). A native wake is scheduled for 2026-11-18 00:01 UTC; execution of that wake and full Phase 1 acceptance remain open.
 
 ## Actual boundaries
 
@@ -13,7 +13,7 @@ The Agent SDK's SQLite-backed Durable Object stores the **operational wake state
 ## Current verified evidence
 
 - [Standalone D1 smoke evidence](D1_LIVE_STATUS_2026-11-17.md): create/revise/reinterpret, persistence and full-text index updates across multiple HTTP requests.
-- [Current integrated Core evidence](../cloudflare_agent/CORE_MEMORY_INTEGRATION.md): the read-only status at 2026-11-17 22:03:52 UTC reported **4 wakes, 2 memory writes, 4 memory reads and 3 memory contexts**. The final state is `blocked` with `invalid_decision`, not a broken D1 binding. [Operator diagnostic](https://github.com/blondahouse/misslea-operator/actions/runs/44148862213).
+- [Current integrated Core evidence](../cloudflare_agent/CORE_MEMORY_INTEGRATION.md): the read-only status at 2026-11-17 22:03:52 UTC reported **4 wakes, 2 memory writes, 4 memory reads and 3 memory contexts**. That historical status was `blocked` with `invalid_decision`, not a broken D1 binding. A later [one-time Operator resume](https://github.com/blondahouse/misslea-operator/actions/runs/44195835158) preserved the existing D1 pointer and counters, returned `scheduled` with `resumeCount=1`, and verified a native alarm for 2026-11-18 00:01 UTC; the future wake was not yet observed. [Operator diagnostic](https://github.com/blondahouse/misslea-operator/actions/runs/44148862213).
 
 The integrated Worker and standalone D1 smoke Worker are distinct. The trusted private Operator provisions/reuses the dedicated synthetic D1 database, verifies its migration, binds it to the integrated Worker and deploys pinned source. GitHub Actions is **not** the agent's wake scheduler.
 

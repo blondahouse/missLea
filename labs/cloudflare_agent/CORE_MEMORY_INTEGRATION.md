@@ -1,6 +1,6 @@
 # Synthetic Agent Core + Unified Living Memory (D1) integration
 
-**Status (2026-11-18): deployed and memory continuity live-verified; currently `blocked / invalid_decision` after four autonomous wakes.** This is a **bounded synthetic lab**, not a production/personal Miss Lea.
+**Status (2026-11-18): deployed and memory continuity live-verified; the four-wake `invalid_decision` stop has been safely re-armed in the same run. The next native wake is scheduled for 2026-11-18 00:01 UTC; it is not yet verified.** This is a **bounded synthetic lab**, not a production/personal Miss Lea.
 
 ## Deployed components
 
@@ -40,7 +40,7 @@ A subsequent **read-only** [Operator status workflow #44148862213, attempt 2](ht
 }
 ```
 
-**What passed:** real native wake scheduling, independent subsequent inference, model-selected memory writes, D1-backed retrieval/context assembly across wakes, and callback rejection checks. **What did not pass:** ongoing autonomous operation after a malformed model decision. There is no pending wake, and the system must not be represented as still running.
+**What passed:** real native wake scheduling, independent subsequent inference, model-selected memory writes, D1-backed retrieval/context assembly across wakes, and callback rejection checks. **What did not pass at that time:** ongoing autonomous operation after a malformed model decision. That snapshot is historical; a later explicitly authorized resume created a new pending wake.
 
 The final `invalid_decision` is a strict model-output validation rejection; this sanitized receipt alone does **not** identify the exact malformed field or prove a provider error. Do not reveal raw model output or memory content to diagnose it.
 
@@ -50,7 +50,7 @@ A model response can be syntactically invalid even though Workers AI inference i
 
 If validation rejects the first **returned** model decision, the Core may request **one** new complete decision in that wake, **before** performing any memory write or synthetic tool action. The additional inference attempt is durably counted before dispatch; at most **two such repairs per synthetic run** are allowed. There are no retries of transport/model exceptions, uncertain inference outcomes, D1 writes or any side effect. Repeated malformed decisions still `block` the run.
 
-Read-only status can expose a bounded `decisionRepairs` count and an allowlisted `lastDecisionValidationCode`, never the raw reply, memory text or internal identifiers. The previous four-wake experimental run remains blocked until an explicitly authorized restart/resume; deploying code does not silently reset it. This is a reliability improvement for future wakes, not a retrospective explanation of the precise fourth-response defect.
+Read-only status can expose a bounded `decisionRepairs` count and an allowlisted `lastDecisionValidationCode`, never the raw reply, memory text or internal identifiers. The four-wake experiment was blocked at the historical snapshot; deploying the parser fix did not reset it. A subsequent separately authorized same-run resume has now been observed (below). This is a reliability improvement for future wakes, not a retrospective explanation of the precise fourth-response defect.
 
 ## Safe same-run resumption (synthetic-only)
 
@@ -60,12 +60,18 @@ Resumption is allowed **only** from `blocked / invalid_decision` with no pending
 
 At most two explicit resumes are permitted during one synthetic run. Unauthorized, duplicate, stale or unsafe requests fail closed; a scheduling error cannot be repeatedly retried. `/start` cannot replace an already-used run or erase its D1 pointer. Public synthetic status exposes only bounded `resumeCount` and `lastResumeAt`, not model text, memory data or credentials. `tool_failed`, `schedule_failed`, `model_or_quota_failed`, uncertain in-flight operations and agent-chosen pauses are **not** eligible for this recovery.
 
-This is a deliberately narrow survival mechanism, **not** general autonomous recovery, rollback of personality or an authorization for unbounded model calls. The old four-wake record remains blocked until a separately authorized resume operation completes. Source/build tests cannot prove a live scheduled wake; observe actual Cloudflare status after a real resume.
+This is a deliberately narrow survival mechanism, **not** general autonomous recovery, rollback of personality or an authorization for unbounded model calls. A separately authorized same-run resume has now completed (below). Source/build tests cannot prove a later autonomous model wake; observe actual Cloudflare status after the scheduled alarm.
+
+## Real resume evidence (2026-11-17 23:04:14 UTC)
+
+The trusted private Operator [run #44195835158](https://github.com/blondahouse/misslea-operator/actions/runs/44195835158) deployed the reviewed safe-resume code and performed exactly **one** authenticated continuation of the original four-wake blocked experiment, without calling `/start` or accessing D1 records. Public status was checked before and after.
+
+Sanitized receipt: `status=scheduled, wakes=4, modelCalls=4, memoryWrites=2, memoryContexts=3, resumeCount=1, nextWakeAt=2026-11-18T00:01:00Z, alarmPresent=true`. The Worker verified both an SDK schedule and a physical Durable Object alarm. Previous counters, D1 memory pointer and run identity were retained. The wake is deferred to the next UTC day because the synthetic four-wakes-per-day cap was already reached. **This proves a successful resume and physical scheduling, not that a fifth model call has occurred.**
 
 ## Operational/architecture caveats
 
 - Bounded synthetic-only limits: 12 total wakes, 4 per UTC day; sleep delay 60–86,400 seconds.
-- A failed/uncertain model or memory operation is not automatically replayed to avoid duplicate side effects. `blocked` state needs a separately designed recovery policy; no automatic resume is implemented.
+- Failed/uncertain model or memory operations are never automatically replayed to avoid duplicate side effects. Only the explicitly verified `invalid_decision` case has bounded, authorized same-run resume. No general automatic recovery from uncertain effects is implemented.
 - No Telegram, personal conversations, paid provider keys, real external tools, owner funds, root/admin agent rights, independently measured CPU/Neuron/D1 billing/quota headroom or cross-provider backup.
 - No deployed decay, associations, pressure-driven eviction, personality migration or document vault. D1 is the first native store behind a replaceable Memory Manager, not the whole Living Memory design.
 - Earlier standalone Cloudflare / Core / D1 lab evidence is retained separately. Historical off-Cloudflare research remains experimental and is not in the integrated runtime.
