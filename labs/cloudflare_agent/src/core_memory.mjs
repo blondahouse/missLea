@@ -60,9 +60,9 @@ export class CoreMemoryAgent extends Agent {
       if(result.status!=="scheduled")return {error:"schedule_failed"};
       // A successful RPC is not proof of a durable scheduled callback:
       // check both the SDK queue and the underlying Durable Object alarm.
-      const jobs=await this.listSchedules();
-      const alarm=await this.ctx.storage.getAlarm();
-      if(!Array.isArray(jobs)||jobs.length===0||!Number.isFinite(alarm)){
+      const scheduledJobs=await this.listSchedules();
+      const scheduledAlarm=await this.ctx.storage.getAlarm();
+      if(!Array.isArray(scheduledJobs)||scheduledJobs.length===0||!Number.isFinite(scheduledAlarm)){
         this.setState(blockWake(this.state,"schedule_failed"));
         return {error:"schedule_failed"};
       }
