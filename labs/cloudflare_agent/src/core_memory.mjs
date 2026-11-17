@@ -54,7 +54,20 @@ export class CoreMemoryAgent extends Agent {
     }
   }
   async receipt(){
-    return safeIntegratedStatus(this.state??initialState());
+    const result=safeIntegratedStatus(this.state??initialState());
+    // Synthetic-only alarm diagnostics: never include payloads, memory texts,
+    // SQL contents, internal DO identifiers or credentials.
+    let jobs=null,alarmAt=null;
+    try{
+      const list=await this.listSchedules();
+      jobs=Array.isArray(list)?list.length:null;
+    }catch{}
+    try{
+      const alarm=await this.ctx.storage.getAlarm();
+      if(typeof alarm==="number" && Number.isFinite(alarm))
+        alarmAt=new Date(alarm).toISOString();
+    }catch{}
+    return {...result,scheduledJobCount:jobs,physicalAlarmAt:alarmAt};
   }
   async wake(payload) {
     if(!canHandleScheduledWake(this.state,payload))return;
