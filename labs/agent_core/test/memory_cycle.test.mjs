@@ -41,6 +41,19 @@ test("strict memory decisions validate tool names, data, budgets and shapes",()=
     JSON.stringify({intent:"x",note:"",tool:null,memoryContent:"",sleepSeconds:0})
   ])assert.throws(()=>parseMemoryDecision(raw),/invalid_decision/);
 });
+test("scheduled wake runs with the production default clock, without an injected clock",async()=>{
+  let state=initialMemoryState("default-clock",Date.now()-120000);
+  const result=await wakeWithMemory({
+    runId:"default-clock",memory:store(),
+    load:async()=>state,
+    save:async value=>{state=structuredClone(value);},
+    schedule:async()=>{},
+    infer:async()=>reply(null,"",null,"Synthetic wake completed",null)
+  });
+  assert.equal(result.status,"paused");
+  assert.equal(result.wakes,1);
+  assert.equal(result.modelCalls,1);
+});
 test("two scheduled wakes save a model-written memory and reread its D1 content",async()=>{
   let now=start,state;
   const actions=[],seen=[];
