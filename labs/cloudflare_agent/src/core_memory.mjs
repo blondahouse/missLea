@@ -103,24 +103,47 @@ export class CoreMemoryAgent extends Agent {
       this.setState(state);
     }
     if(!canHandleScheduledWake(this.state,payload))return;
+    let phase="memory_port";
     try{
+      const underlying=this.memoryPort();
+      const memory={};
+      for(const method of ["read","recall","remember","revise","reinterpret"]) {
+        memory[method]=async (...args)=>{
+          phase="memory_"+method;
+          return underlying[method](...args);
+        };
+      }
+      phase="cycle_entry";
       await wakeWithMemory({
         runId:payload.runId,
-        load:async()=>this.state,
-        save:async state=>this.setState(state),
-        schedule:params=>this.scheduleNext(params),
-        memory:this.memoryPort(),
-        infer:async messages=>this.env.AI.run(MODEL,{
-          messages,
-          max_tokens:384,
-          chat_template_kwargs:{enable_thinking:false}
-        })
+        load:async()=>{phase="load_state";return this.state;},
+        save:async state=>{
+          phase=state.status==="running"?"persist_running":"persist_outcome";
+          return this.setState(state);
+        },
+        schedule:async params=>{
+          phase="schedule_next";
+          return this.scheduleNext(params);
+        },
+        memory,
+        infer:async messages=>{
+          phase="model_inference";
+          return this.env.AI.run(MODEL,{
+            messages,
+            max_tokens:384,
+            chat_template_kwargs:{enable_thinking:false}
+          });
+        }
       });
     }catch{
-      // State is already marked running before LLM/D1 effects. Never replay
-      // an uncertain model call or uncertain D1 write after an exception.
-      if(this.state?.status==="running")
-        this.setState(blockWake(this.state,"tool_failed"));
+      // Catch failures even BEFORE the first "running" save (e.g. a missing
+      // D1 port). Never leave an accepted one-shot callback as "scheduled":
+      // a consumed alarm would otherwise silently strand the experiment.
+      const current=this.state;
+      if(["scheduled","running"].includes(current?.status)) {
+        this.setState({...blockWake(current,"tool_failed"),
+          callbackFailurePhase:phase});
+      }
     }
   }
 }

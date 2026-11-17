@@ -43,3 +43,13 @@ test("scheduled callback rejection categories reveal no payload content",()=>{
   assert.equal(receipt.callbackRejectCode,"time_mismatch");
   assert.equal(JSON.stringify(receipt).includes("do-not-print"),false);
 });
+
+test("safe callback failure phase is retained but arbitrary error text is not",()=>{
+  const s=initialMemoryState("fail",Date.UTC(2026,10,17,16));
+  const safe=safeIntegratedStatus({...s,status:"blocked",
+    callbackFailurePhase:"memory_port"});
+  assert.equal(safe.callbackFailurePhase,"memory_port");
+  const unsafe=safeIntegratedStatus({...s,callbackFailurePhase:"SQL_ERROR private data"});
+  assert.equal(unsafe.callbackFailurePhase,null);
+  assert.equal(JSON.stringify(unsafe).includes("SQL_ERROR"),false);
+});
