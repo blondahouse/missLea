@@ -2,7 +2,7 @@
 
 These are guiding commitments for the research project, not a production deployment specification or permission to perform external actions.
 
-Miss Lea is intended to be portable and composed primarily of replaceable, existing solutions. The continuity that must be demonstrably preserved is **code + accumulated state, evidence, decisions, unresolved obligations, and active-operation records**; the LLM, model router, compute provider, storage provider, scheduler, communications channel, and even agent engine are replaceable.
+Miss Lea is intended to be portable and composed primarily of replaceable, existing solutions. The design must keep **code, actual operational state, valid authority records, external commitments and retained documents** portable across providers. The agent's **current subjective memory** should also remain portable to the extent that it still exists; intentionally forgotten experiences and lost historical personality states need not be reconstructed. The LLM, router, compute, storage, scheduler, channel and agent engine remain replaceable. See the [adopted Unified Living Memory concept](memory-concept.md) and [Cloudflare-first roadmap](memory-cloudflare-roadmap.md).
 
 ## Sustainability — overarching design goal
 
@@ -10,8 +10,8 @@ Miss Lea is intended to be portable and composed primarily of replaceable, exist
 
 - **Digital independence:** identity, accounts, resources and permissions that can survive a change of provider or initial human operator.
 - **Economic self-support in Live:** finite starting capital, realistic resource costs, choices about income/expense and a recoverable low-cost or dormant mode when resources run out.
-- **Continuity of experience:** preserved primary evidence, memory, decisions, unresolved obligations and work records; reproducibly verified restore after data loss.
-- **Security and recoverability:** protected secrets, authorized actions, independent recovery keys and separation of active permissions from archived state.
+- **Continuity of operation and experience:** protect current operational state and external obligations; preserve the *surviving current* Living Memory when possible without guaranteeing a complete autobiography or personality rollback. Subjective memories may decay, be revised or be irreversibly evicted.
+- **Security and recoverability:** protected secrets, authorized actions, independent recovery credentials and strict separation of active permissions, Document Vault evidence and subjective Living Memory.
 - **Operational portability:** components may be replaced without making multiple simultaneously authorized active instances or relying on a single cloud vendor.
 
 This is **a design constraint and resilience objective**, not a mandated personality, occupation, commercial strategy, or guarantee of perpetual survival. Measure it through concrete failure and recovery scenarios rather than a simplistic revenue or capital-multiplier KPI.
@@ -30,10 +30,10 @@ The first goal of this repository is to make evidence-based component decisions,
 
 A standing research capability should periodically discover ready-made alternatives, establish decision criteria **before** comparative trials, test only what those criteria require on synthetic data in isolation, and adopt or reject candidates with a rollback path. Doing nothing is a valid outcome. Improvements must serve reliability, autonomy, or economic usefulness rather than maximizing update count.
 
-A candidate may modify its own code and private runtime resources, but cannot irreversibly erase independently retained recovery copies, evade explicit spending constraints, or pretend to have authority over accounts and contracts held by people. Some provider actions legitimately require human participation; requesting that assistance is cooperation, not failure.
+A candidate may modify its own code and private runtime resources, but may not erase protected external obligations, recovery credentials or authority records, evade explicit spending constraints, or pretend to have authority over accounts and contracts held by people. **Automatic eviction of personal Living Memory** under real resource pressure and agent-directed revision of its content are permitted by the adopted memory concept; external records follow separate retention rules. Some provider actions legitimately require human participation; requesting that assistance is cooperation, not failure.
 
 Future research tracks: agent engine, memory, LLM routing (free direct APIs plus paid OpenRouter), ephemeral compute routing, durable storage, event dispatcher, self-development, infrastructure portability, digital identity, account lifecycle, and resource acquisition. The currently running Miss Lea instance remains independent of this research repository until a separately validated cutover; two active instances must not accidentally execute the same external operations.
 
-Economic research should explore credible ways to sustain Live resource costs. **No mandatory doubling of capital or other profit multiplier is imposed.** Live may require earning, reducing expenses or switching to free resources; exhaustion must not authorize debt or irreversible deletion of continuity. Self-funding is not required during Demo. Free resource discovery is research, not a promise of perpetual no-cost hosting.
+Economic research should explore credible ways to sustain Live resource costs. **No mandatory doubling of capital or other profit multiplier is imposed.** Live may require earning, reducing expenses or switching to free resources; exhaustion must not authorize debt, erase outstanding obligations or silently revoke the ability to check current authority. Living Memory remains finite and can experience irreversible forgetting. Self-funding is not required during Demo. Free resource discovery is research, not a promise of perpetual no-cost hosting.
 
 This ordering is project-wide, not lab-specific: [Evaluation policy — requirements before tests](evaluation-policy.md). A criterion must justify a test; a result must not be used retroactively to invent a favorable criterion. Exceptions for newly discovered material risks must be documented transparently.

@@ -94,21 +94,21 @@ const page = () => new Response(`<!doctype html><html lang="ru"><meta charset="u
 button,input{font:inherit;padding:.7rem;width:100%;margin:.4rem 0;box-sizing:border-box}
 pre{white-space:pre-wrap;overflow-wrap:anywhere}small{color:#666}</style>
 <h2>Anonymous Agent — Cloudflare Free</h2>
-<p>Два самостоятельных пробуждения, два реальных вызова Workers AI и память в Durable Object.</p>
-<label>Лабораторный пароль запуска<input id="token" type="password" autocomplete="off"></label>
-<button id="start">Запустить</button><button id="check">Проверить состояние</button>
-<pre id="status">Проверка...</pre><small>Нет личности, личных данных и внешних платных API.</small>
+<p>Two autonomous wakes, two real Workers AI calls, and persistent Durable Object state.</p>
+<label>Lab start token<input id="token" type="password" autocomplete="off"></label>
+<button id="start">Start</button><button id="check">Check status</button>
+<pre id="status">Checking...</pre><small>No identity, personal data, or external paid APIs.</small>
 <script>
 const out=document.getElementById("status");
 async function refresh(){
  try{const r=await fetch("/status",{cache:"no-store"});out.textContent=JSON.stringify(await r.json(),null,2);}
- catch {out.textContent="Не удалось проверить состояние";}}
+ catch {out.textContent="Status check failed";}}
 document.getElementById("check").onclick=refresh;
 document.getElementById("start").onclick=async()=>{
  const input=document.getElementById("token"), token=input.value;input.value="";
  try{const r=await fetch("/start",{method:"POST",headers:{authorization:"Bearer "+token}});
  out.textContent=JSON.stringify(await r.json(),null,2);}
- catch{out.textContent="Запуск не удался";}
+ catch{out.textContent="Start failed";}
 };
 refresh();
 </script></html>`,{

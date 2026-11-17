@@ -1,15 +1,17 @@
-# Candidate inventory — research, not rankings
+# Memory candidates — research inventory, not rankings
 
-| Candidate | Role | Integration | Notes |
+The [adopted concept](../../../docs/memory-concept.md) and [Cloudflare-first roadmap](../../../docs/memory-cloudflare-roadmap.md) are the requirements; **no memory engine has been selected as a production winner**.
+
+| Candidate | Possible role | Current state | Critical consideration |
 | --- | --- | --- | --- |
-| [SQLite](https://www.sqlite.org/) | Immutable event store, lexical baseline | **Implemented** | Standard library only; no autonomous consolidation |
-| [Letta](https://github.com/letta-ai/letta) / [Letta Code](https://github.com/letta-ai/letta-code) | Agent-driven context and memory | **Not integrated** | Evaluate memory capabilities *and* cost of the agent engine; verify export semantics on the selected version |
-| [Mem0](https://github.com/mem0ai/mem0) | Extracted, indexed memories | **Not integrated** | Test update semantics, provenance, and dependence on external LLM or embeddings |
-| [Graphiti](https://github.com/getzep/graphiti) | Temporal knowledge graph | **Not integrated** | Test contradictory facts, temporal relations, infrastructure footprint |
-| [LangGraph](https://github.com/langchain-ai/langgraph) | Durable execution and state checkpoints | **Not integrated** | Compare as a state-management tool, not as a drop-in semantic-memory competitor |
+| **Cloudflare D1 + SQLite FTS5** | Native baseline for mutable Living Memory | Proposed next lab, not yet implemented | Cloudflare-only Free-capable path, with daily query/storage limits; requires our policy and API |
+| **Existing SQLite lab** | Cheap lexical retrieval reference | Implemented, synthetic-only | No semantic revision, budgeted exposure, decay or link retrieval |
+| **Mem0** | Fact extraction and retrieval | Not integrated | Evaluate inference overhead, update behavior, Cloudflare compatibility and portability |
+| **Hindsight** | Richer reflection and consolidation | Not integrated | Extra runtime/memory/LLM cost; not a native Workers drop-in |
+| **Letta / Letta Code** | Self-managed agent context and memory | Not integrated | May replace a larger part of the agent runtime; evaluate rather than assume drop-in memory |
+| **Graphiti** | Weighted/temporal relation research | Not integrated | Specialized graph backend and model extraction cost likely excessive at launch |
+| **LangGraph** | Durable execution/checkpointing | Not integrated | Operational state framework, **not** a semantic-memory equivalent |
 
-Candidates can occupy **different roles**. A useful combination might pair a working-context engine, long-term evidence retrieval, and durable execution checkpoints. It must be tested against a simpler baseline and may be rejected.
+Some candidates solve **different problems**. A working-context engine, lexical store and external documents need not be bundled into one product. Compare integrations against the simplest native baseline using matched workloads and costs. Keep every result explicit: `pass`, `fail`, or `not_tested`.
 
-## Evaluation decision record
-
-No candidate has been selected as production memory. Letta is **a candidate, not a winner**. The first completed comparison must report runnable configurations, missing features, results, resource usage and limitations before recommending adoption. Do not build new abstractions where an upstream tool already exposes a suitable stable interface.
+No automatic provider migration, paid key use or real memory ingestion is permitted by this inventory.

@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#070c16">
-<meta name="description" content="Интерактивная архитектурная карта Miss Lea: компоненты, провайдеры, исследования, статусы, технологии и связи.">
+<meta name="description" content="Interactive Miss Lea architecture map: components, providers, experiments, evidence statuses, technology and relationships.">
 <title>Miss Lea — Architecture Atlas</title>
 <link rel="stylesheet" href="./style.css">
 </head>
@@ -15,79 +15,79 @@
       <div class="brandicon" aria-hidden="true">
         <svg viewBox="0 0 30 30" fill="none"><path d="M4.8 17.7c2.6-8.2 7.3-8.2 10.2 0 3-8.2 7.8-8.2 2.4 0 4.5 1.6 6 4.1" stroke="#a9c5ff" stroke-width="2" stroke-linecap="round"/><path d="M5 24c5.6-10 8.8-13.5 13.3-13.5S25 15.5 25 24" stroke="#7bdfbe" stroke-width="2" stroke-linecap="round"/><circle cx="15" cy="8" r="2" fill="#a9c5ff"/></svg>
       </div>
-      <div><div class="brandname">MISS LEA <span style="color:#8095ac;font-weight:400">/ ARCHITECTURE</span></div><div class="brandmeta">Digital autonomy research · 16.11.2026</div></div>
+      <div><div class="brandname">MISS LEA <span style="color:#8095ac;font-weight:400">/ ARCHITECTURE</span></div><div class="brandmeta">Digital autonomy research · 17.11.2026</div></div>
     </div>
     <div class="toplinks">
       <span class="pill"><i class="small-dot"></i> Public architecture / no secrets</span>
-      <a href="./memory/">Память ↗</a>
-      <a href="https://github.com/blondahouse/missLea" target="_blank" rel="noopener noreferrer">Исходники ↗</a>
+      <a href="./memory/">Memory ↗</a>
+      <a href="https://github.com/blondahouse/missLea" target="_blank" rel="noopener noreferrer">Source ↗</a>
     </div>
   </header>
   <section class="hero">
     <div>
       <div class="kicker">INTERACTIVE SYSTEM MAP · V1</div>
-      <h1>Архитектура <em>Miss Lea</em></h1>
-      <p class="subtitle">От доверенного управления аккаунтами до пробуждений, памяти и восстановления. Каждый блок имеет провайдера, степень готовности, описание технологии и связи с другими компонентами.</p>
+      <h1>Architecture <em>Miss Lea</em></h1>
+      <p class="subtitle">From trusted account control to agent wakes, memory and recovery. Each node identifies its provider, implementation, evidence level and connections.</p>
     </div>
-    <div class="hero-stats" id="stats" aria-label="Статистика системы"></div>
+    <div class="hero-stats" id="stats" aria-label="Architecture statistics"></div>
   </section>
   <div class="notice" role="note">
     <span class="spark" aria-hidden="true">✦</span>
-    <span><b>Это архитектурный атлас, не монитор работающего агента.</b> Зелёный статус относится к конкретному реально проверенному эксперименту, а не к готовности Miss Lea в целом. Cloudflare-only агент пока <b>не развёрнут в облаке</b>.</span>
+    <span><b>This is an architecture atlas, not a live agent monitor.</b> Green indicates only a verified bounded experiment, not overall production readiness. The bounded Cloudflare-only synthetic Agent Lab <b>has been deployed and verified</b>; the full agent is not deployed.</span>
   </div>
   <main class="layout">
-    <aside class="sidebar" aria-label="Навигация и фильтры">
-      <div class="panelhead">Найти компонент</div>
+    <aside class="sidebar" aria-label="Navigation and filters">
+      <div class="panelhead">Find a component</div>
       <label class="searchbox" for="search">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10.8" cy="10.8" r="7"/><path d="m16 16 5 5"/></svg>
-        <input id="search" type="search" placeholder="Агент, API, backup…">
+        <input id="search" type="search" placeholder="Agent, API, backup…">
       </label>
-      <div class="panelhead">Область архитектуры</div>
+      <div class="panelhead">Architecture domains</div>
       <div id="filters" class="filters"></div>
       <div class="divline"></div>
-      <div class="panelhead">Степень готовности</div>
-      <div id="legend" class="legend" role="group" aria-label="Фильтры статусов"></div>
+      <div class="panelhead">Evidence level</div>
+      <div id="legend" class="legend" role="group" aria-label="Status filters"></div>
       <div class="divline"></div>
-      <div class="panelhead">Как читать карту</div>
-      <p class="subtle">Нажми блок — справа откроются детали и связанные компоненты. Цвет точки означает доказанный уровень готовности, а OWN / EXT — кто разрабатывает решение.</p>
+      <div class="panelhead">How to read the map</div>
+      <p class="subtle">Select a node to see details and relationships. Dot colors reflect evidence level; OWN and EXT identify implementation ownership.</p>
       <div class="sources">
-        <a href="https://github.com/blondahouse/missLea" target="_blank" rel="noopener noreferrer">↗ Публичная лаборатория</a>
-        <a href="https://github.com/blondahouse/misslea-operator" target="_blank" rel="noopener noreferrer">↗ Приватный оператор (авторизация)</a>
+        <a href="https://github.com/blondahouse/missLea" target="_blank" rel="noopener noreferrer">↗ Public research lab</a>
+        <a href="https://github.com/blondahouse/misslea-operator" target="_blank" rel="noopener noreferrer">↗ Private operator (authorized access)</a>
       </div>
     </aside>
-    <section class="panel graphPanel" aria-label="Интерактивная схема архитектуры">
+    <section class="panel graphPanel" aria-label="Interactive architecture diagram">
       <div class="graphToolbar">
-        <div><div class="graphTitle">System graph <span style="color:#728ba6;font-weight:400">/ Four domains</span></div><small class="graphHint">Схема прокручивается по горизонтали на небольших экранах</small></div>
+        <div><div class="graphTitle">System graph <span style="color:#728ba6;font-weight:400">/ Four domains</span></div><small class="graphHint">Scroll horizontally on smaller screens</small></div>
         <div class="toolbarActions">
-          <button class="toolButton" type="button" id="showEdges" aria-pressed="false" title="Переключить видимость всех связей">↗ Все связи</button>
-          <button class="toolButton" type="button" id="reset">↻ Сбросить</button>
+          <button class="toolButton" type="button" id="showEdges" aria-pressed="false" title="Toggle visibility of all links">↗ All links</button>
+          <button class="toolButton" type="button" id="reset">↻ Reset</button>
         </div>
       </div>
-      <div class="graphViewport" id="viewport" tabindex="0" aria-label="Прокручиваемая схема">
+      <div class="graphViewport" id="viewport" tabindex="0" aria-label="Scrollable architecture map">
         <div class="diagram" id="diagram">
           <svg class="links" id="links" aria-hidden="true"></svg>
         </div>
       </div>
-      <div class="diagramFooter"><span><strong>OWN</strong> — разработка проекта · <strong>EXT</strong> — внешняя платформа · <strong>MIX</strong> — собственная логика поверх внешнего API</span><span id="matchCount">Выбраны все компоненты</span></div>
+      <div class="diagramFooter"><span><strong>OWN</strong> — built by project · <strong>EXT</strong> — external platform · <strong>MIX</strong> — own logic over external APIs</span><span id="matchCount">All components selected</span></div>
     </section>
-    <aside class="detail" id="detail" aria-label="Описание выбранного компонента" aria-live="polite">
-      <div class="detailEmpty"><div class="glyph">⌘</div><h3>Архитектура в деталях</h3><p>Выбери любой узел на карте, чтобы увидеть реализацию, статус, связи и ссылку на первоисточник.</p></div>
+    <aside class="detail" id="detail" aria-label="Selected component details" aria-live="polite">
+      <div class="detailEmpty"><div class="glyph">⌘</div><h3>Architecture details</h3><p>Select a node to see implementation, evidence status, relationships and source references.</p></div>
     </aside>
   </main>
   <section class="roadmap" aria-labelledby="roadmapTitle">
     <div class="roadmapHeader">
-      <div><div class="kicker">NEXT ACTIONS</div><h2 id="roadmapTitle">Маршрут к первому самостоятельному запуску</h2><p>Минимально достаточные этапы, без заранее навязанных внешних провайдеров.</p></div>
-      <a href="https://github.com/blondahouse/missLea/tree/main/labs/cloudflare_agent" target="_blank" rel="noopener noreferrer" style="font-size:12px">Лаборатория запуска ↗</a>
+      <div><div class="kicker">NEXT ACTIONS</div><h2 id="roadmapTitle">Path to the first independent launch</h2><p>Minimal milestones without unnecessary external providers.</p></div>
+      <a href="https://github.com/blondahouse/missLea/tree/main/labs/cloudflare_agent" target="_blank" rel="noopener noreferrer" style="font-size:12px">Launch lab ↗</a>
     </div>
     <div class="steps">
-      <div class="step"><div class="stepNum">01 / VERIFIED</div><h3>Vault + OIDC</h3><p>Разделение Root / Operations проверено на синтетическом canary в Infisical.</p></div>
-      <div class="step current"><div class="stepNum">02 / NEXT</div><h3>Оператор → Cloudflare</h3><p>Подключить администрирование выделенного аккаунта и создание Worker без ручных действий.</p></div>
-      <div class="step"><div class="stepNum">03 / CLOUD TEST</div><h3>Первое автономное пробуждение</h3><p>Два реальных Alarms, два Workers AI вызова, SQLite и проверка Free CPU.</p></div>
-      <div class="step"><div class="stepNum">04 / MVP</div><h3>Память и общение</h3><p>Цикл задач, Telegram, инициатива, долговременная память и мониторинг.</p></div>
-      <div class="step"><div class="stepNum">05 / LATER</div><h3>Continuity & handoff</h3><p>Независимый backup и восстановление, перенос настоящей истории Леи.</p></div>
+      <div class="step"><div class="stepNum">01 / VERIFIED</div><h3>Vault + OIDC</h3><p>Root/Operations separation verified with a synthetic Infisical canary.</p></div>
+      <div class="step"><div class="stepNum">02 / VERIFIED</div><h3>Operator → Cloudflare</h3><p>Enable delegated dedicated-account administration and Worker provisioning.</p></div>
+      <div class="step"><div class="stepNum">03 / VERIFIED</div><h3>First autonomous wake</h3><p>Two real alarms, two Workers AI calls and SQLite persistence passed the bounded cloud trial; confirm actual Free resource usage.</p></div>
+      <div class="step current"><div class="stepNum">04 / NEXT</div><h3>Memory and communication</h3><p>Task loop, communication, initiative, native memory and monitoring.</p></div>
+      <div class="step"><div class="stepNum">05 / LATER</div><h3>Continuity & handoff</h3><p>Independent current-state mirroring, external records and portability without personality rewind.</p></div>
     </div>
   </section>
-  <footer class="footer"><span>Miss Lea · Architectural research atlas · Обновлено по состоянию исходников на 16 ноября 2026</span><span>Изоляция реальных секретов · Только публично допустимые сведения</span></footer>
+  <footer class="footer"><span>Miss Lea · Architectural research atlas · Source evidence updated through 17 November 2026</span><span>No real secrets · Public-safe details only</span></footer>
 </div>
 <script type="module" src="./app.mjs"></script>
 </body>

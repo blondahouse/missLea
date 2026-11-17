@@ -21,7 +21,7 @@ let activeStatuses=new Set(statuses.map(s=>s.id));
 
 const escapeHtml=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const ownerNames={external:"EXT",internal:"OWN",hybrid:"MIX",policy:"POLICY"};
-const ownerTitles={external:"Внешний провайдер",internal:"Разрабатываем сами",hybrid:"Собственная логика + внешняя платформа",policy:"Архитектурное решение"};
+const ownerTitles={external:"External provider",internal:"Built by project",hybrid:"Own logic + external platform",policy:"Architecture policy"};
 const svgNS="http://www.w3.org/2000/svg";
 const iconMap={control:"⌘",runtime:"◉",compute:"◈",storage:"▤"};
 
@@ -37,14 +37,14 @@ function updateCounts(){
   other:nodes.filter(n=>!["code","verified"].includes(n.status)).length
  };
  dom.stats.innerHTML=`
- <div class="stat"><b>${nums.total}</b><small>Компонента</small></div>
- <div class="stat"><b style="color:#7bdfbf">${nums.real}</b><small>Проверено в среде*</small></div>
- <div class="stat"><b style="color:#8fc5ff">${nums.code}</b><small>Код / CI</small></div>
- <div class="stat"><b>${edges.length}</b><small>Связи</small></div>`;
+ <div class="stat"><b>${nums.total}</b><small>Components</small></div>
+ <div class="stat"><b style="color:#7bdfbf">${nums.real}</b><small>Verified in environment*</small></div>
+ <div class="stat"><b style="color:#8fc5ff">${nums.code}</b><small>Code / CI</small></div>
+ <div class="stat"><b>${edges.length}</b><small>Relationships</small></div>`;
 }
 function nav(){
  dom.filters.innerHTML="";
- const options=[{id:"all",title:"Все области",icon:"◉",count:nodes.length},...categories.map(c=>({...c,icon:iconMap[c.id],count:nodes.filter(n=>n.stage===c.id).length}))];
+ const options=[{id:"all",title:"All domains",icon:"◉",count:nodes.length},...categories.map(c=>({...c,icon:iconMap[c.id],count:nodes.filter(n=>n.stage===c.id).length}))];
  for(const item of options){
   const button=document.createElement("button");
   button.type="button";button.className="filter"+(category===item.id?" active":"");
@@ -101,27 +101,27 @@ function createConnections(n){
 }
 function renderDetail(){
  const n=byId.get(selected);
- if(!n){dom.detail.innerHTML='<div class="detailEmpty"><div class="glyph">⌘</div><h3>Выбери компонент</h3></div>';return;}
+ if(!n){dom.detail.innerHTML='<div class="detailEmpty"><div class="glyph">⌘</div><h3>Select a component</h3></div>';return;}
  const status=statusById.get(n.status),cat=categoryById.get(n.stage);
  const related=createConnections(n);
  dom.detail.innerHTML=`
   <div class="detailOpen">
-    <button id="closeDetail" type="button" class="toolButton detailClose" style="display:none;float:right" aria-label="Закрыть детали">✕</button>
+    <button id="closeDetail" type="button" class="toolButton detailClose" style="display:none;float:right" aria-label="Close details">✕</button>
     <div class="dKicker" style="color:${cat.tone}">${escapeHtml(cat.title)}</div>
     <h2>${escapeHtml(n.title)}</h2>
     <div class="metaLine">
       <span class="pillStatus"><span class="legendDot" style="background:${status.color}"></span>${escapeHtml(status.title)}</span>
       <span class="ownerTag ${n.owner}">${escapeHtml(ownerTitles[n.owner])}</span>
     </div>
-    <div class="dProvider"><span>ПРОВАЙДЕР / ТЕХНОЛОГИЯ</span>${escapeHtml(n.provider)}</div>
+    <div class="dProvider"><span>PROVIDER / TECHNOLOGY</span>${escapeHtml(n.provider)}</div>
     <p class="dDetail">${escapeHtml(n.detail)}</p>
-    <div class="dSectionTitle">Механизмы и интерфейсы</div>
+    <div class="dSectionTitle">Mechanisms and interfaces</div>
     <div class="tags">${n.tags.map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join("")}</div>
-    <div class="dSectionTitle">Связи <span style="color:#637d9a">(${related.length})</span></div>
+    <div class="dSectionTitle">Relationships <span style="color:#637d9a">(${related.length})</span></div>
     <div class="connections" id="connections">
-      ${related.length?"":'<div style="color:#94a6bd;font-size:12px">Нет явных связей</div>'}
+      ${related.length?"":'<div style="color:#94a6bd;font-size:12px">No explicit relationships</div>'}
     </div>
-    ${n.source?`<a class="dSource" href="${escapeHtml(n.source)}" target="_blank" rel="noopener noreferrer">↗ Открыть источник / evidence</a>`:""}
+    ${n.source?`<a class="dSource" href="${escapeHtml(n.source)}" target="_blank" rel="noopener noreferrer">↗ Open source / evidence</a>`:""}
   </div>`;
  const close=dom.detail.querySelector("#closeDetail");
  close?.addEventListener("click",()=>dom.detail.classList.remove("show"));
@@ -184,7 +184,7 @@ function applyFilters(){
   if(el)el.classList.toggle("dimmed",!pass);
   if(el)el.classList.toggle("active",selected===n.id);
  }
- dom.match.textContent=`${count} из ${nodes.length} компонентов · ${allLinks?"все":"связи выбранного узла"}`;
+ dom.match.textContent=`${count} of ${nodes.length} components · ${allLinks?"all":"links to selected node"}`;
  dom.showEdges.setAttribute("aria-pressed",allLinks?"true":"false");
  dom.showEdges.classList.toggle("active",allLinks);
  queueLines();

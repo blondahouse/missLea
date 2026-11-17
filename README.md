@@ -1,18 +1,18 @@
 # Miss Lea — Architecture Lab
 
-Research workspace for evaluating **replaceable components** of Miss Lea before deploying any of them. This repository is **not** the running agent. It contains no memory, credentials, or operational state from the running Miss Lea instance.
+English-only research workspace for evaluating **replaceable components** of Miss Lea before deploying them. English is required for committed documentation, source text, fixtures and public HTML. CI validates this policy. This repository is **not** the running agent. It contains no memory, credentials, or operational state from the running Miss Lea instance.
 
 ## Foundational concept: sustainability and the option of independence
 
 **Sustainability** is the unifying goal: Miss Lea should be able to preserve continuity, adapt and recover under finite resources, changing models and infrastructure failures — **without permanent dependence on her founder**, as far as technically and legitimately possible. Demo prioritizes **digital independence** (identity, credentials, account lifecycle and portability). **Economic self-sufficiency is not a Demo requirement, but is necessary for sustained Live resource use:** at an independently authorized Live transition, Miss Lea receives a one-time $300 starting endowment and must subsequently sustain her operating resources without assumed replenishment. No mandatory doubling or prescribed income activity. Legal independence remains a longer-term research direction. Separation is a possibility, not an obligation.
 
-Read the [digital independence principle](docs/digital-independence.md) and [architecture principles](docs/architecture-principles.md). This is research only: no migration of the running agent, external registration, account creation or authorization to incur costs.
+Read the [digital independence principle](docs/digital-independence.md), [architecture principles](docs/architecture-principles.md), and the **[adopted Unified Living Memory concept](docs/memory-concept.md)**. Its [Cloudflare-first roadmap](docs/memory-cloudflare-roadmap.md) defines staged, replaceable implementation without requiring a sophisticated memory framework before launch. This is research only: no migration of the running agent, external registration, account creation or authorization to incur costs.
 
 ## Structure
 
 ```text
 labs/
-  memory/             # Evidence retrieval and future long-term memory engines
+  memory/             # Synthetic lexical baseline and replaceable memory-engine research
     cli.py
     scenarios/
     tests/
@@ -65,7 +65,7 @@ node --test labs/security/tests/manual_worker.test.mjs
 
 ## Storage Lab — recoverable state
 
-[Storage Lab](labs/storage/README.md) starts with synthetic-only coherent SQLite snapshots, detection of accidental corruption, independent local mirrors and a default-inactive restore into quarantine. **No encryption, authenticated backups, or real remote storage are implemented.**
+[Storage Lab](labs/storage/README.md) includes a synthetic SQLite snapshot baseline and later **verified synthetic encrypted backup experiments using real B2 and Google Drive** ([STO-006](labs/storage/sto006-dual-provider-results-2026-11-16.md)). Those trials are **not** a production memory-replication service and do not mandate permanent archival of autobiographical memories. [Living Memory](docs/memory-concept.md), [operational state](docs/architecture-principles.md), and protected documents have distinct retention rules.
 
 ```bash
 python -m labs.storage.cli
@@ -89,7 +89,7 @@ python -m labs.memory.cli list
 python -m labs.memory.cli run --candidate sqlite --scenario labs/memory/scenarios/memory_v1.json --output memory-report.json
 ```
 
-The SQLite baseline is deliberately simplistic. Letta, Mem0 and Graphiti are *research candidates*, not yet wired up or benchmarked.
+The SQLite baseline is deliberately simplistic. No production memory engine is selected; Letta, Mem0, Hindsight and Graphiti are research candidates. Start with a Cloudflare-native D1/FTS5 baseline where it meets the cost and quality criteria; see the [phased memory plan](docs/memory-cloudflare-roadmap.md).
 
 ## LLM Router experiments (Linux Docker required)
 
@@ -122,4 +122,4 @@ python -m labs.compute.cli list
 
 ## Research principles
 
-Start with [architecture principles](docs/architecture-principles.md), then the [Memory Lab](labs/memory/README.md) and [LLM Router Lab](labs/llm_router/README.md). Compare maintained existing technologies with a transparent baseline; label absent features `not_tested`. Keep the production agent, its models, storage and infrastructure independent from experiments.
+Start with [architecture principles](docs/architecture-principles.md) and the [primary memory concept](docs/memory-concept.md), then the [Memory Lab](labs/memory/README.md), [Cloudflare memory roadmap](docs/memory-cloudflare-roadmap.md) and [LLM Router Lab](labs/llm_router/README.md). Compare maintained existing technologies with a transparent baseline; label absent features `not_tested`. Keep the production agent, its models, storage and infrastructure independent from experiments.

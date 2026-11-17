@@ -1,77 +1,42 @@
-# STO-001 — Where Miss Lea's memory and backups should live (PROPOSED)
+# Storage selection criteria — separate personal memory from durable records
 
-**Recorded:** 2026-11-15 · **Decision type:** research and architecture selection, NOT migration or production deployment · **Decision:** DEFER selection until minimum evidence · **Criteria owner:** project discussion; proposed thresholds require confirmation before comparative trials.
+**Current scope (17 November 2026):** The [Unified Living Memory concept](../../docs/memory-concept.md) is authoritative for **subjective memory**. This document supersedes the earlier proposed STO-001 retention criteria as a policy. The completed STO-002 through STO-006 comparisons remain historical **synthetic experiments** and their result files are retained unchanged. Their successful snapshot/restore tests must not be mistaken for an obligation to archive all of Miss Lea's personal history.
 
-## What is being preserved?
+## Data classes and different requirements
 
-Do **not** treat memory, index, state, secrets and backup as one undifferentiated database.
-
-| Data plane | Examples | Durability and authority |
+| Class | Example | Policy |
 | --- | --- | --- |
-| **Primary records / history** | Original messages, observations, source evidence, events, commitments, decisions and their rationales | Durable source of truth; append/change with provenance; preserved through model changes |
-| **Operational state** | Work queue, pending jobs, inventories, provider resource IDs, budgets, grants and revocations | Transactional; concurrency/fencing needed; restored copy must not resume action |
-| **Derived memory** | Summaries, embeddings, knowledge graph, retrieval indexes | Rebuildable from retained source/evidence; track derivation and versions |
-| **Artifacts** | Code snapshots, files, reports and model data | Content-addressable or manifest-verified; independent ownership and retention |
-| **Secrets / decryption authority** | Vault keys, account tokens, archive unlock credentials | **Not** stored in agent-visible memory or unencrypted backups; managed under [Security Lab](../security/selection-criteria.md) |
-| **Recovery snapshots** | Encrypted copies of consistent primary state and original sources | Multiple independent storage failure domains; never grant active authority when restored |
+| **Unified Living Memory** | Experiences, beliefs, subjective interpretation, goals, preferences, self-model | One mutable logical state, self-directed revisions, lazy decay, automatic eviction only under real storage pressure. No arbitrary personality rewind or required full-history snapshots. |
+| **Current operational state** | Pending jobs, wake schedules, financial/quota controls, in-flight operations | Durable transactional state and fencing, separated from recollections; independent current authority checks on restart. |
+| **External obligations / documents** | Signed contracts, entitlements, commitments, selected protected artifacts | Independent Document/Contract Vault rules, access and retention; not automatically evicted as autobiographical memory. |
+| **Credentials / authority** | Tokens, grants, revocations, recovery keys | Outside agent-visible memory; current authorization must be independently verified and never restored from historical memory. |
+| **Search indexes / embeddings** | FTS, vectors, association projections | Derived from **currently retained** memory; rebuildable without requiring archived forgotten content. |
+| **Historical platform data** | D1 Time Travel when available | Optional external testimony with time-limited provider retention; no automatic import or overwrite into Living Memory. |
 
-**Memory Lab** chooses extraction, consolidation and retrieval; **Storage Lab** chooses durable location, consistency, backup and recovery. The live source of truth should remain **single-writer**, not a distributed multi-master memory by default.
+## Selection principles
 
-## Proposed mandatory gates and evidence
+1. Keep the **Cloudflare-only initial launch** simple: native Durable Objects for the agent's operational lifecycle and a Cloudflare-native memory store through a replaceable Memory Manager interface. [Incremental roadmap](../../docs/memory-cloudflare-roadmap.md).
+2. One authoritative mutation order and explicit record versions; do not introduce multiple concurrently authorized personal instances.
+3. Export only the **surviving current** Living Memory as structured, versioned data. Exported snapshots used for migration or tests are not a requirement for indefinite autobiographical backup.
+4. A future second independent memory replica must converge to **current state**, including edits, redactions and eviction, and must not resurrect deleted or outdated entries.
+5. Preserve and recover **binding external records and operational state** according to their own risk and retention requirements. Technical restoration never reactivates revoked grants.
+6. Measure actual request/row limits, CPU, model tokens, monetary cost and maintenance; do not upgrade plans implicitly.
+7. No custom cryptography. Use maintained provider capabilities for authorization, storage, encryption and integrity.
+8. Keep comparison gates prospective and fixture-based; no live Miss Lea memory in public research CI.
 
-Use PASS / FAIL / NOT TESTED per **configuration**, not per product marketing. Do not choose a winner with unresolved mandatory NOT TESTED.
+## Evidence required before a production decision
 
-| ID | Type | Criterion | Evidence needed / veto |
-| --- | --- | --- | --- |
-| D1 | Mandatory | Original evidence, decisions, unclosed obligations and state can be exported without loss of ordering/provenance | Synthetic round trip across two environments; FAIL for inaccessible or silently truncated fields |
-| D2 | Mandatory | Crash-safe coherent write/snapshot for one authoritative writer | Simulated interrupted write and consistent restore; FAIL if successful reports hide data loss |
-| D3 | Mandatory | Encrypted and authenticated backups using **existing maintained software** before leaving a trusted host | Restore and tamper-failure test; current plaintext hash fixture is **not sufficient** |
-| D4 | Mandatory | Primary host loss **and** corruption/unavailability of one backup location still permit recovery | Two physically/account independent destinations and a rehearsed restoration; two folders on one disk do not qualify |
-| D5 | Mandatory | Backup/restore credentials cannot erase every independently protected generation; unlock key is outside its own backups | Credential and failure-domain diagram; negative access and recovery test |
-| D6 | Mandatory | Restored state starts isolated: no second live agent, no recycled grant, no implicit financial/compute authorization | Restore into quarantine + independent current-authority check; FAIL on uncontrolled simultaneous execution |
-| D7 | Mandatory | Demo design has an achievable **zero-new-subscription-cost** configuration; no implicit upgrade, credit card or chargeable service | Provider pricing, quota behavior and limits verified for actual planned usage |
-| D8 | Mandatory | No founder device/LLM model is required for routine backups, and migration/export path is practical | Simulated transfer to independently provisioned host; FAIL on irreplaceable login/host |
-| T1 | Trade-off | Storage capacity, recurring requests/egress and measured restore time | Measure on equivalent workloads, record missing costs as unknown |
-| T2 | Trade-off | Maintenance, rate limits, migration tooling and vendor dependence | Runbook size, dependencies, documented restrictions |
-| T3 | Optional | Geographic spread, deduplication, retained history search and cold dormant-mode cost | Only test if it would change the decision |
+- **Minimal memory:** bounded, relevant retrieval and content revision across wakes, with explicit low-exposure model-token cost.
+- **Mutation safety:** concurrent updates, interruption between modification and acknowledgment, version conflict, fragment redaction, no voluntary whole-record deletion.
+- **Forgetting:** deterministic tests of lazy wall-time + meaningful-experience decay; correct eviction when **test-only constrained capacity** is reached; no eviction solely for age.
+- **Expansion:** associations and deeper exposure must beat or meaningfully complement lexical retrieval under matched budgets before adoption.
+- **External state:** separate contract/authority access and fail-closed authorization behavior; never use autobiographical memory as legal proof.
+- **Recovery:** current-state replication and historical read-only inspection must be evaluated separately; no production restore-overwrite disguised as a historical query.
 
-**Proposed Demo recovery target:** no more than **24 hours of primary record loss (RPO)** in a rehearsed single-site failure; actual restore time (RTO) must be measured, not assumed. This is a *research target*, not a claim about running TinyFund or permission to relax its current backups. Revisit after measurements or a stricter requirement. No mandatory storage spending is approved.
+## What previous STO studies prove
 
-**Stopping rule:** stop when one primary + backup configuration passes D1–D8 and a viable fallback is documented, or when the smallest untested mandatory blocker is isolated. Do not implement vector databases or multi-primary replicas merely to increase apparent sophistication.
+STO-002 compared backup engines. STO-003 tested two remote backup services on isolated CI runners. STO-004/005 verified separate real Backblaze B2 and Google Drive synthetic-data recovery paths. [STO-006](sto006-dual-provider-results-2026-11-16.md) verified identical **test-only encrypted archive bytes** at both providers and two isolated restores.
 
-## Candidate topologies — desktop research, not selection
+These are valid technical results for **protected external evidence or other recovery use cases**, not evidence of an implemented, coherent dual-provider **live-memory mirror** and not a decision to retain past personalities.
 
-| Configuration | Benefit | Critical unknown/trade-off | Status |
-| --- | --- | --- | --- |
-| **SQLite on a persistent Linux host + restic to two independent backends** | Simple, portable primary; existing [Storage Lab](snapshot.py) validates synthetic SQLite-consistent snapshots. restic encrypts/authenticates and supports diverse repositories | Requires an always-on durable host; actual cloud backend credentials and offline unlock/recovery untested | NOT TESTED as deployed system |
-| **Cloudflare D1 as the primary + independently exported encrypted backups** | Serverless SQL database accessible from Workers; usable while avoiding a long-lived VM in an early experiment | Cloudflare dependence and export frequency; Workers Free limits (500 MB per database and 5 GB total account storage as of Oct 2026), and limits can stop writes until quota reset. D1 point-in-time recovery is **not** a second-provider backup | NOT TESTED |
-| **PostgreSQL on a separate host + independent encrypted backups** | Strong transactional base if multiple services eventually write | Higher cost/operational overhead than needed before concurrent writes are a demonstrated requirement | DEFERRED / NOT TESTED |
-| **restic with distinct SFTP/object/other supported remotes** | Established encrypted backup, data integrity and verification, multi-backend portability | Separate backend lifecycle, permissions, retention, credential deletion rights and recovery keys must be tested | CANDIDATE only |
-| **Cloudflare R2 as one destination** | S3-compatible object storage; published included free usage | R2 **requires adding an R2 subscription/checkout**, which can bill beyond free usage; do not enable it without separate authorization. Also **not independent** from D1/Workers when used as the only backup | NOT AUTHORIZED |
-
-Where two storage backends share a provider account, login, root token, decryption key, billing policy or deletion authority, **do not count them as independent failure domains** merely because they are two buckets.
-
-## Smallest useful evidence plan
-
-1. **No provider calls:** agree on synthetic dataset (event ordering, changed decisions, unresolved obligations, attachments, one stale grant), size profile and a portable export schema. The [existing Storage Lab](README.md) only proves a basic **unencrypted** SQLite snapshot and two *same-disk* mirrors; it is not sufficient for D3–D5.
-2. **Primary decision:** test portable SQLite on a persistent test host against D1/D2/D6; test D1 serverless export only if eliminating the always-on VM would change the result. Do not use a Worker runtime filesystem as the durable database.
-3. **Backups:** use established restic in isolated ephemeral CI/container to encrypt a synthetic consistent snapshot, make two independently keyed repository copies, corrupt one, restore another, and validate all original records. Root recovery material is supplied outside the test repositories. No real data or public CI secrets.
-4. **Only then test real free storage providers** after separate account, cost and permissions approval. Verify that backup credentials cannot erase protected generations; simulate loss of the primary host and one provider. Measure RPO, RTO, storage/egress/requests, and what a free-tier exhaustion does.
-5. **Decision:** SELECT / REJECT / DEFER with measured evidence, missing facts, rollback and explicit Demo integration authorization. Do not move the running TinyFund memory based on research alone.
-
-## Continuity and independence constraints
-
-- **One active writer;** standby/restore cannot start external operations until current independently verified authority is granted.
-- **Not everything needs online storage:** operational primary data stays accessible to the executing agent; immutable original evidence and encrypted recovery copies can be remote. Derived embeddings/graph indexes can be regenerated.
-- **Founder may initially bootstrap legal accounts/recovery but must not be a permanent daily operator.** Each storage account records holder, operator, billing party, recovery and transferability.
-- **No recursive lockout:** a vault must not require a secret recoverable only from a backup it decrypts. Independent emergency recovery must be tested before production.
-- **Dormancy:** allow durable archival storage with compute turned off when credits run out, without silently creating debts.
-
-## Official references (checked 2026-11-15)
-
-- [Cloudflare D1 free limits and Time Travel](https://developers.cloudflare.com/d1/platform/limits/)
-- [D1 free daily limits enforcement, September 2026](https://developers.cloudflare.com/changelog/post/2026-09-01-d1-free-tier-limit-enforcement/)
-- [Cloudflare R2 requires subscription](https://developers.cloudflare.com/r2/get-started/)
-- [restic encrypted repository security model](https://restic.readthedocs.io/en/stable/100_references.html)
-- [restic check, copy, restore commands](https://restic.readthedocs.io/en/stable/manual_rest.html)
-- [Project evaluation policy](../../docs/evaluation-policy.md)
+Original experiment protocols and results remain part of research history. See [Storage Lab](README.md).

@@ -10,13 +10,13 @@ const control = () => new Response(`<!doctype html>
 <style>body{font:16px system-ui;max-width:36rem;margin:2rem auto;padding:0 1rem;line-height:1.5}
 input,button{font:inherit;padding:.65rem;width:100%;box-sizing:border-box;margin:.5rem 0}
 pre{white-space:pre-wrap;overflow-wrap:anywhere}small{color:#666}</style>
-<h1>Anonymous Sleep Lab</h1><p>Два пробуждения Cloudflare → Deno. Только синтетические данные.</p>
-<label for="secret">Одноразовый пароль управления (не сохраняется)</label>
+<h1>Anonymous Sleep Lab</h1><p>Two Cloudflare → Deno wakes. Synthetic data only.</p>
+<label for="secret">One-time control token (not stored)</label>
 <input id="secret" type="password" autocomplete="off" spellcheck="false" />
-<button id="start" type="button">Запустить два пробуждения</button>
-<button id="check" type="button">Проверить состояние</button>
-<pre id="output" aria-live="polite">Ожидает запуска</pre>
-<small>Нет модели, личной памяти, платных вызовов или постоянного процесса.</small>
+<button id="start" type="button">Start two wakes</button>
+<button id="check" type="button">Check status</button>
+<pre id="output" aria-live="polite">Awaiting start</pre>
+<small>No model, personal memory, paid calls, or always-on process.</small>
 <script>
 async function inspect(){
  const r=await fetch('/health',{cache:'no-store'});
@@ -31,7 +31,7 @@ document.querySelector('#start').addEventListener('click',async()=>{
    'authorization':'Bearer '+token,'content-type':'application/json'},
    body:JSON.stringify({delay_seconds:10})});
   document.querySelector('#output').textContent=JSON.stringify(await r.json(),null,2);
- } catch {document.querySelector('#output').textContent='Запрос не удался';}
+ } catch {document.querySelector('#output').textContent='Request failed';}
 });
 inspect();
 </script></html>`, {

@@ -20,8 +20,8 @@ for(const e of edges){
  assert.ok(ids.has(e.from)&&ids.has(e.to),JSON.stringify(e));
  assert.ok(e.label);
 }
-assert.equal(metadata.asOf,"2026-11-16");
-assert.equal(nodes.find(n=>n.id==="agent-sdk").status,"code");
+assert.equal(metadata.asOf,"2026-11-17");
+assert.equal(nodes.find(n=>n.id==="agent-sdk").status,"verified");
 assert.equal(nodes.find(n=>n.id==="infisical-root").status,"verified");
 assert.equal(nodes.find(n=>n.id==="restore").status,"verified");
 const html=readFileSync(new URL("./index.html",import.meta.url),"utf8");
@@ -31,4 +31,14 @@ assert.ok(html.includes('src="./app.mjs"'));
 assert.ok(html.includes('href="./style.css"'));
 assert.ok(js.includes('new Map(nodes.map'));
 assert.ok(css.includes(".graphViewport"));
+const memoryHtml=readFileSync(new URL("./memory/index.html",import.meta.url),"utf8");
+const memoryDecision=readFileSync(new URL("../docs/memory-concept.md",import.meta.url),"utf8");
+const memoryPlan=readFileSync(new URL("../docs/memory-cloudflare-roadmap.md",import.meta.url),"utf8");
+assert.ok(memoryHtml.includes('lang="en"'));
+assert.ok(memoryHtml.includes('id="exposure"'));
+assert.ok(memoryHtml.includes("Unified Living Memory"));
+assert.ok(memoryDecision.includes("Adopted primary memory concept"));
+assert.ok(memoryPlan.includes("Cloudflare first"));
+const pageSources=[html,js,css,memoryHtml,readFileSync(new URL("./data.mjs",import.meta.url),"utf8")];
+for(const src of pageSources) assert.ok(!/[\u0400-\u04FF]/u.test(src),"site must contain English-only content");
 console.log("PASS:",nodes.length,"nodes,",edges.length,"evidence-linked edges,",categories.length,"domains");

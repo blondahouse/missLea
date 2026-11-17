@@ -52,7 +52,7 @@ test("two bounded wakes preserve synthetic memory across restarted instance", as
     const control = await worker.fetch(new Request("https://lab.invalid/control"),env);
     assert.equal(control.status,200);
     const body = await control.text();
-    assert.ok(body.includes('Запустить два пробуждения'));
+    assert.ok(body.includes('Start two wakes'));
     assert.ok(!body.includes(token));
     assert.equal((await worker.fetch(
       new Request("https://lab.invalid/health"),env)).status,200);
