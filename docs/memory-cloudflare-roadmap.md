@@ -24,7 +24,7 @@ Evaluate what the current retrieval baseline can and cannot do; specify comparab
 
 **Ready when:** the baseline and missing capabilities are explicit, with bounded costs and reproducible synthetic tests. No personal memory enters the public lab.
 
-**Implementation update (17 Nov 2026):** initial standalone Memory Manager, parameterized D1 adapter and FTS5 schema exist at labs/living_memory. Live D1 provisioning and Agent Core binding are not yet verified; Phase 1 acceptance remains open.
+**Implementation update (17 Nov 2026):** initial standalone Memory Manager, parameterized D1 adapter and FTS5 schema exist at labs/living_memory. Dedicated D1 provisioning and schema read-back were verified, but live record operations have not passed the acceptance test; Agent Core remains unbound. Phase 1 acceptance is still open.
 
 ## Phase 1 — minimal native Living Memory
 
