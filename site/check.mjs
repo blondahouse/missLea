@@ -20,7 +20,10 @@ for(const e of edges){
  assert.ok(ids.has(e.from)&&ids.has(e.to),JSON.stringify(e));
  assert.ok(e.label);
 }
-assert.equal(metadata.asOf,"2026-11-17");
+assert.equal(metadata.asOf,"2026-11-18");
+assert.equal(nodes.find(n=>n.id==="memory-manager").status,"verified");
+assert.equal(nodes.find(n=>n.id==="d1").status,"verified");
+assert.ok(edges.some(e=>e.from==="memory-manager"&&e.to==="d1"));
 assert.equal(nodes.find(n=>n.id==="agent-sdk").status,"verified");
 assert.equal(nodes.find(n=>n.id==="infisical-root").status,"verified");
 assert.equal(nodes.find(n=>n.id==="restore").status,"verified");
