@@ -1,6 +1,6 @@
 # Miss Lea Operator Control Plane — V1
 
-**Current status: source and synthetic tests only. Real vault, trusted runner, Cloudflare and Gmail credentials are NOT connected; no actual account-admin operation was performed.** This code is published solely to bootstrap a separate, immutable-to-agent **private trusted operator** environment. Never add real secrets to this public research repository, its Actions, issues, files, branches, or chats.
+**Status of this public package:** only synthetic adapter/tests are implemented here; it is **not** the deployed trusted runner. **Current separate private Operator:** `blondahouse/misslea-operator` has successfully used GitHub OIDC with Infisical and Cloudflare Operations credentials to provision D1 and deploy synthetic Cloudflare Workers. Its D1 provisioning job separately uses Root credentials without passing them to agent runtime. Current autonomous Core + D1 state is recorded in the [integration report](../cloudflare_agent/CORE_MEMORY_INTEGRATION.md). This public repository contains neither real secrets nor access to the private runner's operational state. Never add secrets to its Actions, issues, files, branches or chats.
 
 ## Goal
 
@@ -18,9 +18,9 @@ Create **two projects**, each with environment `prod`:
 
 Free's basic project role boundaries need a real denial test: an Ops identity attempting to fetch a Root canary must be rejected before storing any actual master credentials. This is mandatory. If Free fails, **stop root-secret onboarding** and switch vault/isolation; do not assume folder names or convention provide security.
 
-### Deposit securely without sharing with ChatGPT
+### Historical bootstrap checklist — not a statement of current credential state
 
-**Do not deposit real master credentials yet.** First confirm project isolation in a live trusted environment using a fake canary. This avoids storing a root password in a Free-tier configuration whose basic role boundaries have not been tested.
+**Historical prerequisite:** before the initial sensitive credential onboarding, project isolation had to be demonstrated with a fake canary. The private Operator later verified Infisical OIDC separation. The following steps document the **original bootstrap sequence**, not a demand to recreate projects or rotate existing credentials now.
 
 1. You log in to Infisical **directly** in your browser (not via ChatGPT or a link with an encoded token) using the dedicated Miss Lea-controlled organization; verify the HTTPS origin.
 2. Create the two separate projects and their Root/OPS machine identities; add **only** a synthetic `ROOT_ACCESS_CANARY` secret to the `misslea-root` project. Once the private protected operator runner is established, run `python -m labs.operator_control.cli --check-vault-isolation` there. It must report `operational_identity_root_access=denied`. This is a genuine provider-side denial test, not just a simulated one.
@@ -35,7 +35,7 @@ Free's basic project role boundaries need a real denial test: an Ops identity at
 
 ### Separate trusted execution environment
 
-**Required before live credentials.** Create a new **private** `misslea-operator` repository controlled only by the current trusted operator/owner, not editable by the running agent, and migrate the `labs/operator_control` package. The present connected GitHub tooling cannot create a new repo; the operator can later use an authorized code-hosting GUI/connector or request one owner bootstrap. A private repository by itself is not a sufficient security boundary: enforce branch protections, runner/environment restrictions, and prevent any agent-owned token from updating its workflows or code. GitHub Free restrictions on private Environment protections may require a different executor; do not use a privileged runner until these controls are verified.
+**Original bootstrap plan (now partially completed):** the new **private** `misslea-operator` repository exists and has used isolated GitHub Actions / Infisical identities for live Cloudflare deployments. It remains controlled by the trusted owner/operator, not the running synthetic agent. The public `labs/operator_control` package is still research code; do not assume its full administrative commands are implemented in the private deployment. A private repository by itself is not a sufficient security boundary: enforce branch protections, runner/environment restrictions, and prevent any agent-owned token from updating its workflows or code. GitHub Free restrictions on private Environment protections may require a different executor; do not use a privileged runner until these controls are verified.
 
 The trusted runner obtains Infisical machine credentials from its protected environment (or Workload Identity/OIDC, when supported), calls Infisical and provider APIs, and reports **sanitized** responses only. Any access to `Root` occurs in a separate admin operation, is written to an independent audit log, and does not return a root secret to an agent. Both runner source integrity and independent auth are mandatory. Do not make the runner's privileged API public without authentication.
 
