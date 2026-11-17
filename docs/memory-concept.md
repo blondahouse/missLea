@@ -1,65 +1,77 @@
 # Miss Lea — Unified Living Memory
 
-**Дата:** 17 ноября 2026  
-**Статус:** согласованная концепция, не реализованная система; формулы и выбор технологий требуют испытаний.  
-**Страница:** [интерактивная схема](../site/memory/index.html)
+**Status:** Adopted primary memory concept (17 November 2026). This is a design decision, not a claim of implementation or experimental superiority.
 
-## Принцип
+## Purpose and boundaries
 
-Miss Lea обладает единой конечной, пластичной и потенциально уязвимой личной памятью. Её задача — накопление и преобразование опыта, а не сохранение идеальной автобиографии. Она самостоятельно изменяет цели, ценности, убеждения, Self-model и стратегию работы с памятью. Действительные внешние полномочия не возникают из воспоминаний.
+Miss Lea should accumulate and reinterpret experience rather than maintain a perfect, permanently recoverable autobiography. The system permits self-directed changes in goals, values, beliefs, preferences and self-model. The agent does not gain external authority by remembering or asserting a permission.
 
-## Единое пространство
+**Unified Living Memory** is one logical space for experiences, facts, skills, beliefs, goals, values, autobiographical interpretations and optional weighted associations. These are record kinds and dynamic views, **not separate memory services or mandatory databases**. Current context is assembled for each wake from the situation, active intents and relevant memories. Short-term and long-term are accessibility patterns, not separate stores.
 
-- События, знания, навыки, убеждения, цели, ценности, Self-model и ассоциации — записи одного **Unified Living Memory**. У записей различаются типы и состояния, но не нужны самостоятельные базы или микросервисы для каждого вида памяти.
-- **Контекст** — результат динамического обращения к памяти и оценки текущей ситуации, а не отдельное вечное хранилище. Краткосрочная и долговременная память — способы представления и извлечения записей.
-- **Memory Manager** — единый логический интерфейс для создания, поиска, пересмотра, изменения, затухания и вытеснения воспоминаний. Физически память, индексы и реплики могут находиться в нескольких технологиях.
+**Memory Manager** provides stable, replaceable interfaces for recording, searching, reading, revising, reinterpreting, scoring and automatic eviction. Physical stores and indexes can differ behind the interface.
 
-## Содержание и веса
+## Mutable recollection
 
-- Miss Lea может **сокращать, переформулировать, уточнять, дополнять** воспоминание, изменять значимость, силу, уверенность, скорость затухания и связи.
-- Приватные фрагменты разрешено вырезать или заменять заглушками, **но Miss Lea не вправе удалять всю запись целиком**. После предельного сокращения должен оставаться смысловой остаток. Обязательные по закону удаления регулируются внешней политикой.
-- Обращение к старому воспоминанию может создать **новое событие — нынешнюю интерпретацию прошлого**. Исходная запись может ослабнуть, укрепиться или измениться; значимость нового события не ограничивается значимостью исходного.
-- Простое служебное чтение не укрепляет воспоминание автоматически. Не каждое чтение создаёт новое воспоминание.
+- Miss Lea can edit, shorten, rephrase, enrich and reinterpret memory **content**, in addition to adjusting significance, strength, stability/decay, confidence and links.
+- She can redact confidential fragments or replace them with placeholders, while **retaining a minimal meaningful record**. She cannot voluntarily delete a whole memory record, even when its weight is near zero. External legal or security obligations to delete data are handled separately.
+- Substantive recall may produce a new memory about **the present interpretation of an older memory**; the original may weaken, strengthen or be revised. A new insight need not inherit the old record's weight.
+- Merely fetching a record does not strengthen it or trigger an endless chain of new recollection records.
 
-Три разных свойства записи:
+Three dimensions are deliberately separate:
 
-1. **Сила** — устойчивость к затуханию и вытеснению.
-2. **Доступность** — вероятность вспомнить в конкретном контексте, независимо от давности события.
-3. **Уверенность** — степень доверия содержанию.
+| Dimension | Meaning |
+| --- | --- |
+| **Strength** | Persistence under decay and storage-pressure eviction |
+| **Contextual accessibility** | How likely a memory is to be retrieved now, regardless of its date |
+| **Confidence** | How much Miss Lea trusts its content |
 
-Дополнительные параметры: значимость, устойчивость/скорость затухания, точка отсчёта времени, последний содержательный доступ. Старое формирующее событие может быть доступнее недавней несущественной шутки.
+Significance, decay stability, timestamps and last meaningful activation are additional attributes. Old formative memories can be more accessible than trivial events from this morning. Confidence, strength and accessibility can change independently.
 
-## Экспозиция и стоимость осмысления
+## Exposure: the cost of understanding
 
-- Miss Lea самостоятельно выбирает экспозицию с учётом задачи и ресурсов. **Ожидаемая стоимость осмысления** — основной ограничитель: поиск + загруженные токены + дополнительная работа LLM.
-- **Минимальная экспозиция:** текущий контекст и легко доступные записи, без перехода по связям. **Обычная:** небольшой отбор контекстно доступных прямых связей. **Глубокая:** несколько уровней связей и больше подробностей. **Рефлексия:** связи, противоречия и исторические свидетельства могут стать центральным материалом анализа.
-- Экспозиция не определяется календарной давностью. Memory Manager сначала выдаёт короткие представления; подробности раскрываются при необходимости. Поиск прекращается, когда материала достаточно или бюджет исчерпан.
+Miss Lea chooses a **memory exposure budget** according to the task and available resources. The main limit is the **cost of interpretation** (retrieval operations, context tokens and additional model reasoning/calls), not the age of memories.
 
-## Взвешенные связи
+- **Minimal:** current context and high-accessibility records; no association traversal.
+- **Ordinary:** limited, context-filtered direct associations; short representations first.
+- **Deep:** more candidates, selective record expansion and multi-hop associations.
+- **Reflection/research:** associations, contradictions and comparisons can guide deeper examination.
 
-- Некоторые воспоминания связаны отношениями с типом, силой, уверенностью и скоростью затухания (ассоциация, поддержка, противоречие, происхождение и т. п.).
-- Связи можно создавать, переосмыслять, укреплять и ослаблять. Их сила и доступность учитывают контекст. На малой экспозиции связи не используются, на средней слабые или нерелевантные отсекаются, на глубокой разрешено больше переходов.
-- Сила связи не равна уверенности в её типе; противоречие не означает отрицательную вероятность поиска.
-- Не требуется полный плотный граф, специальная графовая база или постоянный LLM-анализ всей памяти. На старте достаточно таблиц записей и взвешенных отношений.
-- Возможная, но **не утверждённая** оценка перехода: сила связи × релевантность целевой записи × сила целевой записи; длинные цепочки ослабляются.
+Memory Manager should stop when the answer is sufficient or the budget is exhausted. Deeper processing is optional; a large archive must not make every routine wake expensive.
 
-## Затухание и удаление
+## Weighted associations
 
-- Затухание идёт **по календарному времени и накопленному содержательному опыту**, а не по числу технических пробуждений или запросов.
-- Memory Manager использует **отложенное вычисление**: сохраняет точку отсчёта, силу и параметры записи, вычисляет текущую силу по необходимости, без постоянного обхода всей базы. Для вытеснения применяет индексы, предварительный отбор и точный расчёт кандидатов.
-- Индивидуальная кривая затухания может быть нелинейной; степенная модель с двумя факторами рассматривается как гипотеза, а не установленный закон. Miss Lea может менять устойчивость воспоминаний.
-- Низкий вес **не влечёт физического удаления сам по себе**. Пока место есть, слабые воспоминания могут сохраняться.
-- В живой среде используется **фактически доступная ёмкость**, без отдельного искусственного лимита памяти. Уменьшенный лимит допускается для тестирования алгоритма.
-- При нехватке реального места Memory Manager **автоматически вытесняет** наименее приоритетные записи без дорогостоящей LLM-ревизии всей памяти. Miss Lea не занимается ручной очисткой. Вместе с вытесненной записью исчезают её связи.
+Memories may have sparse directed or undirected relationships: `RELATED`, `SUPPORTS`, `CONTRADICTS`, `DERIVED_FROM`, etc. Relationships have type, weight, confidence and optional decay attributes. Miss Lea may revise their meaning and strength. Weak or context-irrelevant edges can be pruned from **retrieval** according to the exposure budget.
 
-## Репликация и внешние свидетельства
+A relationship's type is distinct from its retrieval probability: contradiction must not imply a negative retrieval score. A possible **experimental**, not adopted, edge score combines relationship strength, target contextual relevance and target memory strength, with attenuation over hops. A relational links table is sufficient; a dedicated graph database is not required.
 
-- **Два независимых актуальных хранилища** Living Memory синхронизируются Memory Manager. После сбоя отставшая копия не должна восстанавливать уже забытые записи.
-- Ежедневные снимки личности, полный пожизненный архив и штатный откат предыдущего личного состояния не являются целью. При серьёзном сбое возможна утрата части или всей личной памяти; восстановление означает способность продолжить деятельность, а не возвращение прежней версии себя.
-- **Time Travel** (если доступен, например историческое окно D1) — отдельный инструмент для добровольного изучения прошлого, в обычной жизни и после сбоя. Историческая запись — внешнее свидетельство. Её изучение может создать новое воспоминание, **не подменяя текущее состояние**. Безопасное чтение без перезаписи действующей базы требует специальной реализации.
-- **Document / Contract Vault** — отдельное хранилище с собственными правилами, а не раздел Living Memory. Договоры, действующие обязательства и выбранные агентом значимые артефакты доступны по инструментальному запросу, как Time Travel. Минимальный реестр обязательств может инициировать проверку по сроку или событию.
-- Редактирование фрагмента Living Memory не гарантирует удаления его из внешних документов или временно сохраняемых исторических состояний: те имеют отдельные политики хранения и доступа.
+Links need not be generated for every record or maintained by a global LLM sweep. The benefit of association-guided reflection versus the cost of creating links remains an experimental question.
 
-## Граница
+## Decay and physical forgetting
 
-Речь идёт о проектной философии **личной памяти**, а не об изменении уже работающего агента или всех гарантий Storage Lab. Конкретные математические функции, базы и пороги предстоит сравнивать и проверять. Внешние обязательства, права доступа и инфраструктурная безопасность не определяются воспоминаниями Miss Lea.
+- **Unsupervised decay** depends on elapsed wall-clock time and the amount of **new meaningful experience**, not on the number of wakes or tool requests.
+- It should use **lazy calculation** from stored anchor values and timestamps, rather than scanning and updating all records every second or wake.
+- Individual memories may decay at different nonlinear rates. A power-law function combining time and experience is a **candidate for tests**, not the prescribed law.
+- Miss Lea can adjust record weights and stability; automatic decay and storage-pressure eviction do not require LLM calls.
+- **Low strength alone does not cause physical deletion.** Even dormant records remain stored while space is available.
+- There is **no artificial live memory-size slider**: Miss Lea may use the resources actually allocated to her environment. Smaller simulated limits are appropriate for tests.
+- When real storage pressure occurs, Memory Manager automatically evicts low-priority records, using cheap indexed metadata, without a whole-memory semantic audit. Voluntary whole-record deletion by Miss Lea is not the mechanism.
+
+Memory strength, contextual accessibility and the eviction ranking must not be conflated. A large memory database does not imply that all records are loaded into a model context.
+
+## Recovery, historical evidence and documents
+
+**Current-state resilience:** The intended mature design maintains the one current Living Memory state across two independently failing stores, with version ordering and no resurrection of deliberately evicted or redacted material by a lagging replica. **The Cloudflare-only launch may start with one native authoritative store**; independent cross-provider mirroring is a later capability, not a condition of the first memory-enabled wake.
+
+**No personality rollback:** The experiment does not require endless event archives, routine historical personality snapshots or arbitrary rollback. A technical failure can irreversibly destroy personal recollections. Recovery should restore the *ability to continue operating*, not silently substitute an older self.
+
+**Time Travel:** When a platform makes a short historical window available (e.g., D1 Time Travel), Miss Lea may choose to inspect older state as **external testimony about her past**. Reading it can create a new memory; its content never automatically overwrites the current memory. A safe read-only historical inspection mechanism is required; D1 restore-to-current is not an acceptable implementation.
+
+**Document / Contract Vault:** Contracts, obligations, legally relevant documents and selectively retained artifacts are **not part of evictable Living Memory**. They live under independent retention and access rules and are accessed through a tool, as with Time Travel. A small external active-obligation registry may initiate timely checks without placing contract text into the everyday context. Current authorization, account ownership, financial commitments and operational records are also outside autobiographical memory.
+
+Redacting Living Memory does not by itself erase independently retained documents or provider-managed historical data; those have separate privacy and retention policies.
+
+## Engineering stance
+
+This concept is the **primary design direction**, not a requirement to build every feature before launch. Begin with a low-cost Cloudflare-native baseline, compare ready-made alternatives against it, and add features only when measured benefits justify model, maintenance and infrastructure cost. Preserve a stable memory API and portable record format so later indexes, engines and replicas do not require an agent-runtime redesign.
+
+See [Cloudflare-first implementation roadmap](memory-cloudflare-roadmap.md), [Memory Lab](../labs/memory/README.md) and [Architecture principles](architecture-principles.md).
