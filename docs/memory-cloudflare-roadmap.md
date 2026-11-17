@@ -7,7 +7,7 @@
 - [Cloudflare Agent Lab](../labs/cloudflare_agent/README.md) **verified** two native wakes, two Workers AI calls and persisted synthetic state on 17 Nov 2026. That proves a bounded lifecycle, **not** production memory quality, free-tier headroom or general agent reliability.
 - [Memory Lab](../labs/memory/README.md) currently has a **synthetic SQLite lexical-retrieval baseline only**. No memory framework has won a fair comparison.
 - The current synthetic Core uses an Agents SDK SQLite-backed Durable Object for wake coordination/operational state, and a separate authoritative **D1** database for subjective records through the Memory Manager. This separation prevents old subjective memories from restoring authority or pending operations.
-- [Integrated Core + D1 evidence](../labs/cloudflare_agent/CORE_MEMORY_INTEGRATION.md): 4 native autonomous wakes, 2 memory writes and 3 memory contexts observed on 17 November UTC. Current state is **blocked / invalid_decision**, with no alarm; model-output recovery and quotas still require validation.
+- [Integrated Core + D1 evidence](../labs/cloudflare_agent/CORE_MEMORY_INTEGRATION.md): 4 native autonomous wakes, 2 memory writes and 3 memory contexts observed on 17 November UTC. The run then **blocked / invalid_decision**; an authorized same-run resume at 2026-11-17 23:04 UTC subsequently restored the native alarm with unchanged D1 counters. The next wake was scheduled for 2026-11-18 00:01 UTC; general recovery and quotas still require validation.
 
 ## Non-negotiable interfaces from day one
 
@@ -25,7 +25,7 @@ Evaluate what the current retrieval baseline can and cannot do; specify comparab
 
 **Ready when:** the baseline and missing capabilities are explicit, with bounded costs and reproducible synthetic tests. No personal memory enters the public lab.
 
-**Implementation update (18 Nov 2026):** the standalone Memory Manager, parameterized D1 adapter and FTS5 schema at `labs/living_memory` passed an independent three-request D1 smoke trial. They are **now bound** to the isolated `misslea-core-memory-lab` Agent Core. A later read-only status confirmed 4 wakes / 4 inference calls / 2 memory writes / 4 memory reads / 3 memory contexts. The run then stopped with `invalid_decision`; no further wake is scheduled. Cross-wake memory delivery is verified, but arbitrary record revision by the agent, recovery from malformed model output, and actual Cloudflare CPU/Neuron/D1 quota/cost measurements are **not** established.
+**Implementation update (18 Nov 2026):** the standalone Memory Manager, parameterized D1 adapter and FTS5 schema at `labs/living_memory` passed an independent three-request D1 smoke trial. They are **now bound** to the isolated `misslea-core-memory-lab` Agent Core. A later read-only status confirmed 4 wakes / 4 inference calls / 2 memory writes / 4 memory reads / 3 memory contexts. The run stopped with `invalid_decision`, then an authenticated bounded resume scheduled a new Cloudflare wake **without resetting memory or counters**. [Operator evidence](https://github.com/blondahouse/misslea-operator/actions/runs/44195835158). No fifth wake is claimed until independently observed. Cross-wake memory delivery is verified, but arbitrary record revision by the agent, general recovery from uncertain model/tool failures, and actual Cloudflare CPU/Neuron/D1 quota/cost measurements are **not** established.
 
 ## Phase 1 — minimal native Living Memory
 
