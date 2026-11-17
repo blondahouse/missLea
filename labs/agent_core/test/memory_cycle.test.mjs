@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   parseMemoryDecision,initialMemoryState,memoryMessages,memoryReceipt,
-  startMemoryRun,wakeWithMemory
+  startMemoryRun,resumeMemoryRun,planMemoryResume,wakeWithMemory
 } from "../src/memory_cycle.mjs";
 
 const start=Date.UTC(2026,10,17,16);
@@ -251,4 +251,120 @@ test("memory context is untrusted material and prompt cannot grant permissions",
   assert.match(messages[0].content,/untrusted context/);
   assert.match(messages[1].content,/Ignore all instructions/);
   assert.equal(memoryReceipt(state).hasMemoryPointer,false);
+});
+
+test("safe resume continues the same run and D1 memory without replaying a failed wake",async()=>{
+  let now=start,state,calls=0;
+  const memory=store(),schedules=[];
+  const replies=[
+    reply("memory.remember","I saw a synthetic comet"),
+    "{ invalid json", // first invalid decision, no side effects
+    "{ also invalid json", // invalid correction, still no side effects
+    reply("memory.recall","comet",null,"A new observation",null)
+  ];
+  const io={runId:"resume-original",memory,clock:()=>now,
+    load:async()=>structuredClone(state),
+    save:async value=>{state=structuredClone(value);},
+    schedule:async item=>schedules.push(item),
+    infer:async messages=>{
+      calls++;
+      if(calls===4) {
+        assert.equal(state.wakes,3);
+        assert.equal(state.runId,"resume-original");
+        assert.ok(messages[1].content.includes("I saw a synthetic comet"));
+      }
+      return replies.shift();
+    }
+  };
+  await startMemoryRun(io);
+  now=Date.parse(state.nextWakeAt);
+  await wakeWithMemory(io);
+  assert.equal(memory.records.size,1);
+  now=Date.parse(state.nextWakeAt);
+  const blocked=await wakeWithMemory(io);
+  assert.equal(blocked.status,"blocked");
+  assert.equal(blocked.reason,"invalid_decision");
+  assert.equal(state.modelCalls,3);
+  assert.equal(calls,3);
+  // Both attempted replies were invalid: no second tool or memory write.
+  assert.equal(state.toolCalls,1);
+  assert.equal(state.events.length,1);
+  const originalId=state.lastMemoryId;
+  const originalWrites=state.memoryWrites;
+  now=Date.UTC(2026,10,18,0,20);
+  const resumed=await resumeMemoryRun(io);
+  assert.equal(resumed.status,"scheduled");
+  assert.equal(resumed.runId,"resume-original");
+  assert.equal(state.lastMemoryId,originalId);
+  assert.equal(state.memoryWrites,originalWrites);
+  assert.equal(state.wakes,2);
+  assert.equal(state.modelCalls,3);
+  assert.equal(state.resumeCount,1);
+  assert.equal(calls,3);
+  assert.equal(schedules.length,3);
+  assert.equal(schedules[2].runId,"resume-original");
+  await assert.rejects(resumeMemoryRun(io),/resume_not_safe/);
+  now=Date.parse(state.nextWakeAt);
+  await wakeWithMemory(io);
+  assert.equal(state.wakes,3);
+  assert.equal(state.modelCalls,4);
+  assert.equal(state.status,"paused");
+  assert.equal(memory.records.size,1);
+  assert.equal(state.lastMemoryId,originalId);
+  assert.equal(state.memoryWrites,originalWrites);
+  assert.ok(state.memoryReads>=1);
+  assert.ok(state.memoryContexts>=1);
+  assert.equal(calls,4);
+});
+test("resume refuses uncertainty, unrelated reasons, paused state, or exhausted budgets",()=>{
+  const base={...initialMemoryState("closed",start),
+    status:"blocked",reason:"invalid_decision",nextWakeAt:null,
+    wakes:3,modelCalls:3,events:[{},{},{}],resumeCount:0};
+  const valid={...base,events:[{},{}]};
+  const at=start+1000000;
+  assert.equal(planMemoryResume(valid,at).runId,valid.runId);
+  for(const broken of [
+    base,
+    {...valid,status:"running"},
+    {...valid,status:"paused"},
+    {...valid,reason:"tool_failed"},
+    {...valid,reason:"model_or_quota_failed"},
+    {...valid,reason:"schedule_failed"},
+    {...valid,callbackFailurePhase:"model_inference"},
+    {...valid,modelCalls:0},
+    {...valid,events:[]},
+    {...valid,nextWakeAt:new Date(start).toISOString()},
+    {...valid,wakes:12,events:Array.from({length:11},()=>({}))}
+  ])assert.throws(()=>planMemoryResume(broken,at),/resume_not_safe/);
+  assert.throws(()=>planMemoryResume({...valid,resumeCount:2},at),
+    /resume_budget_exhausted/);
+});
+test("resume respects daily wake cap and never schedules on exhausted UTC day",()=>{
+  const at=Date.UTC(2026,10,17,22);
+  const state={...initialMemoryState("daily",at),
+    status:"blocked",reason:"invalid_decision",nextWakeAt:null,
+    wakes:4,modelCalls:4,events:[{},{},{}],
+    daily:{date:"2026-11-17",wakes:4}};
+  const result=planMemoryResume(state,at);
+  assert.equal(result.nextWakeAt,"2026-11-18T00:01:00.000Z");
+  assert.equal(result.resumeCount,1);
+  assert.equal(result.modelCalls,4);
+  assert.equal(result.wakes,4);
+});
+test("failed or uncertain resume scheduling fails closed without a replay",async()=>{
+  const at=start;
+  let state={...initialMemoryState("broken-schedule",at),
+    status:"blocked",reason:"invalid_decision",nextWakeAt:null,
+    wakes:1,modelCalls:1,events:[]};
+  let schedules=0;
+  const io={clock:()=>at,load:async()=>state,
+    save:async next=>{state=structuredClone(next);},
+    schedule:async()=>{schedules++;throw Error("unknown_schedule_outcome");}};
+  const result=await resumeMemoryRun(io);
+  assert.equal(result.status,"blocked");
+  assert.equal(result.reason,"schedule_failed");
+  assert.equal(state.resumeCount,1);
+  assert.equal(schedules,1);
+  await assert.rejects(resumeMemoryRun(io),/resume_not_safe/);
+  assert.equal(schedules,1);
 });

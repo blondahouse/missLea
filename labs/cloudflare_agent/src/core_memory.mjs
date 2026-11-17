@@ -1,12 +1,12 @@
 // Isolated synthetic Cloudflare Agent Core using authoritative D1 Living Memory.
 // Not a personal agent and not a replacement for previously verified lab Workers.
 import {Agent,getAgentByName} from "agents";
-import {startMemoryRun,wakeWithMemory,memoryReceipt} from "../../agent_core/src/memory_cycle.mjs";
+import {startMemoryRun,resumeMemoryRun,wakeWithMemory,memoryReceipt} from "../../agent_core/src/memory_cycle.mjs";
 import {blockWake} from "../../agent_core/src/core.mjs";
 import {createMemoryManager} from "../../living_memory/src/manager.mjs";
 import {createD1MemoryStore} from "../../living_memory/src/d1.mjs";
 import {canHandleScheduledWake} from "./autonomous_support.mjs";
-import {safeIntegratedStatus,canRestartUnarmedTrial,scheduledCallbackRejection} from "./integrated_support.mjs";
+import {safeIntegratedStatus,canStartFreshTrial,scheduledCallbackRejection} from "./integrated_support.mjs";
 
 const MODEL="@cf/google/gemma-4-26b-a4b-it";
 const INSTANCE="synthetic-core-memory-v1";
@@ -14,7 +14,8 @@ const initialState=()=>({
   schema:1,mode:"synthetic",runId:null,status:"not_started",
   intent:null,notes:[],events:[],wakes:0,modelCalls:0,toolCalls:0,
   daily:{date:"1970-01-01",wakes:0},nextWakeAt:null,reason:null,
-  lastMemoryId:null,memoryWrites:0,memoryReads:0,memoryContexts:0
+  lastMemoryId:null,memoryWrites:0,memoryReads:0,memoryContexts:0,
+  decisionRepairs:0,lastDecisionValidationCode:null,resumeCount:0,lastResumeAt:null
 });
 function json(value,status=200) {
   return Response.json(value,{status,headers:{
@@ -46,12 +47,11 @@ export class CoreMemoryAgent extends Agent {
       // a reported "scheduled" state may have zero persisted jobs/physical alarm.
       await this.lifecycle.start();
       const current=this.state;
-      if(["running","scheduled"].includes(current?.status)) {
-        const jobs=await this.listSchedules();
-        const alarm=await this.ctx.storage.getAlarm();
-        if(!canRestartUnarmedTrial(current,Array.isArray(jobs)?jobs.length:null,
-            alarm,Date.now()))return {error:"already_running"};
-      }
+      // Never silently replace a blocked/paused run or drop its last D1 pointer.
+      const jobs=await this.listSchedules();
+      const alarm=await this.ctx.storage.getAlarm();
+      if(!canStartFreshTrial(current,Array.isArray(jobs)?jobs.length:null,
+          alarm,Date.now()))return {error:"already_started"};
       const result=await startMemoryRun({
         runId:crypto.randomUUID(),
         save:async state=>this.setState(state),
@@ -60,9 +60,9 @@ export class CoreMemoryAgent extends Agent {
       if(result.status!=="scheduled")return {error:"schedule_failed"};
       // A successful RPC is not proof of a durable scheduled callback:
       // check both the SDK queue and the underlying Durable Object alarm.
-      const jobs=await this.listSchedules();
-      const alarm=await this.ctx.storage.getAlarm();
-      if(!Array.isArray(jobs)||jobs.length===0||!Number.isFinite(alarm)){
+      const scheduledJobs=await this.listSchedules();
+      const scheduledAlarm=await this.ctx.storage.getAlarm();
+      if(!Array.isArray(scheduledJobs)||scheduledJobs.length===0||!Number.isFinite(scheduledAlarm)){
         this.setState(blockWake(this.state,"schedule_failed"));
         return {error:"schedule_failed"};
       }
@@ -72,6 +72,40 @@ export class CoreMemoryAgent extends Agent {
         this.setState(blockWake(this.state,"schedule_failed"));
       return {error:"start_failed"};
     }
+  }
+  async resumeExperiment(expectedRunId,expectedWakes) {
+    if(!this.env.MEMORY_DB || !this.env.AI)return {error:"binding_missing"};
+    await this.lifecycle.start();
+    const state=this.state;
+    if(typeof expectedRunId!=="string" || expectedRunId!==state?.runId ||
+       !Number.isSafeInteger(expectedWakes) || expectedWakes!==state?.wakes)
+      return {error:"state_changed"};
+    // A previously scheduled task is never cloned or superseded.
+    const jobs=await this.listSchedules();
+    const alarm=await this.ctx.storage.getAlarm();
+    if(!Array.isArray(jobs)||jobs.length!==0||alarm!==null)
+      return {error:"pending_alarm"};
+    let result;
+    try {
+      result=await resumeMemoryRun({
+        load:async()=>this.state,
+        save:async next=>this.setState(next),
+        schedule:params=>this.scheduleNext(params)
+      });
+    }catch(error){
+      const safe=new Set(["resume_not_safe","resume_budget_exhausted"]);
+      return {error:safe.has(error?.message)?error.message:"resume_failed"};
+    }
+    if(result.status!=="scheduled")return {error:"schedule_failed"};
+    // Verify an actual persisted SDK schedule AND physical alarm before success.
+    const afterJobs=await this.listSchedules();
+    const afterAlarm=await this.ctx.storage.getAlarm();
+    if(!Array.isArray(afterJobs)||afterJobs.length!==1||
+       !Number.isFinite(afterAlarm)){
+      this.setState(blockWake(this.state,"schedule_failed"));
+      return {error:"schedule_failed"};
+    }
+    return result;
   }
   async receipt(){
     await this.lifecycle.start();
@@ -168,6 +202,24 @@ export default {
       if(!env.MEMORY_DB || !env.AI)return json({error:"binding_missing"},503);
       const agent=await getAgentByName(env.CoreMemoryAgent,INSTANCE);
       const response=await agent.startExperiment();
+      return json(response,response.error?409:202);
+    }
+    if(request.method==="POST" && path==="/resume"){
+      if(!authorized(request,env))return json({error:"unauthorized"},401);
+      if(!env.MEMORY_DB || !env.AI)return json({error:"binding_missing"},503);
+      let payload;
+      try {
+        if(Number(request.headers.get("content-length"))>512)
+          return json({error:"invalid_request"},400);
+        payload=await request.json();
+        if(!payload||typeof payload!=="object"||Array.isArray(payload)||
+           Object.keys(payload).length!==2 ||
+           typeof payload.expectedRunId!=="string" ||
+           !Number.isSafeInteger(payload.expectedWakes))
+          return json({error:"invalid_request"},400);
+      }catch{return json({error:"invalid_request"},400);}
+      const agent=await getAgentByName(env.CoreMemoryAgent,INSTANCE);
+      const response=await agent.resumeExperiment(payload.expectedRunId,payload.expectedWakes);
       return json(response,response.error?409:202);
     }
     return json({error:"not_found"},404);

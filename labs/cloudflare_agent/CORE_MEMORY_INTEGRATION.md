@@ -52,6 +52,16 @@ If validation rejects the first **returned** model decision, the Core may reques
 
 Read-only status can expose a bounded `decisionRepairs` count and an allowlisted `lastDecisionValidationCode`, never the raw reply, memory text or internal identifiers. The previous four-wake experimental run remains blocked until an explicitly authorized restart/resume; deploying code does not silently reset it. This is a reliability improvement for future wakes, not a retrospective explanation of the precise fourth-response defect.
 
+## Safe same-run resumption (synthetic-only)
+
+The integrated Worker exposes `POST /resume` behind the same private lab-only `LAB_ADMIN_TOKEN` as `/start`. A trusted Operator sends `{"expectedRunId":"<current run ID>","expectedWakes":<current wake count>}` after reading the public synthetic `/status`. The precondition rejects a state change between inspection and action; the endpoint is **not** public or callable by the model.
+
+Resumption is allowed **only** from `blocked / invalid_decision` with no pending SDK job or Durable Object alarm, a complete sequence of committed prior wake events, a recorded model attempt and available synthetic wake budget. The malformed decision happened before tool dispatch, so its output is discarded rather than replayed. It schedules a **new, separately counted wake of the same run**, preserving D1 record IDs, operational notes, intents, revisions, and all prior counters. The new wake is no earlier than 60 seconds after authorization; if the daily wake limit is exhausted, it waits for the next UTC day. The model remains free to choose subsequent sleep periods.
+
+At most two explicit resumes are permitted during one synthetic run. Unauthorized, duplicate, stale or unsafe requests fail closed; a scheduling error cannot be repeatedly retried. `/start` cannot replace an already-used run or erase its D1 pointer. Public synthetic status exposes only bounded `resumeCount` and `lastResumeAt`, not model text, memory data or credentials. `tool_failed`, `schedule_failed`, `model_or_quota_failed`, uncertain in-flight operations and agent-chosen pauses are **not** eligible for this recovery.
+
+This is a deliberately narrow survival mechanism, **not** general autonomous recovery, rollback of personality or an authorization for unbounded model calls. The old four-wake record remains blocked until a separately authorized resume operation completes. Source/build tests cannot prove a live scheduled wake; observe actual Cloudflare status after a real resume.
+
 ## Operational/architecture caveats
 
 - Bounded synthetic-only limits: 12 total wakes, 4 per UTC day; sleep delay 60–86,400 seconds.
