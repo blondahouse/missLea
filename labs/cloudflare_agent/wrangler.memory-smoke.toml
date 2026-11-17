@@ -1,0 +1,7 @@
+name = "misslea-living-memory-lab"
+main = "../living_memory/src/cloudflare_smoke.mjs"
+compatibility_date = "2026-11-16"
+compatibility_flags = ["nodejs_compat"]
+
+# The private operator must append a dedicated MEMORY_DB D1 binding
+# with its actual immutable UUID before a real deployment. No ID in public Git.

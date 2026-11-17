@@ -16,3 +16,16 @@ Offline tests, no external accounts or credits:
     python -m unittest discover -s labs/living_memory/test -p 'test_*.py' -v
 
 Before live deployment, the trusted operator must provision a dedicated D1 database, apply the migration, bind the immutable database ID to a separate synthetic Worker, and verify permissions and Free quotas. The existing live Agent Core Worker remains unchanged.
+
+## Dedicated live D1 smoke adapter
+
+A separate synthetic Worker source is available at src/cloudflare_smoke.mjs.
+The related Wrangler configuration intentionally has no database identifier.
+Only the private trusted operator may create a dedicated D1 database, apply the
+SQL migration, add the runtime MEMORY_DB binding and deploy the Worker.
+
+Its fixed synthetic trial uses three separate authenticated HTTP requests:
+create and retrieve a fabricated memory, revise it and create an interpretation,
+and verify persistence and FTS5 index changes from a fresh Worker invocation.
+No private content, generic SQL, external record editing or public memory APIs
+are exposed. This lab is distinct from the deployed autonomous Agent Core.

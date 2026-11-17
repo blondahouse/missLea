@@ -7,7 +7,9 @@
     "build:check": "wrangler deploy --dry-run --outdir=.wrangler-dry-run",
     "deploy": "wrangler deploy",
     "check:core": "node --test ../agent_core/test/*.test.mjs test/autonomous_support.test.mjs",
-    "build:core": "wrangler deploy --config wrangler.agent-core.toml --dry-run --outdir=.wrangler-core-dry-run"
+    "build:core": "wrangler deploy --config wrangler.agent-core.toml --dry-run --outdir=.wrangler-core-dry-run",
+    "check:memory": "node --test ../living_memory/test/*.test.mjs",
+    "build:memory": "wrangler deploy --config wrangler.memory-smoke.toml --dry-run --outdir=.wrangler-memory-dry-run"
   },
   "dependencies": {
     "agents": "0.33.0"
