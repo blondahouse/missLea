@@ -1,50 +1,59 @@
-# D1 Living Memory — provider-backed trial status (17 November 2026)
+# D1 Living Memory — Cloudflare live acceptance (17 November 2026)
 
-**Status: PARTIAL INFRASTRUCTURE PASS; APPLICATION ACCEPTANCE BLOCKED.**
+**Status: LIVE PASS for isolated synthetic memory storage. NOT integrated with Agent Core.**
 
-The provider-backed test used one dedicated synthetic D1 database and a separate
-Worker, not the previously verified autonomous Agent Core Worker.
+The trusted operator verified the existing dedicated Cloudflare D1 database through
+the separate `misslea-living-memory-lab` Worker. No real autobiography,
+owner data, external obligations, privileged tools or paid models were involved.
 
-## Verified
+## Verified result
 
-- Private operator created a D1 database with a fixed synthetic-only name.
-- The Root token was available only to the isolated D1 provision/migration job.
-- Cloudflare accepted the SQL schema and FTS5 setup; read-back verified the tables.
-- A separate Workers-only Operations job deployed the memory Worker and bound D1.
-- Local JavaScript tests, SQLite FTS5 migration and Wrangler dry-build passed.
-- During one provider-backed run, remember and lexical recall completed, allowing
-  the launcher to advance to the revision stage. This does not prove the whole
-  cross-request memory lifecycle.
+- Trusted operator run: https://github.com/blondahouse/misslea-operator/actions/runs/44124286018
+- Separate synthetic status: https://misslea-living-memory-lab.misslea931.workers.dev/status
+- D1 database: `misslea-synthetic-living-memory` (immutable database ID retained privately)
+- Result: three authenticated HTTP requests across independent Worker invocations
+- Provider-backed receipt, 2026-11-17 16:19:56 UTC:
 
-## Not accepted
+    LIVE_MEMORY_RECEIPT {"status":"verified","synthetic":true,"requests":3,"modelCalls":0,"recordsCreated":2,"revisions":1,"ftsSearchUpdated":true,"interpretationLinked":true,"persistedAcrossRequests":true}
 
-- The initial test failed at the memory request (ambiguous SELECT in a
-  joined FTS5 projection). This was fixed in PR #43.
-- A subsequent run reached the revision request but failed before producing
-  an accepted result. The adapter was changed in PR #44 to accept D1 metadata
-  counts that include index/FTS changes.
-- The next run again failed during the first memory trial request.
-  The Worker deliberately suppresses provider error strings; the exact
-  underlying reason for this final failure remains **unknown**.
-- No successful three-request remember/revise/reinterpret/reopen receipt exists.
-  No proof of consistent memory semantics across fresh requests, sustained
-  availability or Free-plan quota headroom has been established.
-- Real Cloudflare CPU, D1 row-read/write and billing metrics were not verified.
+The trial created and recalled a fabricated experience, revised its content,
+created a linked present-day interpretation, verified that FTS5 stopped
+returning the old term and found the new term, and read both records again
+from a separate request. The database was **not** wiped, replaced or restored
+to make this pass.
 
-## Evidence
+## Cause of intermittent prior failures and correction
 
-- First live workflow: https://github.com/blondahouse/misslea-operator/actions/runs/44117523593
-- Second live workflow: https://github.com/blondahouse/misslea-operator/actions/runs/44118401180
-- Third live workflow: https://github.com/blondahouse/misslea-operator/actions/runs/44119429817
-- Separate public memory Worker source: labs/living_memory/src/cloudflare_smoke.mjs
-- D1 SQL and adapter: labs/living_memory/migrations/0001_living_memory.sql,
-  labs/living_memory/src/d1.mjs
+Earlier tests failed at FTS5 SQL projection and revision-result accounting.
+Those issues were separately corrected and covered by offline regression tests.
 
-## Next required work
+Subsequent attempts intermittently returned **HTTP 401** on the first memory
+request immediately following `wrangler secret put`. The public `/health`
+check only confirmed a D1 binding; it could not establish whether the
+freshly rotated `LAB_ADMIN_TOKEN` had propagated to the active Worker.
+The operator now polls a separate protected **no-write** `POST /trial/ready`
+endpoint, which confirms the *new* secret before the first mutation. It never
+logs the secret or raw provider responses.
 
-Diagnose the first failing live memory endpoint with safe, bounded error
-categories and D1 consistency/usage metrics. Preserve the database and existing
-synthetic records; do not reset state or repeatedly deploy without evidence.
-Only after a verified full create/revise/reinterpret/recall run should the
-Memory Manager be connected to the autonomous Core. No personal memory import
-or paid fallback is permitted for this synthetic trial.
+Selected historical unsuccessful run evidence:
+- https://github.com/blondahouse/misslea-operator/actions/runs/44117523593
+- https://github.com/blondahouse/misslea-operator/actions/runs/44118401180
+- https://github.com/blondahouse/misslea-operator/actions/runs/44119429817
+- Auth-classifying run: https://github.com/blondahouse/misslea-operator/actions/runs/44123673237
+
+## Boundaries and remaining milestones
+
+This is a standalone service test, not proof that the model stores or recalls
+its own experiences. The autonomous Agent Core has not been connected to D1.
+The existing Cloudflare agent Workers and their Durable Object coordination
+state were not replaced.
+
+Neither sustained reliability nor actual Free-plan D1 reads/writes, CPU
+usage, daily limits, storage or billing were independently inspected.
+The synthetic trial made **zero LLM calls**; thus it says nothing about
+memory retrieval token cost or reflection quality.
+
+**Next milestone:** connect the replaceable Memory Manager interface to an
+isolated autonomous Agent Core integration, verify that it writes and recalls
+a genuine synthetic agent-selected memory on successive scheduled wakes,
+and measure actual resource consumption. Keep real personal histories out.

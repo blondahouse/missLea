@@ -10,7 +10,7 @@ Read the [digital independence principle](docs/digital-independence.md), [archit
 
 [Agent Core](labs/agent_core/README.md) is live-verified as an isolated Cloudflare synthetic Worker, with model-chosen tool use and scheduled continuity (two wakes, two model calls). The earlier two-wake Cloudflare lab remains unchanged. See the [live Agent Core receipt](labs/cloudflare_agent/AGENT_CORE_LIVE_2026-11-17.md).
 
-The [Living Memory D1 foundation](labs/living_memory/README.md) is offline-tested and its separate Cloudflare D1 database and schema were provisioned. The live integration smoke remains BLOCKED; do not treat memory persistence as accepted. See [Cloudflare D1 trial status](labs/living_memory/D1_LIVE_STATUS_2026-11-17.md).
+The [Living Memory D1 foundation](labs/living_memory/README.md) is independently live-verified on Cloudflare: create, revise, reinterpret and FTS5 recall persisted across three authenticated requests. It is NOT yet attached to the autonomous Agent Core; real D1 Free-tier metrics were not measured. See [D1 live acceptance](labs/living_memory/D1_LIVE_STATUS_2026-11-17.md).
 
 ## Structure
 

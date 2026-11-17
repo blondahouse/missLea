@@ -24,7 +24,7 @@ Evaluate what the current retrieval baseline can and cannot do; specify comparab
 
 **Ready when:** the baseline and missing capabilities are explicit, with bounded costs and reproducible synthetic tests. No personal memory enters the public lab.
 
-**Implementation update (17 Nov 2026):** initial standalone Memory Manager, parameterized D1 adapter and FTS5 schema exist at labs/living_memory. Dedicated D1 provisioning and schema read-back were verified, but live record operations have not passed the acceptance test; Agent Core remains unbound. Phase 1 acceptance is still open.
+**Implementation update (17 Nov 2026):** standalone Memory Manager, parameterized D1 adapter and FTS5 schema exist at labs/living_memory. A dedicated D1 and independent Worker are live-verified for the full synthetic create/revise/reinterpret/recall sequence across three authenticated requests. Agent Core remains unbound, and actual Cloudflare quotas/costs are not independently measured. Phase 1 acceptance as an integrated autonomous agent remains open.
 
 ## Phase 1 — minimal native Living Memory
 
