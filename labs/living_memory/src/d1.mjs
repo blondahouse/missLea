@@ -23,7 +23,8 @@ export function createD1MemoryStore(db) {
       .bind(r.revision,r.content,r.strength,r.confidence,r.significance,
         r.accessibility,r.stability,r.updatedAt,r.id,expected).run();
     if(!result?.success) throw Error("update_unconfirmed");
-    return result.meta?.changes===1;
+    // D1 counts index/FTS writes in meta.changes; a CAS update can change more than one row.
+    return Number.isSafeInteger(result.meta?.changes) && result.meta.changes>0;
   }
   async function top(limit) {
     const r=await db.prepare(select+" ORDER BY accessibility DESC,significance DESC,seq DESC LIMIT ?")
