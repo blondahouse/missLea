@@ -51,3 +51,30 @@ Official references checked 2026-11-16:
 - https://developers.cloudflare.com/durable-objects/platform/pricing/
 - https://developers.cloudflare.com/workers-ai/platform/pricing/
 - https://developers.cloudflare.com/changelog/product/workers-ai/
+
+
+## Autonomous Agent Core adapter (separate Cloudflare Worker)
+
+The portable Agent Core now has an isolated adapter in the Cloudflare lab
+source, with its own Wrangler configuration and a distinct Worker name,
+Durable Object class and instance. The previously verified AnonymousFreeAgent
+and its two-wake Worker remain unchanged.
+
+A trusted operator deployment targets only misslea-agent-core-lab, loads
+an Operations-only Workers token, and installs a new per-run synthetic secret.
+GET /health and GET /status expose safe counters and limited evidence only;
+POST /start requires a temporary lab token.
+
+Core notes are not Living Memory. No personal conversations, Telegram,
+third-party actions, Root credentials, or paid models are connected.
+
+Offline checks (no model credits):
+
+    npm install --ignore-scripts
+    npm run check:core
+    npm run build:core
+
+A dry-run build is not evidence of live operation. Live verification must
+observe at least two separately scheduled wakes with durable state and no
+blocked result. An agent-selected pause is valid but does not prove two-wake
+continuity.

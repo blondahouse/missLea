@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'labs/cloudflare_agent/**'
+      - 'labs/agent_core/**'
       - '.github/workflows/cloudflare-only-agent-lab.yml'
   workflow_dispatch:
 permissions:
@@ -21,4 +22,6 @@ jobs:
           node-version: '22'
       - run: npm install --ignore-scripts
       - run: npm run check
+      - run: npm run check:core
       - run: npm run build:check
+      - run: npm run build:core
