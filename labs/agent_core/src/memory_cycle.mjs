@@ -1,7 +1,7 @@
 // Portable Agent Core <-> Living Memory orchestration.
 // Subjective content is authoritative in Memory Manager/D1, never in DO state.
 import {
-  initialState, beginWake, finishWake, syntheticTool, blockWake, publicReceipt
+  LIMITS, initialState, beginWake, finishWake, syntheticTool, blockWake, publicReceipt
 } from "./core.mjs";
 
 export const MEMORY_TOOLS = Object.freeze([
@@ -16,6 +16,7 @@ const allowedReasons = new Set(["invalid_decision","model_or_quota_failed",
 // side effect, and is persisted/accounted before dispatch. Never retry transport
 // failures or uncertain model calls.
 export const MAX_DECISION_REPAIRS = 2;
+export const MAX_EXPLICIT_RESUMES = 2;
 export const DECISION_VALIDATION_CODES = Object.freeze([
   "response_missing","response_too_long","invalid_json","invalid_shape",
   "invalid_intent","invalid_note","unknown_tool","invalid_memory_content",
@@ -119,7 +120,8 @@ export function memoryMessages(state,previous) {
 export function initialMemoryState(runId,at=Date.now()) {
   return {...initialState(runId,at),lastMemoryId:null,
     memoryWrites:0,memoryReads:0,memoryContexts:0,
-    decisionRepairs:0,lastDecisionValidationCode:null};
+    decisionRepairs:0,lastDecisionValidationCode:null,
+    resumeCount:0,lastResumeAt:null};
 }
 export function memoryReceipt(state) {
   return {...publicReceipt(state),lab:"synthetic-core-memory-d1-v1",
@@ -141,6 +143,52 @@ export async function startMemoryRun({runId,save,schedule,clock=Date.now}) {
     const blocked=stop(state,"schedule_failed");
     await save(blocked);return memoryReceipt(blocked);
   }
+}
+
+// A resume is a NEW future wake of the SAME run. The rejected decision was
+// validated before any tool/DB write; its attempted inference is not replayed.
+// Guard against partial/uncertain previous wakes using the committed event count.
+export function planMemoryResume(state,at) {
+  if(!Number.isFinite(at))throw Error("invalid_clock");
+  if(state?.schema!==1 || state?.mode!=="synthetic" ||
+     state.status!=="blocked" || state.reason!=="invalid_decision" ||
+     state.nextWakeAt!==null || typeof state.runId!=="string" ||
+     !/^[a-zA-Z0-9_-]{1,80}$/.test(state.runId) ||
+     !Number.isSafeInteger(state.wakes) || state.wakes<1 ||
+     state.wakes>=LIMITS.totalWakes ||
+     !Array.isArray(state.events) ||
+     state.events.length!==state.wakes-1 ||
+     !Number.isSafeInteger(state.modelCalls) ||
+     state.modelCalls<state.wakes ||
+     state.callbackFailurePhase!=null)
+    throw Error("resume_not_safe");
+  const count=state.resumeCount??0;
+  if(!Number.isSafeInteger(count)||count<0||count>=MAX_EXPLICIT_RESUMES)
+    throw Error("resume_budget_exhausted");
+  const today=new Date(at).toISOString().slice(0,10);
+  const used=state.daily?.date===today?state.daily.wakes:0;
+  if(!Number.isSafeInteger(used)||used<0)throw Error("resume_not_safe");
+  let wakeAt=at+LIMITS.minSleep*1000;
+  if(used>=LIMITS.dailyWakes)
+    wakeAt=(Math.floor(at/86400000)+1)*86400000+60000;
+  return {...state,status:"scheduled",reason:null,
+    nextWakeAt:new Date(wakeAt).toISOString(),
+    resumeCount:count+1,lastResumeAt:new Date(at).toISOString()};
+}
+
+export async function resumeMemoryRun({load,save,schedule,clock=Date.now}) {
+  const state=planMemoryResume(await load(),clock());
+  // Persist the re-armed state BEFORE attempting the SDK schedule. A second
+  // resume is then refused. An uncertain schedule is never automatically retried.
+  await save(state);
+  try {
+    await schedule({runId:state.runId,at:state.nextWakeAt});
+  }catch{
+    const blocked=stop(state,"schedule_failed");
+    await save(blocked);
+    return memoryReceipt(blocked);
+  }
+  return memoryReceipt(state);
 }
 
 async function chooseTool(memory,decision,lastMemoryId) {
