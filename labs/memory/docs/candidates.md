@@ -6,7 +6,7 @@ The [adopted concept](../../../docs/memory-concept.md) and [Cloudflare-first roa
 | --- | --- | --- | --- |
 | **Cloudflare D1 + SQLite FTS5** | Native baseline for mutable Living Memory | Proposed next lab, not yet implemented | Cloudflare-only Free-capable path, with daily query/storage limits; requires our policy and API |
 | **Existing SQLite lab** | Cheap lexical retrieval reference | Implemented, synthetic-only | No semantic revision, budgeted exposure, decay or link retrieval |
-| **Mem0** | Fact extraction and retrieval | Not integrated | Evaluate inference overhead, update behavior, Cloudflare compatibility and portablility |
+| **Mem0** | Fact extraction and retrieval | Not integrated | Evaluate inference overhead, update behavior, Cloudflare compatibility and portability |
 | **Hindsight** | Richer reflection and consolidation | Not integrated | Extra runtime/memory/LLM cost; not a native Workers drop-in |
 | **Letta / Letta Code** | Self-managed agent context and memory | Not integrated | May replace a larger part of the agent runtime; evaluate rather than assume drop-in memory |
 | **Graphiti** | Weighted/temporal relation research | Not integrated | Specialized graph backend and model extraction cost likely excessive at launch |
