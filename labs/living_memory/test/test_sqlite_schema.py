@@ -15,14 +15,15 @@ class MigrationTests(unittest.TestCase):
             "VALUES(?,?,?,?,?,?,?,?,?,?)",
             ("memory_1","experience","A cobalt synthetic river",.6,.7,.8,.5,.5,"t","t")
         )
-        search = ("SELECT id FROM living_memory JOIN living_memory_fts "
+        search = ("SELECT living_memory.seq,living_memory.id,living_memory.content "
+                  "FROM living_memory JOIN living_memory_fts "
                   "ON living_memory_fts.rowid=living_memory.seq "
                   "WHERE living_memory_fts MATCH ?")
-        self.assertEqual(db.execute(search, ('"cobalt"*',)).fetchall(), [("memory_1",)])
+        self.assertEqual(db.execute(search, ('"cobalt"*',)).fetchall(), [(1,"memory_1","A cobalt synthetic river")])
         db.execute("UPDATE living_memory SET content=?,revision=2 WHERE id=?",
                    ("River now looks green","memory_1"))
         self.assertEqual(db.execute(search, ('"cobalt"*',)).fetchall(), [])
-        self.assertEqual(db.execute(search, ('"green"*',)).fetchall(), [("memory_1",)])
+        self.assertEqual(db.execute(search, ('"green"*',)).fetchall(), [(1,"memory_1","River now looks green")])
         self.assertEqual(db.execute("SELECT count(*) FROM living_memory").fetchone()[0],1)
         with self.assertRaises(sqlite3.IntegrityError):
             db.execute(
