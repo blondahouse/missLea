@@ -8,6 +8,8 @@ English-only research workspace for evaluating **replaceable components** of Mis
 
 Read the [digital independence principle](docs/digital-independence.md), [architecture principles](docs/architecture-principles.md), and the **[adopted Unified Living Memory concept](docs/memory-concept.md)**. Its [Cloudflare-first roadmap](docs/memory-cloudflare-roadmap.md) defines staged, replaceable implementation without requiring a sophisticated memory framework before launch. This is research only: no migration of the running agent, external registration, account creation or authorization to incur costs.
 
+[Agent Core](labs/agent_core/README.md) now has a bounded, self-directed synthetic implementation with offline tests. This is not deployed; the verified two-wake Cloudflare lab remains unchanged.
+
 ## Structure
 
 ```text
