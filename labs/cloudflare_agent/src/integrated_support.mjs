@@ -1,5 +1,5 @@
 // Public status: never reveal model messages, personal content or D1 record IDs.
-import {memoryReceipt,DECISION_VALIDATION_CODES,MAX_DECISION_REPAIRS} from "../../agent_core/src/memory_cycle.mjs";
+import {memoryReceipt,DECISION_VALIDATION_CODES,MAX_DECISION_REPAIRS,MAX_EXPLICIT_RESUMES} from "../../agent_core/src/memory_cycle.mjs";
 const tools=new Set(["memory.remember","memory.recall","memory.revise",
   "memory.reinterpret","environment.inspect","dataset.summarize"]);
 export function safeIntegratedStatus(state) {
@@ -11,6 +11,12 @@ export function safeIntegratedStatus(state) {
       ?state.decisionRepairs:0,
     lastDecisionValidationCode:DECISION_VALIDATION_CODES.includes(state.lastDecisionValidationCode)
       ?state.lastDecisionValidationCode:null,
+    resumeCount:Number.isSafeInteger(state.resumeCount) &&
+      state.resumeCount>=0 && state.resumeCount<=MAX_EXPLICIT_RESUMES
+      ?state.resumeCount:0,
+    lastResumeAt:typeof state.lastResumeAt==="string" &&
+      Number.isFinite(Date.parse(state.lastResumeAt))
+      ?state.lastResumeAt:null,
     callbackAttempts:Number.isSafeInteger(state.callbackAttempts)?state.callbackAttempts:0,
     callbackRejected:Number.isSafeInteger(state.callbackRejected)?state.callbackRejected:0,
     callbackRejectCode:["not_scheduled","payload_missing","run_id_missing",
@@ -41,4 +47,10 @@ export function scheduledCallbackRejection(state,payload){
   if(typeof payload.scheduledAt!=="string")return "time_missing";
   if(payload.scheduledAt!==state.nextWakeAt)return "time_mismatch";
   return null;
+}
+
+export function canStartFreshTrial(state,jobCount,alarmAt,now){
+  return (state?.schema===1 && state.mode==="synthetic" &&
+    state.status==="not_started" && state.wakes===0 && state.modelCalls===0) ||
+    canRestartUnarmedTrial(state,jobCount,alarmAt,now);
 }
