@@ -1,80 +1,83 @@
 export const metadata={
   "version": "1.0",
-  "asOf": "2026-11-16",
+  "asOf": "2026-11-17",
   "description": "Observed source and provider evidence, not a live-system dashboard. All architecture data is public-safe.",
   "repo": "blondahouse/missLea",
   "operator": "blondahouse/misslea-operator"
 };
+
 export const categories=[
   {
     "id": "control",
     "title": "IDENTITY & CONTROL",
-    "subtitle": "Кто имеет полномочия и управляет аккаунтами",
+    "subtitle": "Who is authorized to control dedicated accounts",
     "tone": "#c6a3ff"
   },
   {
     "id": "runtime",
     "title": "AGENT RUNTIME",
-    "subtitle": "Минимальная автономная жизнь Miss Lea",
+    "subtitle": "Minimal independent agent lifecycle",
     "tone": "#79c9ff"
   },
   {
     "id": "compute",
     "title": "INTELLIGENCE & COMPUTE",
-    "subtitle": "Модели и заменяемая вычислительная мощность",
+    "subtitle": "Models and replaceable compute resources",
     "tone": "#eebd80"
   },
   {
     "id": "storage",
     "title": "STORAGE & CONTINUITY",
-    "subtitle": "Память, резервирование, восстановление",
+    "subtitle": "External evidence, state and recovery experiments",
     "tone": "#78d8b0"
   }
 ];
+
 export const statuses=[
   {
     "id": "verified",
-    "title": "Проверено реально",
+    "title": "Live verified",
     "short": "Live verified",
     "color": "#72dab8"
   },
   {
     "id": "code",
-    "title": "Код + CI",
+    "title": "Code / CI",
     "short": "Code / CI",
     "color": "#83bdfd"
   },
   {
     "id": "lab",
-    "title": "Лаборатория",
+    "title": "Synthetic lab",
     "short": "Offline lab",
     "color": "#e9bc75"
   },
   {
     "id": "research",
-    "title": "Исследовано",
+    "title": "Research",
     "short": "Research",
     "color": "#bbaff9"
   },
   {
     "id": "planned",
-    "title": "Запланировано",
+    "title": "Planned",
     "short": "Planned",
     "color": "#8991a6"
   }
 ];
+
 export const nodes=[
   {
     "id": "founder",
     "stage": "control",
-    "title": "Делегирование управления",
-    "provider": "Олег → доверенный оператор",
+    "title": "Delegated control",
+    "provider": "Founder → trusted operator",
     "owner": "policy",
     "status": "planned",
-    "subtitle": "Полномочия на этапе разработки",
-    "detail": "Олег — текущий владелец и делегирующий субъект. ChatGPT действует как оператор по явным поручениям. Для дальнейшего самостоятельного агента нужен проверенный механизм передачи полномочий, а не просто перенос памяти.",
+    "subtitle": "Current stewardship during development",
+    "detail": "The founder currently authorizes actions. ChatGPT acts as a trusted operator under explicit instructions. A future independent Miss Lea needs independently verified authority transfer; memory migration alone grants no permissions.",
     "tags": [
-      "Полномочия",
+      "Authority",
       "Recovery"
     ],
     "source": "https://github.com/blondahouse/missLea/blob/main/docs/digital-independence.md"
@@ -82,12 +85,12 @@ export const nodes=[
   {
     "id": "git-private",
     "stage": "control",
-    "title": "Operator Repository",
+    "title": "Operator repository",
     "provider": "GitHub • private",
     "owner": "external",
     "status": "verified",
-    "subtitle": "blondahouse/misslea-operator",
-    "detail": "Приватный репозиторий существует и доступен оператору. GitHub Actions уже выполнял автоматические OIDC-проверки Infisical. Он пока не является проверенным исполнителем реальных Cloudflare-административных действий.",
+    "subtitle": "Private trusted automation",
+    "detail": "The private operator repository exists and has performed authenticated Infisical OIDC checks. It is a privileged operational control surface, not an agent's unrestricted executor.",
     "tags": [
       "GitHub Actions",
       "OIDC",
@@ -102,8 +105,8 @@ export const nodes=[
     "provider": "Infisical Cloud EU",
     "owner": "external",
     "status": "verified",
-    "subtitle": "misslea-root • prod",
-    "detail": "Корневой проект и машинная идентичность misslea-root-operator созданы. Подтверждено чтение синтетического ROOT_ACCESS_CANARY через GitHub OIDC. Настоящие мастер-ключи пока не внесены.",
+    "subtitle": "Recovery authority and root credentials",
+    "detail": "The root project and machine identity exist. Synthetic canary retrieval via GitHub OIDC was verified. Root authority is separated from routine operational privileges.",
     "tags": [
       "Org Admin",
       "Emergency",
@@ -118,8 +121,8 @@ export const nodes=[
     "provider": "Infisical Cloud EU",
     "owner": "external",
     "status": "verified",
-    "subtitle": "misslea-operations • prod",
-    "detail": "Второй проект и машинная идентичность misslea-ops-operator. Живой тест подтвердил: Operations не входит в Root-проект и получает HTTP 403 при чтении его canary.",
+    "subtitle": "Scoped, revocable daily permissions",
+    "detail": "A second Infisical project and machine identity were verified; Operations received HTTP 403 when attempting to read the Root project canary.",
     "tags": [
       "Member",
       "Limited tokens",
@@ -130,12 +133,12 @@ export const nodes=[
   {
     "id": "oidc",
     "stage": "control",
-    "title": "Machine Identity / OIDC",
+    "title": "Machine identity / OIDC",
     "provider": "GitHub ↔ Infisical",
     "owner": "hybrid",
     "status": "verified",
-    "subtitle": "Без статических Client Secrets",
-    "detail": "Официальный Infisical GitHub Action реально обменял короткоживущий GitHub OIDC JWT на полномочия Root и Operations. Диагностические workflows с корневым доступом после теста удалены.",
+    "subtitle": "Short-lived workload authentication",
+    "detail": "The official Infisical GitHub Action exchanged GitHub OIDC identity for short-lived credentials in verified tests. Temporary root-access diagnostics were subsequently removed.",
     "tags": [
       "JWT",
       "Audience",
@@ -147,12 +150,12 @@ export const nodes=[
   {
     "id": "admin-api",
     "stage": "control",
-    "title": "Account Provisioning",
+    "title": "Account provisioning",
     "provider": "Cloudflare API + own adapter",
     "owner": "hybrid",
     "status": "code",
-    "subtitle": "Создание Workers и выпуск токенов",
-    "detail": "В публичной исследовательской лаборатории есть Python-прототип работы с Infisical и Cloudflare API. Реальный управляющий канал не подключён, мастер-токен Cloudflare не проверен.",
+    "subtitle": "Cloudflare API management adapter",
+    "detail": "The public Operator Control Lab contains a synthetic Cloudflare/Infisical administration prototype. Integration and live privileges must be separately verified.",
     "tags": [
       "Workers Admin",
       "Account Tokens",
@@ -163,12 +166,12 @@ export const nodes=[
   {
     "id": "email",
     "stage": "control",
-    "title": "Почта и новые аккаунты",
-    "provider": "Gmail • отдельный аккаунт",
+    "title": "Dedicated email and accounts",
+    "provider": "Gmail • dedicated account",
     "owner": "external",
     "status": "planned",
-    "subtitle": "Identity / Recovery / регистрация",
-    "detail": "Отдельная почта Miss Lea существует. Работа через доверенный операторский контур и OAuth именно этого аккаунта ещё не подключена; использование личной почты владельца не планируется.",
+    "subtitle": "Separate agent identity and recovery",
+    "detail": "Miss Lea has a dedicated email account. Trusted operator access through this account's OAuth and recovery workflow is a separate capability; do not use the founder's personal mailbox.",
     "tags": [
       "Google OAuth",
       "Gmail API",
@@ -179,12 +182,12 @@ export const nodes=[
   {
     "id": "registry",
     "stage": "control",
-    "title": "Реестр полномочий",
+    "title": "Authority registry",
     "provider": "Own • Identity Lab / SQLite",
     "owner": "internal",
     "status": "lab",
-    "subtitle": "Учёт владельца, грантов и восстановления",
-    "detail": "Реализован синтетический реестр ресурсов, сроков, отзывов и полномочий. Пока нет реальной авторизации внешнего клиента, управления соглашениями или активного credential broker.",
+    "subtitle": "Account holders, grants and recovery",
+    "detail": "A synthetic registry models ownership, grants, expiration and revocation. Live provider authorization and contractual decisions are not implemented by the fixture.",
     "tags": [
       "SQLite",
       "Grants",
@@ -199,8 +202,8 @@ export const nodes=[
     "provider": "Own • planned",
     "owner": "internal",
     "status": "planned",
-    "subtitle": "Команды вместо выдачи ключей",
-    "detail": "Предполагаемый доверенный посредник: принимает допустимую операцию, временно разрешает секрет в защищённой среде, обращается к API и отдаёт результат без ключа. Не развёрнут и не протестирован с настоящими мастер-ключами.",
+    "subtitle": "Allowed actions without exposing keys",
+    "detail": "Proposed trusted intermediary resolves dedicated secrets only inside protected execution and returns operation results without exposing credentials to the agent model.",
     "tags": [
       "Privileged ops",
       "Auditing",
@@ -214,9 +217,9 @@ export const nodes=[
     "title": "Cloudflare Worker",
     "provider": "Cloudflare Workers Free",
     "owner": "external",
-    "status": "code",
-    "subtitle": "HTTP entrypoint / start / health",
-    "detail": "Исходники отдельного анонимного лабораторного Worker собраны в CI; не развёрнуты как полноценный новый агент в Cloudflare. 10 ms CPU Free — ключевой риск, проверяется только реальным запуском.",
+    "status": "verified",
+    "subtitle": "Worker entry points and health",
+    "detail": "A bounded synthetic Cloudflare Agent Lab was deployed on 17 Nov 2026 and completed two native wake cycles. This is not a production personal agent or proof of ongoing free-plan headroom.",
     "tags": [
       "HTTP",
       "Free",
@@ -230,9 +233,9 @@ export const nodes=[
     "title": "Agent Engine",
     "provider": "Cloudflare Agents SDK • own logic",
     "owner": "hybrid",
-    "status": "code",
-    "subtitle": "Агентная сессия и цикл",
-    "detail": "Синтетический AnonymousFreeAgent на Agents SDK делает выбор разрешённого действия, сохраняет результат и готовит повторное пробуждение. Работоспособность в облаке не подтверждена.",
+    "status": "verified",
+    "subtitle": "Agent session and control loop",
+    "detail": "A live bounded synthetic trial used Cloudflare Agents SDK with allowed action selection, durable state and two scheduled wakes. It does not validate a full autonomous Miss Lea.",
     "tags": [
       "Agent",
       "Session",
@@ -243,12 +246,12 @@ export const nodes=[
   {
     "id": "alarms",
     "stage": "runtime",
-    "title": "Сон / пробуждение",
+    "title": "Sleep / wake scheduler",
     "provider": "Durable Objects Alarms",
     "owner": "external",
-    "status": "code",
-    "subtitle": "Self-wake без постоянной VM",
-    "detail": "В коде лаборатории предусмотрены два пробуждения с интервалом и повторный запуск по расписанию. Настоящие Cloudflare Alarms ещё не проходили end-to-end.",
+    "status": "verified",
+    "subtitle": "Native scheduled agent activation",
+    "detail": "The synthetic agent completed two native Cloudflare scheduled wakes without a local computer or GitHub runner driving the wake cycle.",
     "tags": [
       "Schedule",
       "Wake",
@@ -259,12 +262,12 @@ export const nodes=[
   {
     "id": "state",
     "stage": "runtime",
-    "title": "Оперативное состояние",
+    "title": "Operational state",
     "provider": "SQLite-backed Durable Objects",
     "owner": "external",
-    "status": "code",
-    "subtitle": "История, события, next wake",
-    "detail": "Данные синтетической агентной сессии сохраняются в состоянии Durable Object. Живое сохранение в облаке и восстановление после сна пока не подтверждены.",
+    "status": "verified",
+    "subtitle": "Durable Object SQLite session state",
+    "detail": "The synthetic run persisted an earlier tool result and read it after a scheduled wake. Operational state is separate from the proposed autobiographical D1 Living Memory.",
     "tags": [
       "SQLite",
       "Events",
@@ -275,12 +278,12 @@ export const nodes=[
   {
     "id": "tools",
     "stage": "runtime",
-    "title": "Инструменты агента",
+    "title": "Bounded tools",
     "provider": "Own • allowlist",
     "owner": "internal",
-    "status": "code",
-    "subtitle": "Ограниченный безопасный action",
-    "detail": "В лаборатории разрешено только вычисление квадратов чисел 2,3,5. Это тест решения и выполнения инструмента, а не свободный программный или административный доступ.",
+    "status": "verified",
+    "subtitle": "Deterministic synthetic action",
+    "detail": "The trial allowed a fixed squares-calculation action and verified result 38. This does not grant arbitrary external API, code execution or administrator capabilities.",
     "tags": [
       "SQUARES",
       "Allowlist",
@@ -291,12 +294,12 @@ export const nodes=[
   {
     "id": "telegram",
     "stage": "runtime",
-    "title": "Общение / входящие",
+    "title": "Communication",
     "provider": "Telegram Bot API",
     "owner": "external",
     "status": "planned",
-    "subtitle": "Новый агент: канал ещё не подключён",
-    "detail": "Telegram используется старым TinyFund, но в новом репозитории Miss Lea новый автономный коммуникационный контур ещё не развёрнут. Не переносить статус старого бота на новую систему.",
+    "subtitle": "New agent messaging channel",
+    "detail": "The older TinyFund instance used Telegram, but this new Cloudflare agent runtime has not yet demonstrated its own full messaging loop. Do not reuse old-bot status as new-agent evidence.",
     "tags": [
       "Messages",
       "Webhook",
@@ -307,12 +310,12 @@ export const nodes=[
   {
     "id": "quota",
     "stage": "runtime",
-    "title": "Бюджет / бесплатные квоты",
+    "title": "Budget and free-tier limits",
     "provider": "Own • policy gate",
     "owner": "internal",
     "status": "planned",
-    "subtitle": "Никаких неявных платных fallback",
-    "detail": "Цель: запуск на Free, остановка при исчерпании квоты, учёт нейронов/CPU/внешних запросов. В лабораторном коде платные интеграции отсутствуют, но автономный бюджетный контроллер ещё не реализован.",
+    "subtitle": "No implicit paid fallback",
+    "detail": "Aims to halt at quota exhaustion and track CPU, model and request usage. A complete per-agent resource controller and verified ongoing no-cost operation are not yet demonstrated.",
     "tags": [
       "Zero spend",
       "Stop",
@@ -323,12 +326,12 @@ export const nodes=[
   {
     "id": "observability",
     "stage": "runtime",
-    "title": "Здоровье / мониторинг",
-    "provider": "Cloudflare Metrics + own receipts",
+    "title": "Health and monitoring",
+    "provider": "Cloudflare metrics + own receipts",
     "owner": "hybrid",
     "status": "planned",
-    "subtitle": "Heartbeat, errors, quota, alerts",
-    "detail": "Реальный мониторинг нового агента, тайминги пробуждений, журнал отказов, метрики ресурсоёмкости и независимый watchdog запланированы. Публичные /health лаборатории — не production-мониторинг.",
+    "subtitle": "Receipts, errors, limits and watchdog",
+    "detail": "Operational monitoring, wake timing, error records, budget reporting and independent recovery signals remain to be developed. A lab health endpoint is not production observability.",
     "tags": [
       "Receipt",
       "Errors",
@@ -339,12 +342,12 @@ export const nodes=[
   {
     "id": "workers-ai",
     "stage": "compute",
-    "title": "Первичная LLM",
+    "title": "Initial LLM",
     "provider": "Cloudflare Workers AI • Gemma 4",
     "owner": "external",
-    "status": "code",
-    "subtitle": "Два вызова модели в лаборатории",
-    "detail": "Исходники вызывают модель @cf/google/gemma-4-26b-a4b-it: первый выбирает инструмент, второй сверяет сохранённый результат. Фактические вызовы модели на Cloudflare ещё не проверены.",
+    "status": "verified",
+    "subtitle": "Two verified bounded inference calls",
+    "detail": "The Cloudflare synthetic agent used the configured Workers AI model for an action decision and later result verification. Ongoing usage/billing headroom is still unverified.",
     "tags": [
       "Inference",
       "Gemma",
@@ -355,12 +358,12 @@ export const nodes=[
   {
     "id": "llm-router",
     "stage": "compute",
-    "title": "Мультимодельный Router",
+    "title": "Multi-model router",
     "provider": "Bifrost / GoModel / LiteLLM / Portkey",
     "owner": "hybrid",
     "status": "lab",
-    "subtitle": "4 провайдера сравнивались на mock upstream",
-    "detail": "Реальные Docker-бинарники проверены на синтетических upstream. Bifrost выбран ADR для первоначальной Demo-интеграции, но self-hosted маршрутизатор не развёрнут и может быть отложен ради Cloudflare-only старта. У протестированного Portkey есть блокирующий SSRF.",
+    "subtitle": "Candidate selection tested on mock upstream",
+    "detail": "Bifrost, GoModel, LiteLLM and Portkey were compared under isolated mocks. A Bifrost research decision exists but is not a requirement for Cloudflare-only launch; tested Portkey had a blocking SSRF issue.",
     "tags": [
       "Bifrost",
       "Fallback",
@@ -371,18 +374,18 @@ export const nodes=[
   {
     "id": "memory",
     "stage": "compute",
-    "title": "Long-term Memory",
+    "title": "Unified Living Memory",
     "provider": "Own • SQLite baseline",
     "owner": "internal",
     "status": "lab",
-    "subtitle": "Источники, решения, retrieval",
-    "detail": "Работает базовый поиск по SQLite на синтетических сценариях, без семантической памяти. Извлечение опыта, сжатие, обновление фактов и проверка понимания первоисточников остаются открытыми задачами.",
+    "subtitle": "Adopted concept; native baseline planned",
+    "detail": "Personal memory is one mutable record space with contextual recall, weights, optional sparse links, lazy decay and eviction on actual pressure. Only synthetic SQLite lexical retrieval is implemented. The Cloudflare-first roadmap starts with D1 and FTS5, not a heavy framework.",
     "tags": [
       "SQLite",
       "Retrieval",
       "Consolidation"
     ],
-    "source": "https://github.com/blondahouse/missLea/tree/main/labs/memory"
+    "source": "https://github.com/blondahouse/missLea/blob/main/docs/memory-concept.md"
   },
   {
     "id": "edge",
@@ -391,8 +394,8 @@ export const nodes=[
     "provider": "Cloudflare Workers / Supabase",
     "owner": "external",
     "status": "code",
-    "subtitle": "Короткие запросы, API и dispatcher",
-    "detail": "Cloudflare Worker реализован в коде; существуют и отдельные ручные synthetic Security Lab испытания. Supabase adapter для гибридного вычисления написан, но не развёрнут. Основной старт — Cloudflare.",
+    "subtitle": "Light HTTP requests and dispatch",
+    "detail": "Cloudflare Worker source exists and bounded deployment was verified in a separate agent lab. A Supabase hybrid adapter remains experimental and is not required for the Cloudflare-only initial path.",
     "tags": [
       "HTTP",
       "Edge",
@@ -403,12 +406,12 @@ export const nodes=[
   {
     "id": "services",
     "stage": "compute",
-    "title": "Scale-to-zero Services",
+    "title": "Scale-to-zero services",
     "provider": "Google Cloud Run / Azure Container Apps",
     "owner": "external",
     "status": "research",
-    "subtitle": "Контейнерные HTTP-сессии",
-    "detail": "Кандидаты для более тяжёлого Agent Engine и длительных HTTP-вызовов. Не подключены и не нужны для первого Cloudflare-only старта, если Worker укладывается в Free.",
+    "subtitle": "Container HTTP execution candidates",
+    "detail": "Google Cloud Run and Azure Container Apps remain potential alternatives for heavier tasks. They are neither required nor deployed for the first Cloudflare-only agent.",
     "tags": [
       "HTTP",
       "Container",
@@ -423,8 +426,8 @@ export const nodes=[
     "provider": "Google Cloud Run Jobs",
     "owner": "external",
     "status": "research",
-    "subtitle": "Длительные задачи без HTTP",
-    "detail": "Реализован исследовательский CLI для синтетической Cloud Run Job (создать → вычислить → получить logs → удалить), но live-испытание и расходы не подтверждены. Не обязательны на старте.",
+    "subtitle": "Deferred non-HTTP workloads",
+    "detail": "A synthetic Cloud Run Job probe was written. Live execution costs have not been proven, and a job service is not needed to establish native Cloudflare memory.",
     "tags": [
       "Batch",
       "Container",
@@ -435,12 +438,12 @@ export const nodes=[
   {
     "id": "sandbox",
     "stage": "compute",
-    "title": "Ephemeral Sandboxes",
+    "title": "Ephemeral sandboxes",
     "provider": "E2B / Modal",
     "owner": "external",
     "status": "research",
-    "subtitle": "Изоляция выполнения кода",
-    "detail": "Есть код экспериментального E2B-пробника, но подтверждённого живого развертывания нет. Позже пригодится для программирования, анализа и установки пакетов.",
+    "subtitle": "Future isolated code execution",
+    "detail": "An E2B trial adapter exists, but no verified production sandbox is enabled for Miss Lea. Future use may help development or heavy computation.",
     "tags": [
       "Ephemeral",
       "Code exec",
@@ -451,12 +454,12 @@ export const nodes=[
   {
     "id": "vm",
     "stage": "compute",
-    "title": "Временные / постоянные VM",
+    "title": "Optional virtual machines",
     "provider": "Oracle Always Free / Google Compute Engine",
     "owner": "external",
     "status": "research",
-    "subtitle": "Полный Linux-хост как резерв",
-    "detail": "Не требуется для первого облачного запуска. Возможность будущего размещения инструментов, локальной LLM или долгих демонов; бесплатность и доступность ресурсов отдельно проверяются.",
+    "subtitle": "Full Linux as a future fallback",
+    "detail": "Long-running hosts and local models may be considered later. Their free availability and operating cost need separate validation.",
     "tags": [
       "Linux",
       "ARM",
@@ -467,12 +470,12 @@ export const nodes=[
   {
     "id": "hybrid",
     "stage": "compute",
-    "title": "Гибридный Sleep Lab",
+    "title": "Hybrid Sleep Lab",
     "provider": "Cloudflare → Supabase / Deno",
     "owner": "hybrid",
     "status": "code",
-    "subtitle": "Альтернативный внешний исполнитель",
-    "detail": "Схема Cloudflare Durable Object Alarm → внешняя HTTP-функция реализована и проходит офлайн-тесты. Реальное двухоблачное пробуждение не проверено. Deno Deploy — только временный совместимый вариант.",
+    "subtitle": "Optional external wake executor",
+    "detail": "A Cloudflare alarm to external HTTP function was tested offline. It remains an alternative, not a dependency of the Cloudflare-only launch.",
     "tags": [
       "Alarm",
       "External compute",
@@ -483,12 +486,12 @@ export const nodes=[
   {
     "id": "snapshot",
     "stage": "storage",
-    "title": "Consistent Snapshots",
+    "title": "Consistent snapshot experiment",
     "provider": "Own • SQLite backup API",
     "owner": "internal",
     "status": "lab",
-    "subtitle": "Хэш, quarantine, inactive restore",
-    "detail": "Синтетические консистентные снимки SQLite, контроль повреждения, восстановление в карантин реализованы и проверены офлайн. Это не production-шифрование или живой data pipeline.",
+    "subtitle": "Synthetic archive integrity and quarantine",
+    "detail": "Storage Lab verified coherent SQLite snapshots, corruption detection and inactive recovery on synthetic fixtures. This is historical engineering evidence, not a required personality-backup policy.",
     "tags": [
       "SQLite backup",
       "SHA-256",
@@ -499,12 +502,12 @@ export const nodes=[
   {
     "id": "restic",
     "stage": "storage",
-    "title": "Шифрование / Backup Engine",
+    "title": "Encrypted backup experiment",
     "provider": "restic + real CLI tests",
     "owner": "hybrid",
     "status": "verified",
-    "subtitle": "Единый синтетический архив",
-    "detail": "Реальный restic использовался в GitHub Actions: один зашифрованный синтетический снимок создан и восстановлен. Тестовый пароль публичен, поэтому это НЕ защита настоящей памяти.",
+    "subtitle": "Independent historical backup-engine research",
+    "detail": "The actual restic binary was exercised in isolated GitHub Actions with synthetic archives and integrity verification. This is not a deployed autobackup of Miss Lea's personal recollections.",
     "tags": [
       "restic",
       "Archive",
@@ -515,12 +518,12 @@ export const nodes=[
   {
     "id": "b2",
     "stage": "storage",
-    "title": "Replica A • B2",
+    "title": "Replica A — B2 (synthetic trial)",
     "provider": "Backblaze B2",
     "owner": "external",
     "status": "verified",
-    "subtitle": "Реальная внешняя копия",
-    "detail": "STO-006: одинаковый архив загружен в настоящий B2; отдельный runner без Google-доступа сверил SHA-256, проверил restic и восстановил синтетические данные.",
+    "subtitle": "Real external object-store test",
+    "detail": "STO-006 uploaded synthetic encrypted archive bytes to real Backblaze B2. An isolated runner verified the hash and restored source fixtures without Drive access.",
     "tags": [
       "S3 API",
       "Remote replica",
@@ -531,12 +534,12 @@ export const nodes=[
   {
     "id": "drive",
     "stage": "storage",
-    "title": "Replica B • Drive",
+    "title": "Replica B — Drive (synthetic trial)",
     "provider": "Google Drive • Miss Lea",
     "owner": "external",
     "status": "verified",
-    "subtitle": "Второй независимый провайдер",
-    "detail": "STO-006: тот же архив загружен в Google Drive через drive.file; отдельный runner без ключа B2 восстановил байт-в-байт. Реальная долговременная политика хранения не доказана.",
+    "subtitle": "Independent test-only recovery",
+    "detail": "STO-006 uploaded matching synthetic archive bytes into the dedicated Google Drive. A separate runner recovered exact data without B2 access.",
     "tags": [
       "drive.file",
       "OAuth",
@@ -547,12 +550,12 @@ export const nodes=[
   {
     "id": "restore",
     "stage": "storage",
-    "title": "Recovery / Fencing",
+    "title": "Recovery and fencing lab",
     "provider": "Own • inactive restore",
     "owner": "internal",
     "status": "verified",
-    "subtitle": "Восстановить, но не оживить копию",
-    "detail": "В STO-006 оба отдельных чистых runner успешно восстановили идентичные записи и вложение в неактивном карантине. Не проверены реальная потеря GitHub, WORM и отзыв старых полномочий при восстановлении.",
+    "subtitle": "Inactive isolated restore verified",
+    "detail": "STO-006 restored test artifacts independently from both providers into inactive quarantine. This does not implement a convergent mirror of currently evolving Living Memory.",
     "tags": [
       "Integrity",
       "Quarantine",
@@ -563,12 +566,12 @@ export const nodes=[
   {
     "id": "keyrecovery",
     "stage": "storage",
-    "title": "Независимый Recovery Key",
+    "title": "Independent recovery authority",
     "provider": "Root Vault + external escrow",
     "owner": "hybrid",
     "status": "planned",
-    "subtitle": "Доступ после потери провайдера",
-    "detail": "Нужно независимо сохранять ключи расшифровки и способы восстановления Root Vault, не замыкая цепочку на Gmail/Infisical/GitHub. Для реальных данных не выполнено.",
+    "subtitle": "Protected keys outside the systems they unlock",
+    "detail": "Recovery requires keys and authority records independent of the data provider. Verified live key escrow, provider outage recovery and current-state identity fencing remain future work.",
     "tags": [
       "Escrow",
       "Unseal",
@@ -579,12 +582,12 @@ export const nodes=[
   {
     "id": "kv",
     "stage": "storage",
-    "title": "KV / Objects",
+    "title": "KV and objects",
     "provider": "Cloudflare Workers KV / R2",
     "owner": "external",
     "status": "research",
-    "subtitle": "Нефундаментальное хранилище",
-    "detail": "Cloudflare KV не отвергнут: возможен для конфигурации, справочников, кэша, архивов. Для согласованного агентного состояния первым кандидатом выбран SQLite Durable Objects.",
+    "subtitle": "Optional cache and document storage",
+    "detail": "Cloudflare KV or R2 may support caches, public reference content or a separate Document Vault. D1 is the current proposed native personal-memory baseline; KV's eventual consistency is unsuitable for an authoritative mutation log.",
     "tags": [
       "KV",
       "Eventual consistency",
@@ -595,12 +598,12 @@ export const nodes=[
   {
     "id": "portability",
     "stage": "storage",
-    "title": "Portability & Handoff",
+    "title": "Portability and handoff",
     "provider": "Own • architecture principles",
     "owner": "internal",
     "status": "planned",
-    "subtitle": "Данные ≠ разрешение действовать",
-    "detail": "Нужны миграция памяти, первоисточники, перенос полномочий и проверка единственного активного экземпляра. Архитектурный принцип принят; сквозного live-теста переезда нет.",
+    "subtitle": "Data is not authority",
+    "detail": "The portable artifact is the current surviving Living Memory, separate external obligations and current operational authority. A former or archived copy does not authorize a second active instance or restore forgotten history.",
     "tags": [
       "G5",
       "Identity",
@@ -609,11 +612,12 @@ export const nodes=[
     "source": "https://github.com/blondahouse/missLea/blob/main/docs/digital-independence.md"
   }
 ];
+
 export const edges=[
   {
     "from": "founder",
     "to": "git-private",
-    "label": "делегирует"
+    "label": "delegates"
   },
   {
     "from": "git-private",
@@ -633,27 +637,27 @@ export const edges=[
   {
     "from": "git-private",
     "to": "admin-api",
-    "label": "исполняет"
+    "label": "executes"
   },
   {
     "from": "infisical-root",
     "to": "admin-api",
-    "label": "аварийные права"
+    "label": "root recovery rights"
   },
   {
     "from": "infisical-ops",
     "to": "admin-api",
-    "label": "рабочие токены"
+    "label": "operational tokens"
   },
   {
     "from": "admin-api",
     "to": "worker",
-    "label": "деплой / create"
+    "label": "provisions"
   },
   {
     "from": "email",
     "to": "registry",
-    "label": "идентичность"
+    "label": "identity"
   },
   {
     "from": "registry",
@@ -663,77 +667,72 @@ export const edges=[
   {
     "from": "broker",
     "to": "admin-api",
-    "label": "операции"
+    "label": "authorized operations"
   },
   {
     "from": "worker",
     "to": "agent-sdk",
-    "label": "запускает"
+    "label": "starts"
   },
   {
     "from": "agent-sdk",
     "to": "alarms",
-    "label": "следующий wake"
+    "label": "schedules next wake"
   },
   {
     "from": "alarms",
     "to": "agent-sdk",
-    "label": "пробуждает"
+    "label": "wakes"
   },
   {
     "from": "agent-sdk",
     "to": "state",
-    "label": "читает / пишет"
+    "label": "reads / writes"
   },
   {
     "from": "agent-sdk",
     "to": "workers-ai",
-    "label": "LLM запрос"
+    "label": "LLM request"
   },
   {
     "from": "workers-ai",
     "to": "agent-sdk",
-    "label": "решение"
+    "label": "decision"
   },
   {
     "from": "agent-sdk",
     "to": "tools",
-    "label": "действие"
+    "label": "action"
   },
   {
     "from": "tools",
     "to": "state",
-    "label": "событие"
+    "label": "event"
   },
   {
     "from": "telegram",
     "to": "worker",
-    "label": "webhook • план"
+    "label": "planned webhook"
   },
   {
     "from": "agent-sdk",
     "to": "quota",
-    "label": "расходы"
+    "label": "budget controls"
   },
   {
     "from": "worker",
     "to": "observability",
-    "label": "метрики"
+    "label": "metrics"
   },
   {
     "from": "agent-sdk",
     "to": "memory",
-    "label": "retrieval • план"
-  },
-  {
-    "from": "memory",
-    "to": "snapshot",
-    "label": "snapshot • план"
+    "label": "planned recall"
   },
   {
     "from": "state",
     "to": "snapshot",
-    "label": "snapshot • план"
+    "label": "historical trial only"
   },
   {
     "from": "snapshot",
@@ -773,12 +772,12 @@ export const edges=[
   {
     "from": "workers-ai",
     "to": "llm-router",
-    "label": "заменяемый backend"
+    "label": "replaceable backend"
   },
   {
     "from": "agent-sdk",
     "to": "edge",
-    "label": "исполняется"
+    "label": "runs on"
   },
   {
     "from": "agent-sdk",
