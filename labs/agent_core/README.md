@@ -1,22 +1,38 @@
-# Agent Core — synthetic research implementation
+# Agent Core — portable synthetic lifecycle and integrated Cloudflare runtime
 
-**Status: live-verified on Cloudflare as a separate synthetic Agent Core Worker (2026-11-17).** Its existing two-wake predecessor remains separate and unchanged. The Core uses a real Workers AI free-tier model, but has no Telegram, personal memories, privileged external tools or paid model API keys. No real credentials, paid APIs, funds, or provider-side actions are available.
+**Current status (2026-11-18):** The portable Core is deployed in two distinct kinds of **synthetic** Cloudflare lab: a previously verified standalone Core Worker and the newer memory-integrated `misslea-core-memory-lab`. These are not the former TinyFund agent, a migrated personal identity, or a production-ready independent Miss Lea.
 
-Agent Core provides a replaceable state machine and injected model, storage, and scheduler ports. Each scheduled wake allows the model to choose or change a provisional intention, optionally call one of two pure fabricated tools, record a short working note, and select the next wake or pause. No mandatory topic, objective, personality, or scripted two-step task is assigned.
+## What actually runs
 
-The current test harness has a strict JSON decision contract, explicit tool allowlist, bounded working context, a limit of 4 wakes per UTC day and 12 total wakes, stale-run rejection, and a non-replay rule: persist a model-call attempt before inference. Uncertain interrupted calls remain in running state for future reconciliation. Safe receipts omit notes and intents.
+The current integrated Worker uses `src/memory_cycle.mjs` and the state machine in `src/core.mjs`; `labs/cloudflare_agent/src/core_memory.mjs` binds those portable components to:
 
-**This is not Living Memory.** The short operational note buffer is not a subjective or autobiographical store; later memory integration must use the adopted Memory Manager contract, with D1 as the first candidate. No recovery, monitoring service, model router, privileged Operator delegation, or Telegram is implemented here. The separate Cloudflare SDK adapter does not provide Living Memory.
+- **Cloudflare Agents SDK / SQLite-backed Durable Object:** one active synthetic instance; native scheduled callbacks/physical alarms; operational state, bounded notes and intent, usage counters and only the most recent D1 memory ID.
+- **Cloudflare Workers AI:** one fixed Gemma 4 model (not yet connected to a multi-model router).
+- **Our Memory Manager:** `labs/living_memory/src/manager.mjs`, which exposes the restricted model-facing remember/recall/revise/reinterpret operations.
+- **Cloudflare D1 + FTS5:** `labs/living_memory/src/d1.mjs` and its migration store the actual subjective synthetic records. Memory text is not duplicated into Durable Object state.
+- **Private trusted Operator:** independently deploys pinned public source via GitHub Actions with credentials obtained from Infisical. It does **not** drive scheduled wakes. Root credentials remain in the separate provisioning job and are never passed to the Worker.
 
-Run the offline tests (no credits required):
+The model may choose or change provisional intent, select one allowed synthetic/environment or memory action per wake, and choose the next sleep (60–86,400 seconds) or pause. There are no real external actions, Telegram, paid provider keys, private conversations, agent-admin credentials or owner funds. Synthetic safety limits remain **12 total wakes, 4 per UTC day**. These limits are lab scaffolding, not the intended long-term autonomy policy.
 
-    node --test labs/agent_core/test/*.test.mjs
+The Core records an inference attempt before dispatch, rejects mismatched/stale callbacks and does not automatically replay uncertain side effects. Invalid model JSON or an invalid decision fails closed as `blocked`; autonomous repair/reconciliation is not implemented. The currently retained operational notes and provisional intent are distinct from authoritative subjective Living Memory, but their eventual conceptual boundary still needs refinement.
 
-**Live evidence:** two scheduled Cloudflare wakes, two real model calls and two fabricated tool calls with durable operational state. Intent remained unset in the observed receipt; long-term goal selection is not yet validated. See the [live run record](../cloudflare_agent/AGENT_CORE_LIVE_2026-11-17.md). Next milestones are the separate Living Memory Manager (D1), Telegram and a free-model router. Independent Recovery and detailed Monitoring remain future work.
+## Live evidence, kept separate
 
+- **Standalone Core (historical PASS):** 2 scheduled wakes, 2 Workers AI calls and 2 synthetic tools, no lasting intent. [Standalone live evidence](../cloudflare_agent/AGENT_CORE_LIVE_2026-11-17.md).
+- **Standalone D1 (historical PASS):** memory create/revise/reinterpret and FTS5 across three requests. [D1 live evidence](../living_memory/D1_LIVE_STATUS_2026-11-17.md).
+- **Integrated Core + Living Memory (current live state):** the 2026-11-17 22:03:52 UTC **read-only** status returned `wakes=4, modelCalls=4, toolCalls=3, memoryWrites=2, memoryReads=4, memoryContexts=3, callbackAttempts=4, callbackRejected=0`. Status is **`blocked` / `invalid_decision`**, no pending schedule or alarm. This verifies repeated autonomous wakes, model-chosen writes and later D1-fed model context, not indefinite operation or complete model understanding. [Operator status evidence (run 44148862213, attempt 2)](https://github.com/blondahouse/misslea-operator/actions/runs/44148862213). [Integration details](../cloudflare_agent/CORE_MEMORY_INTEGRATION.md).
 
-## Synthetic D1 integration
+The earlier integrated acceptance [workflow 44147427562](https://github.com/blondahouse/misslea-operator/actions/runs/44147427562) failed with `integrated_live_continuity_timeout` because the model scheduled the next wake beyond the workflow's observation window. That failure **did not** stop the Cloudflare alarm; later read-only evidence verified subsequent wakes. A later malformed decision **did** block the live synthetic run.
 
-The separate portable orchestration layer at `src/memory_cycle.mjs` adds
-model-selected memory actions and later D1-backed recall without changing the
-previous verified standalone Core Worker. See the [integration record](../cloudflare_agent/CORE_MEMORY_INTEGRATION.md).
+## Not yet implemented or independently measured
+
+Router with two independent free model providers, Telegram, privileged Tools/Operator delegation, recovery from blocked decisions, robust monitoring, personal-memory migration, full Living Memory decay/eviction/associations, independent cross-provider recovery, and actual Cloudflare Free-plan resource/billing headroom remain open.
+
+Offline tests without model/provider credentials:
+
+```bash
+node --test labs/agent_core/test/*.test.mjs
+cd labs/cloudflare_agent && npm install --ignore-scripts && npm run check:integrated && npm run build:integrated
+```
+
+These tests validate source/build behavior, **not** real Cloudflare acceptance.
