@@ -1,6 +1,6 @@
 # Agent Core — synthetic research implementation
 
-**Status: offline-tested with a separate Cloudflare Agents SDK adapter; live validation pending.** This lab is not connected to the running Cloudflare two-wake experiment, to Telegram, to real models, or to personal memories. No real credentials, paid APIs, funds, or provider-side actions are available.
+**Status: live-verified on Cloudflare as a separate synthetic Agent Core Worker (2026-11-17).** Its existing two-wake predecessor remains separate and unchanged. The Core uses a real Workers AI free-tier model, but has no Telegram, personal memories, privileged external tools or paid model API keys. No real credentials, paid APIs, funds, or provider-side actions are available.
 
 Agent Core provides a replaceable state machine and injected model, storage, and scheduler ports. Each scheduled wake allows the model to choose or change a provisional intention, optionally call one of two pure fabricated tools, record a short working note, and select the next wake or pause. No mandatory topic, objective, personality, or scripted two-step task is assigned.
 
@@ -12,4 +12,4 @@ Run the offline tests (no credits required):
 
     node --test labs/agent_core/test/*.test.mjs
 
-**Next integration milestone:** connect the core to an isolated Cloudflare Agents SDK instance using synthetic state and a real free model call, without changing the existing verified two-wake lab. Prove that decisions, tool observations, and scheduled wake times survive a fresh runtime instance.
+**Live evidence:** two scheduled Cloudflare wakes, two real model calls and two fabricated tool calls with durable operational state. Intent remained unset in the observed receipt; long-term goal selection is not yet validated. See the [live run record](../cloudflare_agent/AGENT_CORE_LIVE_2026-11-17.md). Next milestones are the separate Living Memory Manager (D1), Telegram and a free-model router. Independent Recovery and detailed Monitoring remain future work.

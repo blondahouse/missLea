@@ -78,3 +78,8 @@ A dry-run build is not evidence of live operation. Live verification must
 observe at least two separately scheduled wakes with durable state and no
 blocked result. An agent-selected pause is valid but does not prove two-wake
 continuity.
+
+Live acceptance on 17 November 2026 confirmed two scheduled wakes, two model
+calls and two fabricated tool uses. No durable subjective intent was selected.
+See [Agent Core live evidence](AGENT_CORE_LIVE_2026-11-17.md). Actual
+Cloudflare Free-tier billing/usage metrics were not independently captured.
