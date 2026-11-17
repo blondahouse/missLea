@@ -2,6 +2,7 @@
 
 Public-facing, synthetic-safe **architectural atlas**, not a monitor of production resources.
 
+- **Memory concept**: [Unified Living Memory](memory/index.html) is a design-only companion page; the written decision record is [docs/memory-concept.md](../docs/memory-concept.md). It is not a production memory service.
 - **Source**: `site/index.html`, `site/style.css`, `site/app.mjs`, `site/data.mjs`.
 - **Data basis**: public `missLea` laboratory README/evidence files and sanitized results of the private `misslea-operator` OIDC isolation canary. No actual secret values, recovery details, access tokens or personal account credentials are included.
 - **Status semantics**: **Проверено реально** only denotes narrowly scoped actual-provider trial evidence, not overall production readiness; **Код + CI** means source/test present but no live deploy; **Лаборатория** means controlled synthetic/mock validation; **Исследовано** means candidate only; **Запланировано** means not implemented.
