@@ -43,7 +43,7 @@ test("strict memory decisions validate tool names, data, budgets and shapes",()=
 });
 test("JSON fences are accepted only as complete wrappers; semantic guards remain strict",()=>{
   const valid=reply("memory.remember","Synthetic lake");
-  assert.equal(parseMemoryDecision({choices:[{message:{content:"\`\`\`json\\n"+valid+"\\n\`\`\`"}}]}).tool,
+  assert.equal(parseMemoryDecision({choices:[{message:{content:"\`\`\`json\n"+valid+"\n\`\`\`"}}]}).tool,
     "memory.remember");
   assert.equal(parseMemoryDecision("  "+valid+"  ").memoryContent,"Synthetic lake");
   for(const [text,code] of [
@@ -105,7 +105,7 @@ test("persistent invalid decisions fail closed after one correction without side
   const io={runId:"two-bad",clock:()=>now,memory,
     load:async()=>state,save:async s=>{state=structuredClone(s);},
     schedule:async()=>{},
-    infer:async()=>{calls++;return {response:"\`\`\`json\\n{broken}\\n\`\`\`"};}
+    infer:async()=>{calls++;return {response:"\`\`\`json\n{broken}\n\`\`\`"};}
   };
   await startMemoryRun(io);
   now=Date.parse(state.nextWakeAt);
