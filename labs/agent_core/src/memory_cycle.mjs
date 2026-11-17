@@ -147,7 +147,7 @@ async function chooseTool(memory,decision,lastMemoryId) {
 // Same no-replay semantics as core runtime: persist "running" before I/O
 // and fail closed on any uncertain external write/inference. No retry loop.
 export async function wakeWithMemory({
-  runId,load,save,schedule,infer,memory,clock=Date.now()
+  runId,load,save,schedule,infer,memory,clock=Date.now
 }) {
   for(const name of ["read","recall","remember","revise","reinterpret"])
     if(typeof memory?.[name]!=="function")throw Error("invalid_memory_port");
