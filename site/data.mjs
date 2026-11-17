@@ -1,6 +1,6 @@
 export const metadata={
   "version": "1.0",
-  "asOf": "2026-11-17",
+  "asOf": "2026-11-18",
   "description": "Observed source and provider evidence, not a live-system dashboard. All architecture data is public-safe.",
   "repo": "blondahouse/missLea",
   "operator": "blondahouse/misslea-operator"
@@ -218,8 +218,8 @@ export const nodes=[
     "provider": "Cloudflare Workers Free",
     "owner": "external",
     "status": "verified",
-    "subtitle": "Worker entry points and health",
-    "detail": "A bounded synthetic Cloudflare Agent Lab was deployed on 17 Nov 2026 and completed two native wake cycles. This is not a production personal agent or proof of ongoing free-plan headroom.",
+    "subtitle": "Current integrated synthetic Cloudflare Worker",
+    "detail": "The distinct misslea-core-memory-lab Worker hosts the current isolated Core + Memory Manager + D1 experiment. Live read-only evidence (2026-11-17 22:03:52 UTC): 4 native wakes, 4 Workers AI calls, 2 D1 memory writes, 4 reads and 3 memory contexts. The model then returned an invalid decision; the synthetic run is blocked, with no pending alarm. Full autonomous recovery and Free quota verification remain open.",
     "tags": [
       "HTTP",
       "Free",
@@ -234,8 +234,8 @@ export const nodes=[
     "provider": "Cloudflare Agents SDK • own logic",
     "owner": "hybrid",
     "status": "verified",
-    "subtitle": "Agent session and control loop",
-    "detail": "A live bounded synthetic trial used Cloudflare Agents SDK with allowed action selection, durable state and two scheduled wakes. It does not validate a full autonomous Miss Lea.",
+    "subtitle": "Native Agent Core, alarms and memory orchestration",
+    "detail": "The Agents SDK hosts the portable synthetic Core inside a Durable Object, scheduling callbacks without a GitHub runner. The current integrated Worker used four native wakes and then blocked on invalid_decision; no automatic recovery is yet implemented.",
     "tags": [
       "Agent",
       "Session",
@@ -250,8 +250,8 @@ export const nodes=[
     "provider": "Durable Objects Alarms",
     "owner": "external",
     "status": "verified",
-    "subtitle": "Native scheduled agent activation",
-    "detail": "The synthetic agent completed two native Cloudflare scheduled wakes without a local computer or GitHub runner driving the wake cycle.",
+    "subtitle": "Native scheduled callbacks (4 verified)",
+    "detail": "A Durable Object alarm woke the Core for four scheduled callbacks; all were accepted. After a later invalid model decision the synthetic run blocked and no alarm remains; this is not a still-running service.",
     "tags": [
       "Schedule",
       "Wake",
@@ -266,8 +266,8 @@ export const nodes=[
     "provider": "SQLite-backed Durable Objects",
     "owner": "external",
     "status": "verified",
-    "subtitle": "Durable Object SQLite session state",
-    "detail": "The synthetic run persisted an earlier tool result and read it after a scheduled wake. Operational state is separate from the proposed autobiographical D1 Living Memory.",
+    "subtitle": "Operational wake state; D1 memory pointer only",
+    "detail": "The SQLite-backed Durable Object persists wake status, counters, temporary intent/notes/events and the last D1 memory ID. Subjective memory record text is held in D1 through Memory Manager, not duplicated in DO.",
     "tags": [
       "SQLite",
       "Events",
@@ -282,8 +282,8 @@ export const nodes=[
     "provider": "Own • allowlist",
     "owner": "internal",
     "status": "verified",
-    "subtitle": "Deterministic synthetic action",
-    "detail": "The trial allowed a fixed squares-calculation action and verified result 38. This does not grant arbitrary external API, code execution or administrator capabilities.",
+    "subtitle": "Bounded synthetic and memory actions",
+    "detail": "The current integrated Core exposes an allowlist of synthetic environment tools and remember/recall/revise/reinterpret memory actions; the live evidence shows three tool uses. No arbitrary network, code executor, real account or operator administration was granted.",
     "tags": [
       "SQUARES",
       "Allowlist",
@@ -346,8 +346,8 @@ export const nodes=[
     "provider": "Cloudflare Workers AI • Gemma 4",
     "owner": "external",
     "status": "verified",
-    "subtitle": "Two verified bounded inference calls",
-    "detail": "The Cloudflare synthetic agent used the configured Workers AI model for an action decision and later result verification. Ongoing usage/billing headroom is still unverified.",
+    "subtitle": "4 model calls in integrated synthetic trial",
+    "detail": "Gemma 4 on Cloudflare Workers AI produced four model decisions in the integrated Core + D1 lab. The fourth ended in strict invalid_decision blocking. Free-tier billing/quota headroom is still unverified.",
     "tags": [
       "Inference",
       "Gemma",
@@ -374,18 +374,42 @@ export const nodes=[
   {
     "id": "memory",
     "stage": "compute",
-    "title": "Unified Living Memory",
-    "provider": "Own • SQLite baseline",
+    "title": "Unified Living Memory — Phase 1",
+    "provider": "Own Memory Manager + Cloudflare D1",
     "owner": "internal",
-    "status": "lab",
-    "subtitle": "Adopted concept; native baseline planned",
-    "detail": "Personal memory is one mutable record space with contextual recall, weights, optional sparse links, lazy decay and eviction on actual pressure. Only synthetic SQLite lexical retrieval is implemented. The Cloudflare-first roadmap starts with D1 and FTS5, not a heavy framework.",
+    "status": "verified",
+    "subtitle": "D1/FTS5 integration verified; mature memory features pending",
+    "detail": "The adopted unified memory concept is broader than the current Phase 1 implementation. The Cloudflare integrated lab used one authoritative D1 store through our own Manager: 2 writes, 4 reads and 3 model contexts across four native wakes. Decay, associations, eviction, personal memory and independent replication are not deployed.",
     "tags": [
       "SQLite",
       "Retrieval",
       "Consolidation"
     ],
     "source": "https://github.com/blondahouse/missLea/blob/main/docs/memory-concept.md"
+  },
+  {
+    "id": "memory-manager",
+    "stage": "compute",
+    "title": "Memory Manager",
+    "provider": "Own • in-process module",
+    "owner": "internal",
+    "status": "verified",
+    "subtitle": "Stable subjective memory API",
+    "detail": "The deployed Worker calls the project's own replaceable Memory Manager: remember, read, recall, revise and reinterpret over a restricted D1 port. It is a module, not a separate service; full decay and eviction are future work.",
+    "tags": ["Remember", "Recall", "Revise", "Reinterpret"],
+    "source": "https://github.com/blondahouse/missLea/blob/main/labs/living_memory/README.md"
+  },
+  {
+    "id": "d1",
+    "stage": "storage",
+    "title": "Authoritative D1 Memory",
+    "provider": "Cloudflare D1 + SQLite FTS5",
+    "owner": "external",
+    "status": "verified",
+    "subtitle": "Persistent indexed synthetic memories",
+    "detail": "One existing dedicated D1 database stores subjective synthetic records for the integrated Cloudflare Core. The latest safe status confirmed two writes and subsequent D1-backed context. No independent replica, complete cost audit or historical rollback tool is deployed.",
+    "tags": ["D1", "FTS5", "Persistence"],
+    "source": "https://github.com/blondahouse/missLea/blob/main/labs/cloudflare_agent/CORE_MEMORY_INTEGRATION.md"
   },
   {
     "id": "edge",
@@ -727,7 +751,17 @@ export const edges=[
   {
     "from": "agent-sdk",
     "to": "memory",
-    "label": "planned recall"
+    "label": "memory tools (verified)"
+  },
+  {
+    "from": "memory",
+    "to": "memory-manager",
+    "label": "in-process memory API"
+  },
+  {
+    "from": "memory-manager",
+    "to": "d1",
+    "label": "indexed read / write"
   },
   {
     "from": "state",

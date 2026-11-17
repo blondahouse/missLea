@@ -1,6 +1,6 @@
 # Miss Lea — Architecture Lab
 
-English-only research workspace for evaluating **replaceable components** of Miss Lea before deploying them. English is required for committed documentation, source text, fixtures and public HTML. CI validates this policy. This repository is **not** the running agent. It contains no memory, credentials, or operational state from the running Miss Lea instance.
+English-only research workspace for evaluating **replaceable components** of Miss Lea before deploying them. English is required for committed documentation, source text, fixtures and public HTML. CI validates this policy. This repository contains the source deployed to **isolated synthetic Cloudflare Workers** as well as unconnected research labs. It is **not** the personal or legacy TinyFund agent, and contains no private memories, credentials or live operational state. Current synthetic runtime state is held in Cloudflare Durable Objects and D1, not in this repository.
 
 ## Foundational concept: sustainability and the option of independence
 
@@ -8,17 +8,20 @@ English-only research workspace for evaluating **replaceable components** of Mis
 
 Read the [digital independence principle](docs/digital-independence.md), [architecture principles](docs/architecture-principles.md), and the **[adopted Unified Living Memory concept](docs/memory-concept.md)**. Its [Cloudflare-first roadmap](docs/memory-cloudflare-roadmap.md) defines staged, replaceable implementation without requiring a sophisticated memory framework before launch. This is research only: no migration of the running agent, external registration, account creation or authorization to incur costs.
 
-[Agent Core](labs/agent_core/README.md) is live-verified as an isolated Cloudflare synthetic Worker, with model-chosen tool use and scheduled continuity (two wakes, two model calls). The earlier two-wake Cloudflare lab remains unchanged. See the [live Agent Core receipt](labs/cloudflare_agent/AGENT_CORE_LIVE_2026-11-17.md).
+[Agent Core](labs/agent_core/README.md) was first live-verified in a standalone Cloudflare Worker with two autonomous wakes and model-selected synthetic actions; the original Cloudflare two-wake lab is also preserved. See the [standalone Core evidence](labs/cloudflare_agent/AGENT_CORE_LIVE_2026-11-17.md).
 
-The [Living Memory D1 foundation](labs/living_memory/README.md) is independently live-verified on Cloudflare: create, revise, reinterpret and FTS5 recall persisted across three authenticated requests. It is NOT yet attached to the autonomous Agent Core; real D1 Free-tier metrics were not measured. See [D1 live acceptance](labs/living_memory/D1_LIVE_STATUS_2026-11-17.md).
+**Current isolated integration:** [`misslea-core-memory-lab`](labs/cloudflare_agent/CORE_MEMORY_INTEGRATION.md) runs Agent Core + Cloudflare Agents SDK/Durable Object alarms + our [Memory Manager](labs/living_memory/README.md) + one authoritative Cloudflare D1/FTS5 store + Workers AI Gemma 4. A read-only public status diagnostic at 2026-11-17 22:03:52 UTC confirmed **4 wakes, 4 model calls, 2 memory writes, 4 memory reads, 3 memory contexts**, then `status=blocked, reason=invalid_decision`; no alarm remains. This is a real synthetic cross-wake memory continuity result, **not** a fully accepted unattended personal agent. [Evidence: private operator read-only diagnostic, attempt 2](https://github.com/blondahouse/misslea-operator/actions/runs/44148862213).
 
-An [isolated synthetic Agent Core ↔ Living Memory ↔ D1 integration](labs/cloudflare_agent/CORE_MEMORY_INTEGRATION.md) is under development. Separate live acceptance is required before claiming an autonomous memory-enabled agent.
+The [standalone D1 smoke test](labs/living_memory/D1_LIVE_STATUS_2026-11-17.md) separately proved create/revise/reinterpret/FTS5 operations. The **integrated** experiment has verified autonomous writing and later reading, but has not established full free-tier CPU/Neuron/D1 usage metrics, sustained operation, reliable malformed-output recovery, personal-memory migration, Telegram or multi-provider routing. Historical lab Workers are separate and unchanged.
 
 ## Structure
 
 ```text
 labs/
-  memory/             # Synthetic lexical baseline and replaceable memory-engine research
+  agent_core/         # Portable synthetic wake/orchestration logic
+  cloudflare_agent/   # Cloudflare Agents SDK adapters, standalone + integrated lab Workers
+  living_memory/      # Replaceable Memory Manager, D1 store, migration and tests
+  memory/             # Earlier SQLite lexical baseline and alternative-engine research
     cli.py
     scenarios/
     tests/
@@ -95,7 +98,7 @@ python -m labs.memory.cli list
 python -m labs.memory.cli run --candidate sqlite --scenario labs/memory/scenarios/memory_v1.json --output memory-report.json
 ```
 
-The SQLite baseline is deliberately simplistic. No production memory engine is selected; Letta, Mem0, Hindsight and Graphiti are research candidates. Start with a Cloudflare-native D1/FTS5 baseline where it meets the cost and quality criteria; see the [phased memory plan](docs/memory-cloudflare-roadmap.md).
+The earlier SQLite baseline is deliberately simplistic. **Cloudflare D1/FTS5 is the actual Phase 1 synthetic store** behind our own Memory Manager; no third-party memory framework has been selected. Letta, Mem0, Hindsight and Graphiti remain research candidates. See the [phased memory plan](docs/memory-cloudflare-roadmap.md).
 
 ## LLM Router experiments (Linux Docker required)
 

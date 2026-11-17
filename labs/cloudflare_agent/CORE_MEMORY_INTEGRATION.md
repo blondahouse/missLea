@@ -1,55 +1,62 @@
 # Synthetic Agent Core + Unified Living Memory (D1) integration
 
-**Status: code and offline tests. Live provider acceptance is separate.**
+**Status (2026-11-18): deployed and memory continuity live-verified; currently `blocked / invalid_decision` after four autonomous wakes.** This is a **bounded synthetic lab**, not a production/personal Miss Lea.
 
-A distinct Cloudflare Worker `misslea-core-memory-lab` runs a new Durable
-Object class `CoreMemoryAgent` using the portable Agent Core wake machinery
-and the existing Memory Manager / D1 store. The previous Agent Core, D1 smoke,
-and original two-wake Cloudflare Workers remain unchanged.
+## Deployed components
 
-## Intended runtime boundary
+- **Worker:** `misslea-core-memory-lab` (separate from `misslea-agent-core-lab`, `misslea-cloudflare-only-lab` and the standalone D1 smoke Worker).
+- **Core:** portable state machine and `memory_cycle.mjs` orchestration, hosted by `CoreMemoryAgent`, a Cloudflare Agents SDK Durable Object. SDK scheduling creates actual Durable Object alarms; no GitHub runner drives subsequent wakes.
+- **Operational state in Durable Object:** wake/run status, temporary intent and bounded notes/events, inference counters, next wake, and *only the last D1 memory ID*. The DO is not the authoritative autobiographical store.
+- **Subjective synthetic Living Memory:** the in-process Memory Manager (`labs/living_memory/src/manager.mjs`) accesses a dedicated Cloudflare D1 database through `src/d1.mjs`, using indexed SQL and FTS5. Memory record text is not copied into DO state.
+- **Inference:** one fixed Cloudflare Workers AI model, `@cf/google/gemma-4-26b-a4b-it`. Multi-provider routing has not been attached.
+- **Privileged deployment:** the separate private `blondahouse/misslea-operator` repository validates and deploys pinned code. Cloudflare Root credentials are used **only** in its separate D1 provisioning job; Operations credentials deploy the Worker. No such credentials enter Worker/model context. The start endpoint uses a newly installed temporary lab-only token.
 
-- Durable Object: scheduled wakes, inference-attempt counter, bounded operational
-  notes, last D1 memory *ID* only, basic non-sensitive counters.
-- D1: single authoritative record of subjective synthetic memories and changes.
-  The DO does not retain copies of memory text or memory snapshots.
-- Model: chooses a provisional intent, one action, whether/what to remember,
-  read, revise or reinterpret, and its next wake delay or pause.
-- At a later wake, the Memory Manager reads the last memory through D1 and
-  passes it as **untrusted context** to the model within the bounded prompt.
-  This is evidence of memory being supplied, not proof the model understood it.
-- Memory Manager: D1-backed remember/read/recall/revise/reinterpret; no generic
-  SQL, delete or export authority is exposed as a model tool.
-- Operator: deployment and single authenticated lab start only; no Root token,
-  personal content, paid API key or arbitrary external tool is passed to the
-  autonomous Worker.
-- Trial: at most 12 wakes and 4 UTC-day wakes, no paid fallback. The model may
-  pause; that is not an error but may prevent a two-wake acceptance.
+Only fabricated model-selected tools are allowed: `environment.inspect`, `dataset.summarize`, `memory.remember`, `memory.recall`, `memory.revise`, `memory.reinterpret`. At most one tool per wake. A memory is written only when the model selects a write action. On a later wake, the last memory ID is read through Memory Manager/D1 and its content may be supplied as **untrusted context**; doing so is evidence of context delivery, not proof of model comprehension.
 
-One write can succeed just before a crash, while DO state remains marked
-`running`. Such uncertain operations are intentionally **not replayed**
-automatically. Recovery and compensating reconciliation remain later work.
+## Current verified result
 
-The model-action interface is minimal. For memory actions, the content is
-self-authored by the model; for `memory.revise` and
-`memory.reinterpret` the target is limited to the last recorded/recalled
-memory ID (not arbitrary D1 data). A normal autonomous wake is never required
-to write a memory.
+The [integrated launch workflow #44147427562](https://github.com/blondahouse/misslea-operator/actions/runs/44147427562) successfully provisioned/verified D1 and deployed the Worker, then failed with `integrated_live_continuity_timeout`. The model's next alarm at 2026-11-17 19:26:24 UTC was later than the workflow's observation window. The timeout was a **verification-window mismatch**, not proof the native alarm failed.
 
-The existing synthetic D1 database is reused for this isolated integration;
-it contains **synthetic records only**. It is not a per-tenant memory service.
-Before importing personal histories or opening external interactions, explicit
-ownership/isolation controls will be required.
+A subsequent **read-only** [Operator status workflow #44148862213, attempt 2](https://github.com/blondahouse/misslea-operator/actions/runs/44148862213) at **2026-11-17 22:03:52 UTC** returned:
 
-Offline tests:
+```json
+{
+  "status": "blocked",
+  "reason": "invalid_decision",
+  "wakes": 4,
+  "modelCalls": 4,
+  "toolCalls": 3,
+  "memoryWrites": 2,
+  "memoryReads": 4,
+  "memoryContexts": 3,
+  "hasMemoryPointer": true,
+  "callbackAttempts": 4,
+  "callbackRejected": 0,
+  "callbackRejectCode": null,
+  "callbackFailurePhase": null,
+  "nextWakeAt": null,
+  "scheduledJobCount": 0,
+  "physicalAlarmAt": null
+}
+```
 
-    cd labs/cloudflare_agent
-    npm install --ignore-scripts
-    npm run check:integrated
-    npm run build:integrated
+**What passed:** real native wake scheduling, independent subsequent inference, model-selected memory writes, D1-backed retrieval/context assembly across wakes, and callback rejection checks. **What did not pass:** ongoing autonomous operation after a malformed model decision. There is no pending wake, and the system must not be represented as still running.
 
-**Live acceptance criterion:** at least two real Cloudflare-scheduled model
-wakes, at least one *model-selected* memory write and a subsequent wake whose
-inference input contains the D1-read content; no direct content leak in the
-public receipt. Actual D1 quota, CPU/Neuron usage and billing must be measured
-separately. Do not present a green dry build as live acceptance.
+The final `invalid_decision` is a strict model-output validation rejection; this sanitized receipt alone does **not** identify the exact malformed field or prove a provider error. Do not reveal raw model output or memory content to diagnose it.
+
+## Operational/architecture caveats
+
+- Bounded synthetic-only limits: 12 total wakes, 4 per UTC day; sleep delay 60–86,400 seconds.
+- A failed/uncertain model or memory operation is not automatically replayed to avoid duplicate side effects. `blocked` state needs a separately designed recovery policy; no automatic resume is implemented.
+- No Telegram, personal conversations, paid provider keys, real external tools, owner funds, root/admin agent rights, independently measured CPU/Neuron/D1 billing/quota headroom or cross-provider backup.
+- No deployed decay, associations, pressure-driven eviction, personality migration or document vault. D1 is the first native store behind a replaceable Memory Manager, not the whole Living Memory design.
+- Earlier standalone Cloudflare / Core / D1 lab evidence is retained separately. Historical off-Cloudflare research remains experimental and is not in the integrated runtime.
+
+Offline checks (not live acceptance):
+
+```bash
+cd labs/cloudflare_agent
+npm install --ignore-scripts
+npm run check:integrated
+npm run build:integrated
+```
