@@ -4,6 +4,7 @@ on:
     paths:
       - 'labs/cloudflare_agent/**'
       - 'labs/agent_core/**'
+      - 'labs/living_memory/**'
       - '.github/workflows/cloudflare-only-agent-lab.yml'
   workflow_dispatch:
 permissions:
@@ -23,5 +24,7 @@ jobs:
       - run: npm install --ignore-scripts
       - run: npm run check
       - run: npm run check:core
+      - run: node --test ../living_memory/test/*.test.mjs
+      - run: python -m unittest discover -s ../living_memory/test -p 'test_*.py' -v
       - run: npm run build:check
       - run: npm run build:core

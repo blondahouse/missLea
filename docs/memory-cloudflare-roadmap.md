@@ -24,6 +24,8 @@ Evaluate what the current retrieval baseline can and cannot do; specify comparab
 
 **Ready when:** the baseline and missing capabilities are explicit, with bounded costs and reproducible synthetic tests. No personal memory enters the public lab.
 
+**Implementation update (17 Nov 2026):** initial standalone Memory Manager, parameterized D1 adapter and FTS5 schema exist at labs/living_memory. Live D1 provisioning and Agent Core binding are not yet verified; Phase 1 acceptance remains open.
+
 ## Phase 1 — minimal native Living Memory
 
 **Use:** Current Cloudflare Worker/Agents SDK + Durable Object for wake and operational coordination; **Cloudflare D1** as a simple, separate authoritative Living Memory database. Start with ordinary indexed SQL queries and D1's built-in SQLite **FTS5** for lexical search; no vector database, graph server, external memory SaaS or VM. D1 is an implementation candidate within the Cloudflare-only environment, not an instruction to migrate the existing agent session state.
