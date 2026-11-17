@@ -6,7 +6,7 @@ import {blockWake} from "../../agent_core/src/core.mjs";
 import {createMemoryManager} from "../../living_memory/src/manager.mjs";
 import {createD1MemoryStore} from "../../living_memory/src/d1.mjs";
 import {canHandleScheduledWake} from "./autonomous_support.mjs";
-import {safeIntegratedStatus,canRestartUnarmedTrial} from "./integrated_support.mjs";
+import {safeIntegratedStatus,canRestartUnarmedTrial,scheduledCallbackRejection} from "./integrated_support.mjs";
 
 const MODEL="@cf/google/gemma-4-26b-a4b-it";
 const INSTANCE="synthetic-core-memory-v1";
@@ -91,6 +91,17 @@ export class CoreMemoryAgent extends Agent {
     return {...result,scheduledJobCount:jobs,physicalAlarmAt:alarmAt};
   }
   async wake(payload) {
+    const current=this.state;
+    // A scheduled job can disappear after firing even if a strict callback
+    // guard declines its payload. Keep only bounded synthetic diagnostics.
+    if(current?.schema===1 && current?.mode==="synthetic"){
+      const reason=scheduledCallbackRejection(current,payload);
+      const state={...current,
+        callbackAttempts:Math.min(20,(current.callbackAttempts??0)+1),
+        callbackRejectCode:reason,
+        callbackRejected:Math.min(20,(current.callbackRejected??0)+(reason?1:0))};
+      this.setState(state);
+    }
     if(!canHandleScheduledWake(this.state,payload))return;
     try{
       await wakeWithMemory({
